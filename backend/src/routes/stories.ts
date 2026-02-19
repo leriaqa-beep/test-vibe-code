@@ -1,0 +1,104 @@
+import { Router, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import { store, Story } from '../db/store';
+import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { generateStory } from '../services/storyGenerator';
+
+const router = Router();
+router.use(authMiddleware);
+
+const FREE_STORY_LIMIT = 3;
+
+// POST /api/stories/generate
+router.post('/generate', (req: AuthRequest, res: Response) => {
+  const { childId, question, context } = req.body;
+  if (!childId || !question) {
+    res.status(400).json({ error: 'childId и вопрос обязательны' });
+    return;
+  }
+  const child = store.getChildById(childId);
+  if (!child || child.userId !== req.userId) {
+    res.status(404).json({ error: 'Профиль ребёнка не найден' });
+    return;
+  }
+  const user = store.getUserById(req.userId!);
+  if (!user) {
+    res.status(404).json({ error: 'Пользователь не найден' });
+    return;
+  }
+  if (!user.isPremium && user.storiesUsed >= FREE_STORY_LIMIT) {
+    res.status(403).json({ error: 'Исчерпан лимит бесплатных историй', code: 'LIMIT_REACHED' });
+    return;
+  }
+
+  const generated = generateStory({ question: question.trim(), context: context?.trim() || '', child });
+
+  const story: Story = {
+    id: uuidv4(),
+    userId: req.userId!,
+    childId,
+    title: generated.title,
+    question: question.trim(),
+    context: context?.trim() || '',
+    content: generated.content,
+    imageUrl: generated.imageUrl,
+    isSaved: false,
+    rating: 0,
+    readCount: 0,
+    createdAt: new Date().toISOString(),
+  };
+
+  store.saveStory(story);
+  user.storiesUsed = (user.storiesUsed || 0) + 1;
+  store.saveUser(user);
+
+  res.status(201).json(story);
+});
+
+// GET /api/stories
+router.get('/', (req: AuthRequest, res: Response) => {
+  const { childId } = req.query;
+  let stories = store.getStoriesByUser(req.userId!);
+  if (childId) stories = stories.filter(s => s.childId === childId);
+  res.json(stories);
+});
+
+// GET /api/stories/:id
+router.get('/:id', (req: AuthRequest, res: Response) => {
+  const story = store.getStoryById(req.params.id);
+  if (!story || story.userId !== req.userId) {
+    res.status(404).json({ error: 'История не найдена' });
+    return;
+  }
+  // Increment readCount
+  story.readCount = (story.readCount || 0) + 1;
+  store.saveStory(story);
+  res.json(story);
+});
+
+// PUT /api/stories/:id
+router.put('/:id', (req: AuthRequest, res: Response) => {
+  const story = store.getStoryById(req.params.id);
+  if (!story || story.userId !== req.userId) {
+    res.status(404).json({ error: 'История не найдена' });
+    return;
+  }
+  const { isSaved, rating } = req.body;
+  if (isSaved !== undefined) story.isSaved = Boolean(isSaved);
+  if (rating !== undefined) story.rating = Number(rating);
+  store.saveStory(story);
+  res.json(story);
+});
+
+// DELETE /api/stories/:id
+router.delete('/:id', (req: AuthRequest, res: Response) => {
+  const story = store.getStoryById(req.params.id);
+  if (!story || story.userId !== req.userId) {
+    res.status(404).json({ error: 'История не найдена' });
+    return;
+  }
+  store.deleteStory(req.params.id);
+  res.json({ success: true });
+});
+
+export default router;
