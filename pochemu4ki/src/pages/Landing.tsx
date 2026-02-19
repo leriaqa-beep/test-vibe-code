@@ -76,7 +76,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-2xl">✨</span>
-            <span className="text-xl font-bold text-purple-700">Почемучки</span>
+            <span className="text-xl font-bold text-purple-700">Почему-Ка!</span>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -150,7 +150,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Почему родители выбирают Почемучки?
+              Почему родители выбирают Почему-Ка!?
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
               Мы знаем, что дети от 3 до 8 лет задают сотни вопросов в день.
@@ -306,9 +306,9 @@ export default function Landing() {
       <footer className="py-8 px-4 border-t border-gray-100 text-center text-gray-500 text-sm">
         <div className="flex items-center justify-center gap-2 mb-2">
           <span className="text-lg">✨</span>
-          <span className="font-semibold text-purple-700">Почемучки</span>
+          <span className="font-semibold text-purple-700">Почему-Ка!</span>
         </div>
-        <p>© 2024 Почемучки. Магия историй для любопытных детей.</p>
+        <p>© 2024 Почему-Ка!. Магия историй для любопытных детей.</p>
       </footer>
     </div>
   );

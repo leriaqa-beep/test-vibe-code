@@ -19,5 +19,5 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Почемучки backend running on http://localhost:${PORT}`);
+  console.log(`Почему-Ка! backend running on http://localhost:${PORT}`);
 });

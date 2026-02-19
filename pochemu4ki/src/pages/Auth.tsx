@@ -49,7 +49,7 @@ export default function Auth() {
         <div className="text-center mb-8">
           <button onClick={() => navigate('/')} className="inline-flex items-center gap-2 text-white">
             <span className="text-3xl">✨</span>
-            <span className="text-2xl font-bold">Почемучки</span>
+            <span className="text-2xl font-bold">Почему-Ка!</span>
           </button>
         </div>
 

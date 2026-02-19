@@ -1,7 +1,7 @@
 {
-  "name": "pochemu4ki-backend",
+  "name": "pochemu-ka-backend",
   "version": "1.0.0",
-  "description": "Почемучки backend API",
+  "description": "Почему-Ка! backend API",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
