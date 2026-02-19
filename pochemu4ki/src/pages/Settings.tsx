@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Plus, Trash2, Edit3, Crown } from 'lucide-react';
+import { ArrowLeft, LogOut, Plus, Trash2, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 

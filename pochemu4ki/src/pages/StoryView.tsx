@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Heart, Star, Share2, BookOpen } from 'lucide-react';
+import { ArrowLeft, Heart, Star, BookOpen } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import type { Story } from '../types';
 import { api } from '../api/client';

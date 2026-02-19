@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { ChildProfile, Story } from '../types';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import type { ChildProfile, Story } from '../types';
 import { api } from '../api/client';
 
 interface AppContextValue {

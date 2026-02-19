@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Mic, Star, Heart, Sparkles, ChevronRight, Check, Users, Zap } from 'lucide-react';
+import { Star, Sparkles, ChevronRight, Check, Zap } from 'lucide-react';
 
 const features = [
   {

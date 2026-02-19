@@ -1,16 +1,34 @@
 import { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Square } from 'lucide-react';
+import { Mic, Square } from 'lucide-react';
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
   className?: string;
 }
 
-// Extend the Window interface for browser compatibility
+// Type augmentation for Web Speech API (not yet in all TS lib definitions)
+interface SpeechRecognitionInstance {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  start(): void;
+  stop(): void;
+  onstart: (() => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  onresult: ((event: SpeechRecognitionResultEvent) => void) | null;
+}
+
+interface SpeechRecognitionResultEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: new () => SpeechRecognitionInstance;
+    webkitSpeechRecognition: new () => SpeechRecognitionInstance;
   }
 }
 
@@ -18,7 +36,7 @@ export default function VoiceInput({ onTranscript, className }: VoiceInputProps)
   const [isRecording, setIsRecording] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [interim, setInterim] = useState('');
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -37,7 +55,7 @@ export default function VoiceInput({ onTranscript, className }: VoiceInputProps)
 
     recognition.onstart = () => setIsRecording(true);
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: SpeechRecognitionResultEvent) => {
       let finalTranscript = '';
       let interimTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {

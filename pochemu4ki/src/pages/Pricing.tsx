@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Check, ArrowLeft, Zap, Crown, Users } from 'lucide-react';
+import { Check, ArrowLeft, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const plans = [

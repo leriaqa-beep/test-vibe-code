@@ -7,7 +7,7 @@ import { FREE_STORY_LIMIT } from '../types';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { children, stories, loadChildren, loadStories } = useApp();
 
   useEffect(() => {

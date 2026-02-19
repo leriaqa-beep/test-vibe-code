@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '../context/AppContext';
-import type { Toy } from '../types';
 
 const BASE_HEROES = [
   { name: 'Единорог Радуга', emoji: '🦄' },
