@@ -7,6 +7,7 @@ export interface User {
   id: string;
   email: string;
   passwordHash: string;
+  googleId?: string;
   createdAt: string;
   isPremium: boolean;
   storiesUsed: number;
@@ -84,6 +85,8 @@ export const store = {
   getUserById: (id: string): User | undefined => readDB().users.find(u => u.id === id),
   getUserByEmail: (email: string): User | undefined =>
     readDB().users.find(u => u.email.toLowerCase() === email.toLowerCase()),
+  getUserByGoogleId: (googleId: string): User | undefined =>
+    readDB().users.find(u => u.googleId === googleId),
   saveUser: (user: User): void => {
     const db = readDB();
     const idx = db.users.findIndex(u => u.id === user.id);

@@ -1,13 +1,15 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { User } from '../types';
-import { api } from '../api/client';
+
+const TOKEN_KEY = 'auth_token';
+const BASE_URL = 'http://localhost:3001/api';
 
 interface AuthContextValue {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  registerWithEmail: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -15,45 +17,64 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      api.auth.me()
-        .then(setUser)
-        .catch(() => {
-          localStorage.removeItem('token');
-          setToken(null);
-        })
-        .finally(() => setIsLoading(false));
-    } else {
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (!stored) {
       setIsLoading(false);
+      return;
     }
-  }, [token]);
+    // Validate token by fetching current user
+    fetch(`${BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${stored}` },
+    })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((u: User) => {
+        setToken(stored);
+        setUser(u);
+      })
+      .catch(() => {
+        localStorage.removeItem(TOKEN_KEY);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
 
-  const login = async (email: string, password: string) => {
-    const res = await api.auth.login(email, password);
-    localStorage.setItem('token', res.token);
-    setToken(res.token);
-    setUser(res.user);
+  const loginWithEmail = async (email: string, password: string) => {
+    const res = await fetch(`${BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Ошибка входа');
+    localStorage.setItem(TOKEN_KEY, data.token);
+    setToken(data.token);
+    setUser(data.user);
   };
 
-  const register = async (email: string, password: string) => {
-    const res = await api.auth.register(email, password);
-    localStorage.setItem('token', res.token);
-    setToken(res.token);
-    setUser(res.user);
+  const registerWithEmail = async (email: string, password: string) => {
+    const res = await fetch(`${BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Ошибка регистрации');
+    localStorage.setItem(TOKEN_KEY, data.token);
+    setToken(data.token);
+    setUser(data.user);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, loginWithEmail, registerWithEmail, logout }}>
       {children}
     </AuthContext.Provider>
   );

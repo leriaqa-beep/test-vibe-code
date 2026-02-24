@@ -307,11 +307,28 @@ export default function ChildSetup() {
 
         {/* Next / Finish button */}
         <div className="mt-8">
-          {step < TOTAL_STEPS ? (
+          {step === 1 ? (
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => navigate('/app')}
+                className="py-4 rounded-2xl font-semibold text-lg border-2 border-purple-200 text-purple-600 hover:bg-purple-50 transition flex items-center justify-center gap-2"
+              >
+                <ChevronLeft className="w-5 h-5" /> Назад
+              </button>
+              <button
+                onClick={() => setStep(s => s + 1)}
+                disabled={!canNext()}
+                className="bg-gradient-to-r from-purple-600 to-pink-500 text-white border-2 border-white py-5 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 flex items-center justify-center gap-2 transition-all duration-200"
+              >
+                Далее <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+
+          ) : step < TOTAL_STEPS ? (
             <button
               onClick={() => setStep(s => s + 1)}
               disabled={!canNext()}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-semibold text-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90 transition"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white border-2 border-white py-5 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 flex items-center justify-center gap-2 transition-all duration-200"
             >
               Далее <ChevronRight className="w-5 h-5" />
             </button>
@@ -319,7 +336,7 @@ export default function ChildSetup() {
             <button
               onClick={handleFinish}
               disabled={saving}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-semibold text-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90 transition"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white border-2 border-white py-5 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 flex items-center justify-center gap-2 transition-all duration-200"
             >
               {saving ? '✨ Создаём профиль...' : '🎉 Готово! Создать первую сказку'}
             </button>

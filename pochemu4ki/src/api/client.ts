@@ -1,7 +1,8 @@
 const BASE_URL = 'http://localhost:3001/api';
+const TOKEN_KEY = 'auth_token';
 
 function getToken(): string | null {
-  return localStorage.getItem('token');
+  return localStorage.getItem(TOKEN_KEY);
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -19,16 +20,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   auth: {
-    register: (email: string, password: string) =>
-      request<{ token: string; user: import('../types').User }>('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      }),
-    login: (email: string, password: string) =>
-      request<{ token: string; user: import('../types').User }>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      }),
     me: () => request<import('../types').User>('/auth/me'),
   },
 

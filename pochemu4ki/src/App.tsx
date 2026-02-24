@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
+import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard';
 import ChildSetup from './pages/ChildSetup';
 import NewStory from './pages/NewStory';
@@ -22,6 +23,7 @@ export default function App() {
             {/* Public */}
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
             {/* Protected app */}
             <Route path="/app" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

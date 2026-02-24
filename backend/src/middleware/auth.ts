@@ -15,14 +15,11 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
   }
   const token = header.slice(7);
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
-    req.userId = payload.userId;
+    // Supabase JWT stores user ID in 'sub', custom JWT used 'userId'
+    const payload = jwt.verify(token, JWT_SECRET) as { sub?: string; userId?: string };
+    req.userId = payload.sub ?? payload.userId;
     next();
   } catch {
     res.status(401).json({ error: 'Недействительный токен' });
   }
-}
-
-export function signToken(userId: string): string {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '30d' });
 }

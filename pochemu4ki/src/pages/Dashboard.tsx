@@ -44,7 +44,7 @@ export default function Dashboard() {
         {/* Welcome */}
         <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-3xl p-5 mb-5">
           <h1 className="text-xl font-bold mb-1">Добро пожаловать! 👋</h1>
-          <p className="text-purple-200 text-sm">
+          <p className="text-purple-200 text-sm truncate max-w-[90%]">
             {user?.email} · {children.length} {children.length === 1 ? 'ребёнок' : children.length < 5 ? 'детей' : 'детей'}
           </p>
           {!user?.isPremium && (

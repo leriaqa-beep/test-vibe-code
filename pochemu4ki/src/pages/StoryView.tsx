@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Heart, Star, BookOpen } from 'lucide-react';
+import { ArrowLeft, Heart, Star, BookOpen, Library } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import type { Story } from '../types';
 import { api } from '../api/client';
@@ -151,19 +151,28 @@ export default function StoryView() {
         </div>
 
         {/* Actions */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <button
             onClick={() => navigate(`/app/children/${story.childId}/story`)}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition"
+            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-2xl font-semibold flex items-center justify-center gap-1 sm:gap-2 hover:opacity-90 transition text-xs sm:text-sm"
           >
-            <BookOpen className="w-4 h-4" /> Ещё сказку
+            <BookOpen className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden xs:inline sm:inline">Ещё сказку</span>
+            <span className="xs:hidden sm:hidden">Ещё</span>
+          </button>
+          <button
+            onClick={() => navigate('/app/library')}
+            className="py-3 rounded-2xl font-semibold flex items-center justify-center gap-1 sm:gap-2 border-2 border-purple-300 text-purple-600 hover:bg-purple-50 transition text-xs sm:text-sm"
+          >
+            <Library className="w-4 h-4 flex-shrink-0" />
+            <span>Библиотека</span>
           </button>
           <button
             onClick={handleSave}
-            className={`py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 border-2 transition ${story.isSaved ? 'border-red-300 text-red-500 bg-red-50' : 'border-purple-300 text-purple-600 hover:bg-purple-50'}`}
+            className={`py-3 rounded-2xl font-semibold flex items-center justify-center gap-1 sm:gap-2 border-2 transition text-xs sm:text-sm ${story.isSaved ? 'border-red-300 text-red-500 bg-red-50' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
           >
-            <Heart className={`w-4 h-4 ${story.isSaved ? 'fill-red-500' : ''}`} />
-            {story.isSaved ? 'В избранном' : 'В избранное'}
+            <Heart className={`w-4 h-4 flex-shrink-0 ${story.isSaved ? 'fill-red-500' : ''}`} />
+            <span>{story.isSaved ? 'Сохранено' : 'Сохранить'}</span>
           </button>
         </div>
       </div>

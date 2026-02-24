@@ -10,7 +10,7 @@ router.use(authMiddleware);
 const FREE_STORY_LIMIT = 3;
 
 // POST /api/stories/generate
-router.post('/generate', (req: AuthRequest, res: Response) => {
+router.post('/generate', async (req: AuthRequest, res: Response) => {
   const { childId, question, context } = req.body;
   if (!childId || !question) {
     res.status(400).json({ error: 'childId и вопрос обязательны' });
@@ -31,7 +31,7 @@ router.post('/generate', (req: AuthRequest, res: Response) => {
     return;
   }
 
-  const generated = generateStory({ question: question.trim(), context: context?.trim() || '', child });
+  const generated = await generateStory({ question: question.trim(), context: context?.trim() || '', child });
 
   const story: Story = {
     id: uuidv4(),

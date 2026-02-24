@@ -73,23 +73,24 @@ export default function Landing() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-purple-100">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-2xl">✨</span>
             <span className="text-xl font-bold text-purple-700">Почему-Ка!</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => navigate('/auth')}
-              className="text-purple-600 font-medium hover:text-purple-800 transition-colors"
+              className="hidden sm:block text-purple-600 font-medium hover:text-purple-800 transition-colors text-sm"
             >
               Войти
             </button>
             <button
               onClick={() => navigate('/auth?mode=register')}
-              className="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-purple-700 transition-colors"
+              className="bg-gradient-to-r from-purple-600 to-pink-500 text-white border-2 border-white px-4 py-2 sm:px-6 sm:py-3 rounded-full text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
             >
-              Попробовать бесплатно
+              <span className="sm:hidden">Начать</span>
+              <span className="hidden sm:inline">Попробовать бесплатно</span>
             </button>
           </div>
         </div>
@@ -97,29 +98,29 @@ export default function Landing() {
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 text-white">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 text-8xl">⭐</div>
-          <div className="absolute top-20 right-20 text-6xl">🌙</div>
-          <div className="absolute bottom-20 left-1/4 text-7xl">🌈</div>
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-10 left-10 text-8xl hidden sm:block">⭐</div>
+          <div className="absolute top-20 right-20 text-6xl hidden sm:block">🌙</div>
+          <div className="absolute bottom-20 left-1/4 text-7xl hidden sm:block">🌈</div>
           <div className="absolute bottom-10 right-10 text-5xl">✨</div>
         </div>
-        <div className="relative max-w-4xl mx-auto px-4 py-20 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 text-sm mb-8">
+        <div className="relative max-w-4xl mx-auto px-4 py-12 sm:py-20 text-center">
+          <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 text-sm mb-6 sm:mb-8">
             <Sparkles className="w-4 h-4" />
             <span>Более 1000 историй создано родителями</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
             Магические сказки<br />
             <span className="text-yellow-300">для вашего почемучки</span>
           </h1>
-          <p className="text-xl md:text-2xl text-purple-100 mb-10 max-w-2xl mx-auto">
+          <p className="text-base sm:text-xl md:text-2xl text-purple-100 mb-8 sm:mb-10 max-w-2xl mx-auto">
             Персонализированные истории с любимыми игрушками вашего ребёнка,
             которые отвечают на его вопросы и помогают понять мир.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() => navigate('/auth?mode=register')}
-              className="bg-white text-purple-700 px-8 py-4 rounded-full text-lg font-bold hover:bg-yellow-50 transition-colors flex items-center gap-2 shadow-lg"
+              className="w-full sm:w-auto bg-white text-purple-700 px-8 py-4 rounded-full text-lg font-bold shadow-xl shadow-black/30 hover:bg-yellow-50 hover:shadow-2xl hover:shadow-black/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2"
             >
               Попробовать бесплатно
               <ChevronRight className="w-5 h-5" />
@@ -127,43 +128,43 @@ export default function Landing() {
             <p className="text-purple-200 text-sm">3 истории бесплатно, без карты</p>
           </div>
         </div>
-        <div className="max-w-4xl mx-auto px-4 pb-10">
-          <div className="bg-white/20 backdrop-blur rounded-2xl p-6 flex flex-wrap justify-center gap-8 text-center">
+        <div className="max-w-4xl mx-auto px-4 pb-8 sm:pb-10">
+          <div className="bg-white/20 backdrop-blur rounded-2xl p-4 sm:p-6 flex flex-wrap justify-center gap-6 sm:gap-8 text-center">
             <div>
-              <div className="text-3xl font-bold">1000+</div>
-              <div className="text-purple-200 text-sm">историй создано</div>
+              <div className="text-2xl sm:text-3xl font-bold">1000+</div>
+              <div className="text-purple-200 text-xs sm:text-sm">историй создано</div>
             </div>
             <div>
-              <div className="text-3xl font-bold">500+</div>
-              <div className="text-purple-200 text-sm">довольных семей</div>
+              <div className="text-2xl sm:text-3xl font-bold">500+</div>
+              <div className="text-purple-200 text-xs sm:text-sm">довольных семей</div>
             </div>
             <div>
-              <div className="text-3xl font-bold">4.9 ★</div>
-              <div className="text-purple-200 text-sm">средняя оценка</div>
+              <div className="text-2xl sm:text-3xl font-bold">4.9 ★</div>
+              <div className="text-purple-200 text-xs sm:text-sm">средняя оценка</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="py-20 px-4">
+      <section className="py-14 sm:py-20 px-4">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-10 sm:mb-14">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Почему родители выбирают Почему-Ка!?
             </h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
               Мы знаем, что дети от 3 до 8 лет задают сотни вопросов в день.
               Наше приложение помогает отвечать на них красиво и понятно.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
             {features.map((f, i) => (
-              <div key={i} className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 flex gap-4">
-                <div className="text-4xl flex-shrink-0">{f.icon}</div>
+              <div key={i} className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-5 sm:p-6 flex gap-4">
+                <div className="text-3xl sm:text-4xl flex-shrink-0">{f.icon}</div>
                 <div>
-                  <h3 className="font-bold text-gray-900 text-lg mb-2">{f.title}</h3>
-                  <p className="text-gray-600">{f.desc}</p>
+                  <h3 className="font-bold text-gray-900 text-base sm:text-lg mb-2">{f.title}</h3>
+                  <p className="text-gray-600 text-sm sm:text-base">{f.desc}</p>
                 </div>
               </div>
             ))}
@@ -172,32 +173,29 @@ export default function Landing() {
       </section>
 
       {/* How it works */}
-      <section className="py-20 px-4 bg-gradient-to-br from-purple-50 to-pink-50">
+      <section className="py-14 sm:py-20 px-4 bg-gradient-to-br from-purple-50 to-pink-50">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-10 sm:mb-14">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Как это работает?
             </h2>
-            <p className="text-gray-600 text-lg">Три простых шага до волшебной сказки</p>
+            <p className="text-gray-600 text-base sm:text-lg">Три простых шага до волшебной сказки</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-3 gap-6 sm:gap-8">
             {steps.map((s, i) => (
               <div key={i} className="text-center">
                 <div className="w-14 h-14 bg-purple-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                   {s.num}
                 </div>
-                <h3 className="font-bold text-gray-900 text-lg mb-2">{s.title}</h3>
-                <p className="text-gray-600">{s.desc}</p>
-                {i < steps.length - 1 && (
-                  <div className="hidden md:block absolute translate-x-full translate-y-[-50%]" />
-                )}
+                <h3 className="font-bold text-gray-900 text-base sm:text-lg mb-2">{s.title}</h3>
+                <p className="text-gray-600 text-sm sm:text-base">{s.desc}</p>
               </div>
             ))}
           </div>
-          <div className="text-center mt-12">
+          <div className="text-center mt-10 sm:mt-12">
             <button
               onClick={() => navigate('/auth?mode=register')}
-              className="bg-purple-600 text-white px-10 py-4 rounded-full text-lg font-bold hover:bg-purple-700 transition-colors"
+              className="w-full sm:w-auto bg-purple-600 text-white px-10 py-4 rounded-full text-lg font-bold hover:bg-purple-700 transition-colors"
             >
               Начать прямо сейчас
             </button>
@@ -206,18 +204,18 @@ export default function Landing() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 px-4">
+      <section className="py-14 sm:py-20 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-14">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-10 sm:mb-14">
             Что говорят родители
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
             {testimonials.map((t, i) => (
-              <div key={i} className="bg-white border border-purple-100 rounded-2xl p-6 shadow-sm">
+              <div key={i} className="bg-white border border-purple-100 rounded-2xl p-5 sm:p-6 shadow-sm">
                 <div className="flex items-center gap-1 mb-3">
                   {[1,2,3,4,5].map(s => <Star key={s} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
                 </div>
-                <p className="text-gray-700 mb-4 italic">«{t.text}»</p>
+                <p className="text-gray-700 mb-4 italic text-sm sm:text-base">«{t.text}»</p>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{t.emoji}</span>
                   <span className="text-sm font-medium text-gray-600">{t.name}</span>
@@ -229,18 +227,18 @@ export default function Landing() {
       </section>
 
       {/* Pricing */}
-      <section className="py-20 px-4 bg-gradient-to-br from-purple-50 to-pink-50">
+      <section className="py-14 sm:py-20 px-4 bg-gradient-to-br from-purple-50 to-pink-50">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Тарифы</h2>
-            <p className="text-gray-600 text-lg">Начните бесплатно, развивайтесь вместе с нами</p>
+          <div className="text-center mb-10 sm:mb-14">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">Тарифы</h2>
+            <p className="text-gray-600 text-base sm:text-lg">Начните бесплатно, развивайтесь вместе с нами</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
             {plans.map((p, i) => (
               <div
                 key={i}
                 className={`rounded-2xl p-6 ${p.highlight
-                  ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-xl scale-105'
+                  ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-xl'
                   : 'bg-white border border-purple-100'
                 }`}
               >
@@ -251,7 +249,7 @@ export default function Landing() {
                 )}
                 <h3 className={`text-xl font-bold mb-1 ${p.highlight ? 'text-white' : 'text-gray-900'}`}>{p.name}</h3>
                 <div className="mb-4">
-                  <span className={`text-4xl font-bold ${p.highlight ? 'text-white' : 'text-gray-900'}`}>
+                  <span className={`text-3xl sm:text-4xl font-bold ${p.highlight ? 'text-white' : 'text-gray-900'}`}>
                     {p.price === '0' ? 'Бесплатно' : `${p.price}₽`}
                   </span>
                   {p.period && <span className={p.highlight ? 'text-purple-200' : 'text-gray-500'}>{p.period}</span>}
@@ -284,18 +282,18 @@ export default function Landing() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-4 bg-gradient-to-br from-purple-600 to-pink-600 text-white text-center">
+      <section className="py-14 sm:py-20 px-4 bg-gradient-to-br from-purple-600 to-pink-600 text-white text-center">
         <div className="max-w-2xl mx-auto">
           <div className="text-5xl mb-6">✨</div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
             Начните сегодня бесплатно
           </h2>
-          <p className="text-purple-200 text-lg mb-8">
+          <p className="text-purple-200 text-base sm:text-lg mb-8">
             3 истории бесплатно. Никакой карты. Никакой регистрации с барьерами.
           </p>
           <button
             onClick={() => navigate('/auth?mode=register')}
-            className="bg-white text-purple-700 px-10 py-4 rounded-full text-lg font-bold hover:bg-yellow-50 transition-colors"
+            className="w-full sm:w-auto bg-white text-purple-700 px-10 py-4 rounded-full text-lg font-bold hover:bg-yellow-50 transition-colors"
           >
             Создать первую сказку
           </button>
