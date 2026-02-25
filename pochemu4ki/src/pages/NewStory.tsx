@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Sparkles, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import VoiceInput from '../components/VoiceInput';
+import DecorationLayer from '../components/Decorations';
 
 const QUICK_QUESTIONS = [
   { emoji: '🌧️', text: 'Почему идёт дождь?' },
@@ -47,19 +48,23 @@ export default function NewStory() {
 
   if (isGenerating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="text-6xl animate-bounce mb-6">✨</div>
-          <h2 className="text-2xl font-bold mb-3">
+      <div
+        className="min-h-screen relative overflow-hidden flex items-center justify-center"
+        style={{ background: 'var(--gradient-button)' }}
+      >
+        <DecorationLayer preset="minimal" />
+        <div className="text-center text-white relative">
+          <div className="text-6xl mb-6 animate-pulse-soft">✨</div>
+          <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: 'var(--font-display)' }}>
             Создаём сказку для {child?.name || 'вашего ребёнка'}...
           </h2>
-          <p className="text-purple-200 mb-6">Собираем все ингредиенты волшебства</p>
+          <p className="mb-6" style={{ color: 'rgba(255,255,255,0.75)' }}>Собираем все ингредиенты волшебства</p>
           <div className="flex justify-center gap-2">
             {[0, 1, 2].map(i => (
               <div
                 key={i}
-                className="w-3 h-3 bg-white rounded-full animate-bounce"
-                style={{ animationDelay: `${i * 0.2}s` }}
+                className="w-3 h-3 bg-white rounded-full"
+                style={{ animation: `bounce-in 0.9s ease-in-out ${i * 0.2}s infinite alternate` }}
               />
             ))}
           </div>
@@ -69,8 +74,12 @@ export default function NewStory() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
-      <div className="max-w-lg mx-auto px-4 py-6">
+    <div
+      className="min-h-screen relative overflow-hidden page-enter"
+      style={{ background: 'var(--bg-primary)' }}
+    >
+      <DecorationLayer preset="minimal" />
+      <div className="max-w-lg mx-auto px-4 py-6 relative">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button
@@ -80,14 +89,14 @@ export default function NewStory() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Новая сказка</h1>
+            <h1 className="text-lg font-bold text-text-primary">Новая сказка</h1>
             {child && <p className="text-sm text-purple-600">для {child.name} {child.hero.emoji}</p>}
           </div>
         </div>
 
         {/* Question input */}
         <div className="bg-white rounded-3xl shadow-sm p-5 mb-4">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-text-primary mb-2">
             Вопрос или тема сказки *
           </label>
           <div className="relative">
@@ -96,7 +105,7 @@ export default function NewStory() {
               onChange={e => setQuestion(e.target.value)}
               placeholder="Что спросил ребёнок? Или опишите ситуацию..."
               rows={3}
-              className="w-full border border-gray-200 rounded-2xl px-4 py-3 pr-16 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none transition"
+              className="w-full border border-gray-200 rounded-2xl px-4 py-3 pr-16 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none transition"
             />
             <div className="absolute bottom-3 right-3">
               <VoiceInput onTranscript={text => setQuestion(prev => prev ? `${prev} ${text}` : text)} />
@@ -106,10 +115,10 @@ export default function NewStory() {
 
         {/* Context input */}
         <div className="bg-white rounded-3xl shadow-sm p-5 mb-4">
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
+          <label className="block text-sm font-semibold text-text-primary mb-1">
             Контекст (необязательно)
           </label>
-          <p className="text-xs text-gray-400 mb-2">
+          <p className="text-xs text-text-muted mb-2">
             Расскажите ситуацию, которая привела к вопросу — история будет точнее
           </p>
           <textarea
@@ -117,7 +126,7 @@ export default function NewStory() {
             onChange={e => setContext(e.target.value)}
             placeholder="Например: Сегодня в садике поспорили с подружкой у кого красивее волосы..."
             rows={3}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none transition"
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none transition"
           />
           <div className="mt-2">
             <VoiceInput
@@ -129,7 +138,7 @@ export default function NewStory() {
 
         {/* Quick questions */}
         <div className="mb-6">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-3">
             Популярные вопросы
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -137,7 +146,7 @@ export default function NewStory() {
               <button
                 key={i}
                 onClick={() => setQuestion(q.text)}
-                className={`text-left px-3 py-2 rounded-xl text-xs font-medium border transition ${question === q.text ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-600 hover:border-purple-300'}`}
+                className={`text-left px-3 py-2 rounded-xl text-xs font-medium border transition ${question === q.text ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-text-secondary hover:border-purple-300'}`}
               >
                 {q.emoji} {q.text}
               </button>
@@ -157,7 +166,7 @@ export default function NewStory() {
           disabled={!question.trim() || isGenerating}
           className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90 transition shadow-lg"
         >
-          <Sparkles className="w-5 h-5" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z"/></svg>
           Создать сказку
         </button>
 

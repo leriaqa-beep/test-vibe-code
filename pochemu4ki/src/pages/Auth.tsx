@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Eye, EyeOff, Sparkles } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import DecorationLayer from '../components/Decorations';
 
 const BACKEND_URL = 'http://localhost:3001';
 
@@ -60,27 +61,29 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center p-4">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 text-6xl opacity-20">⭐</div>
-        <div className="absolute top-20 right-20 text-4xl opacity-20">🌙</div>
-        <div className="absolute bottom-20 left-1/4 text-5xl opacity-20 hidden sm:block">🌈</div>
-        <div className="absolute bottom-10 right-10 text-4xl opacity-20">✨</div>
-      </div>
+    <div
+      className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 page-enter"
+      style={{ background: 'var(--bg-primary)' }}
+    >
+      <DecorationLayer preset="auth" />
 
       <div className="w-full max-w-sm relative">
         {/* Logo */}
         <div className="text-center mb-6">
-          <button onClick={() => navigate('/')} className="inline-flex items-center gap-2 text-white">
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-2"
+            style={{ color: 'var(--text-primary)' }}
+          >
             <span className="text-3xl">✨</span>
-            <span className="text-2xl font-bold">Почему-Ка!</span>
+            <span className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>Почему-Ка!</span>
           </button>
-          <p className="text-purple-200 text-sm mt-1">Магические сказки для вашего ребёнка</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Магические сказки для вашего ребёнка</p>
         </div>
 
         {/* Card */}
         <div className="bg-white rounded-3xl shadow-xl p-6">
-          <h2 className="text-center text-lg font-bold text-gray-800 mb-5">
+          <h2 className="text-center text-lg font-bold text-text-primary mb-5">
             {isRegister ? 'Создать аккаунт' : 'Войти в аккаунт'}
           </h2>
 
@@ -88,7 +91,7 @@ export default function Auth() {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 border-2 border-gray-200 rounded-xl py-3 text-gray-700 font-semibold text-sm hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100 transition-all duration-150 mb-4"
+            className="w-full flex items-center justify-center gap-3 border-2 border-[var(--border-default)] rounded-xl py-3 text-text-primary font-semibold text-sm hover:bg-[var(--bg-subtle)] hover:border-[var(--border-strong)] active:bg-gray-100 transition-all duration-150 mb-4"
           >
             <GoogleIcon />
             Войти через Google
@@ -97,7 +100,7 @@ export default function Auth() {
           {/* Divider */}
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 font-medium">или</span>
+            <span className="text-xs text-text-muted font-medium">или</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
@@ -109,7 +112,7 @@ export default function Auth() {
               onChange={e => setEmail(e.target.value)}
               placeholder="Email"
               required
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300 transition text-sm"
+              className="w-full border border-[var(--border-default)] rounded-xl px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-purple-300 transition text-sm"
             />
             <div className="relative">
               <input
@@ -118,12 +121,12 @@ export default function Auth() {
                 onChange={e => setPassword(e.target.value)}
                 placeholder={isRegister ? 'Пароль (мин. 6 символов)' : 'Пароль'}
                 required
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-11 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300 transition text-sm"
+                className="w-full border border-[var(--border-default)] rounded-xl px-4 py-3 pr-11 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-purple-300 transition text-sm"
               />
               <button
                 type="button"
                 onClick={() => setShowPass(!showPass)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
               >
                 {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -138,10 +141,11 @@ export default function Auth() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white border-2 border-white py-3 rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 flex items-center justify-center gap-2 transition-all duration-200"
+              className="w-full text-white py-3 rounded-xl font-semibold text-sm shadow-md disabled:opacity-60 flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-100"
+              style={{ background: 'var(--gradient-button)' }}
             >
               {loading ? (
-                <><Sparkles className="w-4 h-4 animate-spin" />{isRegister ? 'Создаём...' : 'Входим...'}</>
+                <><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="#fff"><path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z"/></svg>{isRegister ? 'Создаём...' : 'Входим...'}</>
               ) : (
                 isRegister ? 'Создать аккаунт' : 'Войти'
               )}
@@ -149,7 +153,7 @@ export default function Auth() {
           </form>
 
           {/* Переключатель режима */}
-          <p className="text-center text-gray-500 text-xs mt-4">
+          <p className="text-center text-text-secondary text-xs mt-4">
             {isRegister ? 'Уже есть аккаунт? ' : 'Нет аккаунта? '}
             <button
               onClick={() => { setIsRegister(!isRegister); setError(''); }}
@@ -160,7 +164,7 @@ export default function Auth() {
           </p>
         </div>
 
-        <p className="text-center text-purple-200 text-xs mt-4">
+        <p className="text-center text-xs mt-4" style={{ color: 'var(--text-muted)' }}>
           3 истории бесплатно · Без карты
         </p>
       </div>

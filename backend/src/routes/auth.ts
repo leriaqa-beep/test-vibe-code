@@ -42,15 +42,15 @@ router.get('/google', (req: Request, res: Response, next) => {
 router.get(
   '/google/callback',
   passport.authenticate('google', { session: false, failureRedirect: `${FRONTEND_URL}/auth?error=google_failed` }),
-  (req: Request, res: Response) => {
+  async (req: Request, res: Response) => {
     const profile = req.user as import('passport-google-oauth20').Profile;
     const googleId = profile.id;
     const email = profile.emails?.[0]?.value || `${googleId}@google.com`;
 
     // Find or create user
-    let user = store.getUserByGoogleId(googleId);
+    let user = await store.getUserByGoogleId(googleId);
     if (!user) {
-      user = store.getUserByEmail(email);
+      user = await store.getUserByEmail(email);
     }
     if (!user) {
       user = {
@@ -65,7 +65,7 @@ router.get(
     } else if (!user.googleId) {
       user = { ...user, googleId };
     }
-    store.saveUser(user);
+    await store.saveUser(user);
 
     const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '30d' });
     res.redirect(`${FRONTEND_URL}/auth/callback?token=${token}`);
@@ -85,7 +85,7 @@ router.post('/register', async (req: Request, res: Response) => {
     return;
   }
 
-  const existing = store.getUserByEmail(email);
+  const existing = await store.getUserByEmail(email);
   if (existing) {
     res.status(409).json({ error: 'Пользователь с таким email уже существует' });
     return;
@@ -100,7 +100,7 @@ router.post('/register', async (req: Request, res: Response) => {
     isPremium: false,
     storiesUsed: 0,
   };
-  store.saveUser(user);
+  await store.saveUser(user);
 
   const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '30d' });
   res.json({ token, user: { id: user.id, email: user.email, isPremium: user.isPremium, storiesUsed: user.storiesUsed } });
@@ -115,7 +115,7 @@ router.post('/login', async (req: Request, res: Response) => {
     return;
   }
 
-  const user = store.getUserByEmail(email);
+  const user = await store.getUserByEmail(email);
   if (!user) {
     res.status(401).json({ error: 'Неверный email или пароль' });
     return;
@@ -137,9 +137,9 @@ router.post('/login', async (req: Request, res: Response) => {
 });
 
 // GET /api/auth/me
-router.get('/me', authMiddleware, (req: AuthRequest, res: Response) => {
+router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
   const userId = req.userId!;
-  const user = store.getUserById(userId);
+  const user = await store.getUserById(userId);
 
   if (!user) {
     res.status(404).json({ error: 'Пользователь не найден' });

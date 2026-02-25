@@ -7,13 +7,13 @@ const router = Router();
 router.use(authMiddleware);
 
 // GET /api/children
-router.get('/', (req: AuthRequest, res: Response) => {
-  const children = store.getChildrenByUser(req.userId!);
+router.get('/', async (req: AuthRequest, res: Response) => {
+  const children = await store.getChildrenByUser(req.userId!);
   res.json(children);
 });
 
 // POST /api/children
-router.post('/', (req: AuthRequest, res: Response) => {
+router.post('/', async (req: AuthRequest, res: Response) => {
   const { name, age, gender, hero, toys, interests } = req.body;
   if (!name || !age || !gender) {
     res.status(400).json({ error: 'Имя, возраст и пол обязательны' });
@@ -30,13 +30,13 @@ router.post('/', (req: AuthRequest, res: Response) => {
     interests: interests || [],
     createdAt: new Date().toISOString(),
   };
-  store.saveChild(child);
+  await store.saveChild(child);
   res.status(201).json(child);
 });
 
 // PUT /api/children/:id
-router.put('/:id', (req: AuthRequest, res: Response) => {
-  const child = store.getChildById(req.params.id);
+router.put('/:id', async (req: AuthRequest, res: Response) => {
+  const child = await store.getChildById(req.params.id);
   if (!child || child.userId !== req.userId) {
     res.status(404).json({ error: 'Профиль не найден' });
     return;
@@ -51,18 +51,18 @@ router.put('/:id', (req: AuthRequest, res: Response) => {
     ...(toys !== undefined && { toys: toys.map((t: Partial<Toy>) => ({ ...t, id: t.id || uuidv4() })) }),
     ...(interests !== undefined && { interests }),
   };
-  store.saveChild(updated);
+  await store.saveChild(updated);
   res.json(updated);
 });
 
 // DELETE /api/children/:id
-router.delete('/:id', (req: AuthRequest, res: Response) => {
-  const child = store.getChildById(req.params.id);
+router.delete('/:id', async (req: AuthRequest, res: Response) => {
+  const child = await store.getChildById(req.params.id);
   if (!child || child.userId !== req.userId) {
     res.status(404).json({ error: 'Профиль не найден' });
     return;
   }
-  store.deleteChild(req.params.id);
+  await store.deleteChild(req.params.id);
   res.json({ success: true });
 });
 

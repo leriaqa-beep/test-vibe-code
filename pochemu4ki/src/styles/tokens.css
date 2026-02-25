@@ -1,0 +1,197 @@
+/* =================================================================
+   DESIGN TOKENS — Почему-Ка!
+   Мягкая, тёплая, успокаивающая палитра для детей 3-7 лет.
+   Психология цвета: никаких кислотных / неоновых оттенков.
+   ================================================================= */
+
+:root {
+
+  /* ── Шрифты ─────────────────────────────────────────────────── */
+  --font-display: 'Comfortaa', cursive;
+  --font-body:    'Nunito', sans-serif;
+
+  /* Размеры (base = 17px задан на html) */
+  --text-xs:   0.75rem;    /* ~12.75px */
+  --text-sm:   0.824rem;   /* ~14px    */
+  --text-base: 1rem;       /* 17px     */
+  --text-lg:   1.059rem;   /* ~18px    */
+  --text-xl:   1.176rem;   /* ~20px    */
+  --text-2xl:  1.412rem;   /* ~24px    */
+  --text-3xl:  1.647rem;   /* ~28px    */
+  --text-h3:   1.412rem;   /* 24px     */
+  --text-h2:   1.882rem;   /* 32px     */
+  --text-h1:   2.471rem;   /* 42px     */
+
+  --leading-tight:   1.2;
+  --leading-snug:    1.35;
+  --leading-normal:  1.6;
+  --leading-relaxed: 1.75;
+  --leading-story:   1.8;   /* для текста сказок */
+  --leading-loose:   2;
+
+  --letter-heading: -0.02em;
+  --letter-body:     0;
+  --letter-caps:     0.05em;
+
+  --weight-normal:    400;
+  --weight-medium:    500;
+  --weight-semibold:  600;
+  --weight-bold:      700;
+  --weight-extrabold: 800;
+
+  /* ── Фоны ───────────────────────────────────────────────────── */
+  --bg-primary:   #FFFBF5;   /* тёплый кремовый — главный фон */
+  --bg-secondary: #F5F0FF;   /* нежно-лавандовый — фон секций */
+  --bg-warm:      #FFF5EE;   /* персиковый — акцентные блоки  */
+  --bg-mint:      #F0FAF7;   /* мятный — успех, подсказки     */
+  --bg-surface:   #FFFFFF;   /* карточки, модалки             */
+  --bg-subtle:    #FAF8FF;   /* строки, ховер                 */
+
+  /* ── Акцентные цвета ────────────────────────────────────────── */
+
+  /* Приглушённый фиолетовый — кнопки, ссылки, основные UI */
+  --accent-primary:      #7C6BC4;
+  --accent-primary-light: #9B8EC4;
+  --accent-primary-dark:  #5D4EA0;
+  --accent-primary-50:    #F0EEFF;
+  --accent-primary-100:   #E4DFFE;
+  --accent-primary-200:   #C9BCFD;
+
+  /* Мятный — успех, позитивные элементы */
+  --accent-secondary:      #6BB89C;
+  --accent-secondary-light: #89CEB4;
+  --accent-secondary-dark:  #4E9A81;
+  --accent-secondary-50:    #F0FAF7;
+  --accent-secondary-100:   #D6F2EA;
+
+  /* Тёплый оранжевый — бейджи, уведомления, призывы */
+  --accent-warm:      #F4A261;
+  --accent-warm-light: #F7BC8C;
+  --accent-warm-dark:  #E08040;
+  --accent-warm-50:    #FFF5EE;
+  --accent-warm-100:   #FDE8D4;
+
+  /* Нежно-розовый — декор, иллюстрации, девочки */
+  --accent-pink:      #E8A0BF;
+  --accent-pink-light: #F2C0D5;
+  --accent-pink-dark:  #D07FA0;
+  --accent-pink-50:    #FFF0F5;
+  --accent-pink-100:   #FFE0EC;
+
+  /* Мягкий золотистый — звёздочки, рейтинги, особые акценты */
+  --accent-yellow:      #F9D56E;
+  --accent-yellow-light: #FBDF8F;
+  --accent-yellow-dark:  #E8BD48;
+  --accent-yellow-50:    #FFFBEB;
+  --accent-yellow-100:   #FEF3C7;
+
+  /* Небесно-голубой — воображение, небо, космос */
+  --accent-sky:      #7BBCD8;
+  --accent-sky-light: #A0D0E8;
+  --accent-sky-dark:  #5898B8;
+  --accent-sky-50:    #EFF8FF;
+  --accent-sky-100:   #DEF0FB;
+
+  /* ── Текст ──────────────────────────────────────────────────── */
+  --text-primary:    #2D2B3D;   /* тёмно-фиолетово-серый — НЕ чёрный */
+  --text-secondary:  #7A7890;   /* мягкий серый — подписи, хинты      */
+  --text-muted:      #ABA9C0;   /* плейсхолдеры, отключённые          */
+  --text-on-accent:  #FFFFFF;   /* белый на кнопках                    */
+  --text-on-warm:    #7A4B1A;   /* тёмный на персиковом фоне          */
+
+  /* ── Бордеры ────────────────────────────────────────────────── */
+  --border-default: #EAE5F5;
+  --border-muted:   #F3EEFF;
+  --border-warm:    #F5DCC8;
+  --border-strong:  #C9BCFD;
+  --border-focus:   #7C6BC4;
+
+  /* ── Состояния ──────────────────────────────────────────────── */
+  --color-success:     #6BB89C;
+  --color-success-bg:  #F0FAF7;
+  --color-success-border: #D6F2EA;
+
+  --color-warning:     #F4A261;
+  --color-warning-bg:  #FFF5EE;
+  --color-warning-border: #FDE8D4;
+
+  --color-error:     #E57373;
+  --color-error-bg:  #FFF5F5;
+  --color-error-border: #FFCCCC;
+
+  /* ── Градиенты (мягкие, двухцветные) ───────────────────────── */
+  --gradient-hero:    linear-gradient(135deg, #F5F0FF 0%, #FFF5EE 50%, #F0F7FF 100%);
+  --gradient-button:  linear-gradient(135deg, #7C6BC4 0%, #9B8EC4 100%);
+  --gradient-card:    linear-gradient(135deg, #FFF5EE 0%, #F5F0FF 100%);
+  --gradient-warm:    linear-gradient(135deg, #FFF5EE 0%, #FFFBF5 100%);
+  --gradient-mint:    linear-gradient(135deg, #F0FAF7 0%, #FFFBF5 100%);
+  --gradient-lavender: linear-gradient(135deg, #F5F0FF 0%, #FFFBF5 100%);
+  --gradient-story:   linear-gradient(180deg, rgba(45,43,61,0.65) 0%, rgba(45,43,61,0) 55%);
+  --gradient-sky:     linear-gradient(180deg, #EEF6FF 0%, #FFFBF5 100%);
+  --gradient-sunset:  linear-gradient(135deg, #FFF5EE 0%, #FFE0EC 100%);
+
+  /* ── Тени ───────────────────────────────────────────────────── */
+  --shadow-xs:     0 1px 3px rgba(45, 43, 61, 0.06);
+  --shadow-sm:     0 2px 8px rgba(45, 43, 61, 0.07);
+  --shadow-md:     0 4px 16px rgba(45, 43, 61, 0.09);
+  --shadow-lg:     0 8px 32px rgba(45, 43, 61, 0.11);
+  --shadow-xl:     0 16px 48px rgba(45, 43, 61, 0.13);
+  --shadow-card:   0 4px 24px rgba(124, 107, 196, 0.09), 0 1px 4px rgba(45, 43, 61, 0.05);
+  --shadow-button: 0 4px 14px rgba(124, 107, 196, 0.35);
+  --shadow-glow:   0 0 24px rgba(124, 107, 196, 0.25);
+  --shadow-warm:   0 4px 14px rgba(244, 162, 97, 0.30);
+  --shadow-inner:  inset 0 2px 6px rgba(45, 43, 61, 0.06);
+
+  /* ── Скругления ─────────────────────────────────────────────── */
+  --radius-xs:   4px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   18px;
+  --radius-xl:   24px;
+  --radius-2xl:  32px;
+  --radius-3xl:  48px;
+  --radius-full: 9999px;
+
+  /* ── Отступы ────────────────────────────────────────────────── */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* ── Переходы ───────────────────────────────────────────────── */
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+  --duration-slow:   400ms;
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:    cubic-bezier(0, 0, 0.2, 1);
+
+  /* ── Z-индексы ──────────────────────────────────────────────── */
+  --z-base:     0;
+  --z-raised:   10;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  300;
+  --z-modal:    400;
+  --z-toast:    500;
+
+  /* ── Лэйаут ─────────────────────────────────────────────────── */
+  --max-width-sm:      480px;
+  --max-width-md:      768px;
+  --max-width-lg:      1024px;
+  --max-width-xl:      1280px;
+  --max-width-content: 720px;
+
+  /* ── Декоративные ───────────────────────────────────────────── */
+  --decor-opacity:       0.18;   /* непрозрачность фоновых SVG */
+  --decor-opacity-light: 0.12;
+  --decor-opacity-hover: 0.28;
+}

@@ -1,7 +1,8 @@
-import fs from 'fs';
-import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 
-const DB_PATH = path.join(__dirname, '../../../data/db.json');
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export interface User {
   id: string;
@@ -47,89 +48,156 @@ export interface Story {
   createdAt: string;
 }
 
-interface DB {
-  users: User[];
-  children: ChildProfile[];
-  stories: Story[];
+// --- Mappers ---
+
+function toUser(row: Record<string, unknown>): User {
+  return {
+    id: row.id as string,
+    email: row.email as string,
+    passwordHash: (row.password_hash as string) ?? '',
+    googleId: (row.google_id as string | null) ?? undefined,
+    createdAt: row.created_at as string,
+    isPremium: row.is_premium as boolean,
+    storiesUsed: row.stories_used as number,
+  };
 }
 
-function ensureDataDir() {
-  const dataDir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
+function fromUser(user: User) {
+  return {
+    id: user.id,
+    email: user.email,
+    password_hash: user.passwordHash,
+    google_id: user.googleId ?? null,
+    created_at: user.createdAt,
+    is_premium: user.isPremium,
+    stories_used: user.storiesUsed,
+  };
 }
 
-function readDB(): DB {
-  ensureDataDir();
-  if (!fs.existsSync(DB_PATH)) {
-    const empty: DB = { users: [], children: [], stories: [] };
-    fs.writeFileSync(DB_PATH, JSON.stringify(empty, null, 2));
-    return empty;
-  }
-  try {
-    return JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
-  } catch {
-    return { users: [], children: [], stories: [] };
-  }
+function toChild(row: Record<string, unknown>): ChildProfile {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    name: row.name as string,
+    age: row.age as number,
+    gender: row.gender as 'boy' | 'girl',
+    hero: row.hero as { name: string; emoji: string },
+    toys: (row.toys as Toy[]) ?? [],
+    interests: (row.interests as string[]) ?? [],
+    createdAt: row.created_at as string,
+  };
 }
 
-function writeDB(db: DB): void {
-  ensureDataDir();
-  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+function fromChild(child: ChildProfile) {
+  return {
+    id: child.id,
+    user_id: child.userId,
+    name: child.name,
+    age: child.age,
+    gender: child.gender,
+    hero: child.hero,
+    toys: child.toys,
+    interests: child.interests,
+    created_at: child.createdAt,
+  };
 }
+
+function toStory(row: Record<string, unknown>): Story {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    childId: row.child_id as string,
+    title: row.title as string,
+    question: row.question as string,
+    context: (row.context as string) ?? '',
+    content: row.content as string,
+    imageUrl: row.image_url as string,
+    isSaved: row.is_saved as boolean,
+    rating: row.rating as number,
+    readCount: row.read_count as number,
+    createdAt: row.created_at as string,
+  };
+}
+
+function fromStory(story: Story) {
+  return {
+    id: story.id,
+    user_id: story.userId,
+    child_id: story.childId,
+    title: story.title,
+    question: story.question,
+    context: story.context,
+    content: story.content,
+    image_url: story.imageUrl,
+    is_saved: story.isSaved,
+    rating: story.rating,
+    read_count: story.readCount,
+    created_at: story.createdAt,
+  };
+}
+
+// --- Store ---
 
 export const store = {
   // Users
-  getUsers: (): User[] => readDB().users,
-  getUserById: (id: string): User | undefined => readDB().users.find(u => u.id === id),
-  getUserByEmail: (email: string): User | undefined =>
-    readDB().users.find(u => u.email.toLowerCase() === email.toLowerCase()),
-  getUserByGoogleId: (googleId: string): User | undefined =>
-    readDB().users.find(u => u.googleId === googleId),
-  saveUser: (user: User): void => {
-    const db = readDB();
-    const idx = db.users.findIndex(u => u.id === user.id);
-    if (idx >= 0) db.users[idx] = user;
-    else db.users.push(user);
-    writeDB(db);
+  async getUserById(id: string): Promise<User | undefined> {
+    const { data } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
+    return data ? toUser(data) : undefined;
+  },
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const { data } = await supabase.from('users').select('*').ilike('email', email).maybeSingle();
+    return data ? toUser(data) : undefined;
+  },
+
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    const { data } = await supabase.from('users').select('*').eq('google_id', googleId).maybeSingle();
+    return data ? toUser(data) : undefined;
+  },
+
+  async saveUser(user: User): Promise<void> {
+    await supabase.from('users').upsert(fromUser(user), { onConflict: 'id' });
   },
 
   // Children
-  getChildrenByUser: (userId: string): ChildProfile[] =>
-    readDB().children.filter(c => c.userId === userId),
-  getChildById: (id: string): ChildProfile | undefined =>
-    readDB().children.find(c => c.id === id),
-  saveChild: (child: ChildProfile): void => {
-    const db = readDB();
-    const idx = db.children.findIndex(c => c.id === child.id);
-    if (idx >= 0) db.children[idx] = child;
-    else db.children.push(child);
-    writeDB(db);
+  async getChildrenByUser(userId: string): Promise<ChildProfile[]> {
+    const { data } = await supabase.from('children').select('*').eq('user_id', userId);
+    return (data ?? []).map(toChild);
   },
-  deleteChild: (id: string): void => {
-    const db = readDB();
-    db.children = db.children.filter(c => c.id !== id);
-    writeDB(db);
+
+  async getChildById(id: string): Promise<ChildProfile | undefined> {
+    const { data } = await supabase.from('children').select('*').eq('id', id).maybeSingle();
+    return data ? toChild(data) : undefined;
+  },
+
+  async saveChild(child: ChildProfile): Promise<void> {
+    await supabase.from('children').upsert(fromChild(child), { onConflict: 'id' });
+  },
+
+  async deleteChild(id: string): Promise<void> {
+    await supabase.from('children').delete().eq('id', id);
   },
 
   // Stories
-  getStoriesByUser: (userId: string): Story[] =>
-    readDB().stories.filter(s => s.userId === userId).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    ),
-  getStoryById: (id: string): Story | undefined =>
-    readDB().stories.find(s => s.id === id),
-  saveStory: (story: Story): void => {
-    const db = readDB();
-    const idx = db.stories.findIndex(s => s.id === story.id);
-    if (idx >= 0) db.stories[idx] = story;
-    else db.stories.push(story);
-    writeDB(db);
+  async getStoriesByUser(userId: string): Promise<Story[]> {
+    const { data } = await supabase
+      .from('stories')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    return (data ?? []).map(toStory);
   },
-  deleteStory: (id: string): void => {
-    const db = readDB();
-    db.stories = db.stories.filter(s => s.id !== id);
-    writeDB(db);
+
+  async getStoryById(id: string): Promise<Story | undefined> {
+    const { data } = await supabase.from('stories').select('*').eq('id', id).maybeSingle();
+    return data ? toStory(data) : undefined;
+  },
+
+  async saveStory(story: Story): Promise<void> {
+    await supabase.from('stories').upsert(fromStory(story), { onConflict: 'id' });
+  },
+
+  async deleteStory(id: string): Promise<void> {
+    await supabase.from('stories').delete().eq('id', id);
   },
 };

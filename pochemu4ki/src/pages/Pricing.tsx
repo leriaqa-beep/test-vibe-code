@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Check, ArrowLeft, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import DecorationLayer from '../components/Decorations';
 
 const plans = [
   {
@@ -69,8 +70,12 @@ export default function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
-      <div className="max-w-2xl mx-auto px-4 py-6">
+    <div
+      className="min-h-screen relative overflow-hidden page-enter"
+      style={{ background: 'var(--bg-primary)' }}
+    >
+      <DecorationLayer preset="minimal" />
+      <div className="max-w-2xl mx-auto px-4 py-6 relative">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button
@@ -80,8 +85,8 @@ export default function Pricing() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Тарифы</h1>
-            <p className="text-sm text-gray-500">Выберите подходящий план</p>
+            <h1 className="text-xl font-bold text-text-primary">Тарифы</h1>
+            <p className="text-sm text-text-secondary">Выберите подходящий план</p>
           </div>
         </div>
 
@@ -111,17 +116,17 @@ export default function Pricing() {
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{plan.icon}</span>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
+                    <h3 className="text-xl font-bold text-text-primary">{plan.name}</h3>
                     <p className="text-sm text-purple-600 font-medium">{plan.storiesLimit}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   {plan.price === 0 ? (
-                    <span className="text-2xl font-bold text-gray-900">Бесплатно</span>
+                    <span className="text-2xl font-bold text-text-primary">Бесплатно</span>
                   ) : (
                     <>
-                      <span className="text-3xl font-bold text-gray-900">{plan.price}₽</span>
-                      <span className="text-gray-500">{plan.period}</span>
+                      <span className="text-3xl font-bold text-text-primary">{plan.price}₽</span>
+                      <span className="text-text-secondary">{plan.period}</span>
                     </>
                   )}
                 </div>
@@ -131,7 +136,7 @@ export default function Pricing() {
                 {plan.features.map((f, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm">
                     <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span className="text-gray-600">{f}</span>
+                    <span className="text-text-secondary">{f}</span>
                   </li>
                 ))}
               </ul>
@@ -142,7 +147,7 @@ export default function Pricing() {
                 className={`w-full py-3 rounded-2xl font-semibold transition ${plan.highlight
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90'
                   : plan.id === 'free'
-                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-[var(--bg-secondary)] text-text-primary hover:bg-[var(--accent-primary-100)]'
                     : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
                 }`}
               >
@@ -156,7 +161,7 @@ export default function Pricing() {
           ))}
         </div>
 
-        <p className="text-center text-gray-400 text-xs">
+        <p className="text-center text-text-muted text-xs">
           * Функции в разработке, скоро появятся! Оформив подписку сейчас, вы получите их первыми.
         </p>
       </div>

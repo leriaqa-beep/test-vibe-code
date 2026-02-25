@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '../context/AppContext';
+import DecorationLayer from '../components/Decorations';
 
 const BASE_HEROES = [
   { name: 'Единорог Радуга', emoji: '🦄' },
@@ -107,16 +108,20 @@ export default function ChildSetup() {
   const progress = (step / TOTAL_STEPS) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+    <div
+      className="min-h-screen relative overflow-hidden page-enter"
+      style={{ background: 'var(--bg-primary)' }}
+    >
+      <DecorationLayer preset="minimal" />
       {/* Progress bar */}
-      <div className="h-1 bg-purple-100">
+      <div className="h-1" style={{ background: 'var(--accent-primary-100)' }}>
         <div
           className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>
 
-      <div className="max-w-lg mx-auto px-4 py-8">
+      <div className="max-w-lg mx-auto px-4 py-8 relative">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           {step > 1 && (
@@ -136,14 +141,14 @@ export default function ChildSetup() {
         {/* Step 1: Name */}
         {step === 1 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Как зовут вашего ребёнка? 👶</h2>
-            <p className="text-gray-500 mb-6">Это имя будет главным героем всех сказок</p>
+            <h2 className="text-2xl font-bold text-text-primary mb-2">Как зовут вашего ребёнка? 👶</h2>
+            <p className="text-text-secondary mb-6">Это имя будет главным героем всех сказок</p>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Например: Соня, Миша, Лиза..."
-              className="w-full border-2 border-purple-200 rounded-2xl px-5 py-4 text-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 transition bg-white"
+              className="w-full border-2 border-purple-200 rounded-2xl px-5 py-4 text-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-purple-500 transition bg-white"
               autoFocus
             />
           </div>
@@ -152,24 +157,24 @@ export default function ChildSetup() {
         {/* Step 2: Age & Gender */}
         {step === 2 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Расскажите о {name} 📝</h2>
-            <p className="text-gray-500 mb-6">Это поможет создавать сказки по возрасту</p>
+            <h2 className="text-2xl font-bold text-text-primary mb-2">Расскажите о {name} 📝</h2>
+            <p className="text-text-secondary mb-6">Это поможет создавать сказки по возрасту</p>
 
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Возраст: {age} лет</label>
+              <label className="block text-sm font-semibold text-text-primary mb-3">Возраст: {age} лет</label>
               <input
                 type="range"
                 min={3} max={8} value={age}
                 onChange={e => setAge(Number(e.target.value))}
                 className="w-full accent-purple-600"
               />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <div className="flex justify-between text-xs text-text-muted mt-1">
                 <span>3 года</span><span>8 лет</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Пол</label>
+              <label className="block text-sm font-semibold text-text-primary mb-3">Пол</label>
               <div className="grid grid-cols-2 gap-3">
                 {(['girl', 'boy'] as const).map(g => (
                   <button
@@ -178,7 +183,7 @@ export default function ChildSetup() {
                     className={`py-4 rounded-2xl text-2xl border-2 transition flex flex-col items-center gap-1 ${gender === g ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white hover:border-purple-300'}`}
                   >
                     <span>{g === 'girl' ? '👧' : '👦'}</span>
-                    <span className="text-sm font-medium text-gray-700">{g === 'girl' ? 'Девочка' : 'Мальчик'}</span>
+                    <span className="text-sm font-medium text-text-primary">{g === 'girl' ? 'Девочка' : 'Мальчик'}</span>
                     {gender === g && <Check className="w-4 h-4 text-purple-600" />}
                   </button>
                 ))}
@@ -190,8 +195,8 @@ export default function ChildSetup() {
         {/* Step 3: Hero */}
         {step === 3 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Любимый герой {name} ✨</h2>
-            <p className="text-gray-500 mb-6">Этот персонаж будет помогать в каждой сказке</p>
+            <h2 className="text-2xl font-bold text-text-primary mb-2">Любимый герой {name} ✨</h2>
+            <p className="text-text-secondary mb-6">Этот персонаж будет помогать в каждой сказке</p>
             <div className="grid grid-cols-2 gap-3">
               {BASE_HEROES.map(h => (
                 <button
@@ -200,7 +205,7 @@ export default function ChildSetup() {
                   className={`py-4 px-3 rounded-2xl border-2 transition flex flex-col items-center gap-1 ${hero?.name === h.name ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white hover:border-purple-300'}`}
                 >
                   <span className="text-3xl">{h.emoji}</span>
-                  <span className="text-xs font-medium text-gray-700 text-center">{h.name}</span>
+                  <span className="text-xs font-medium text-text-primary text-center">{h.name}</span>
                   {hero?.name === h.name && <Check className="w-4 h-4 text-purple-600" />}
                 </button>
               ))}
@@ -211,8 +216,8 @@ export default function ChildSetup() {
         {/* Step 4: Toys */}
         {step === 4 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Любимые игрушки {name} 🧸</h2>
-            <p className="text-gray-500 mb-6">Они станут персонажами сказок! Можно пропустить</p>
+            <h2 className="text-2xl font-bold text-text-primary mb-2">Любимые игрушки {name} 🧸</h2>
+            <p className="text-text-secondary mb-6">Они станут персонажами сказок! Можно пропустить</p>
 
             {/* Toys list */}
             {toys.length > 0 && (
@@ -220,9 +225,9 @@ export default function ChildSetup() {
                 {toys.map(t => (
                   <div key={t.id} className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between border border-purple-100">
                     <div>
-                      <span className="font-semibold text-gray-900">{t.nickname}</span>
-                      <span className="text-gray-500 text-sm"> — {t.type}</span>
-                      {t.description && <p className="text-xs text-gray-400">{t.description}</p>}
+                      <span className="font-semibold text-text-primary">{t.nickname}</span>
+                      <span className="text-text-secondary text-sm"> — {t.type}</span>
+                      {t.description && <p className="text-xs text-text-muted">{t.description}</p>}
                     </div>
                     <button onClick={() => removeToy(t.id)} className="text-red-400 hover:text-red-600 transition">
                       <Trash2 className="w-4 h-4" />
@@ -287,8 +292,8 @@ export default function ChildSetup() {
         {/* Step 5: Interests */}
         {step === 5 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Интересы {name} 🎯</h2>
-            <p className="text-gray-500 mb-6">Выберите темы, которые нравятся ребёнку (можно несколько)</p>
+            <h2 className="text-2xl font-bold text-text-primary mb-2">Интересы {name} 🎯</h2>
+            <p className="text-text-secondary mb-6">Выберите темы, которые нравятся ребёнку (можно несколько)</p>
             <div className="grid grid-cols-2 gap-2">
               {INTERESTS.map(item => (
                 <button
@@ -297,8 +302,8 @@ export default function ChildSetup() {
                   className={`py-3 px-4 rounded-2xl border-2 transition flex items-center gap-2 ${interests.includes(item.label) ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white hover:border-purple-300'}`}
                 >
                   <span>{item.emoji}</span>
-                  <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                  {interests.includes(item.label) && <Check className="w-4 h-4 text-purple-600 ml-auto" />}
+                  <span className="text-sm font-medium text-text-primary">{item.label}</span>
+                  {interests.includes(item.label) && <Check className="w-4 h-4 text-purple-600" />}
                 </button>
               ))}
             </div>

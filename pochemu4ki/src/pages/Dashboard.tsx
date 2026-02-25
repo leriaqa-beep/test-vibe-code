@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, BookOpen, Sparkles, Settings, Star } from 'lucide-react';
+import { Plus, BookOpen, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { FREE_STORY_LIMIT } from '../types';
+import DecorationLayer from '../components/Decorations';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -18,8 +19,12 @@ export default function Dashboard() {
   const storiesLeft = user ? Math.max(0, FREE_STORY_LIMIT - (user.storiesUsed || 0)) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
-      <div className="max-w-lg mx-auto px-4 py-6">
+    <div
+      className="min-h-screen relative overflow-hidden page-enter"
+      style={{ background: 'var(--bg-primary)' }}
+    >
+      <DecorationLayer preset="dashboard" />
+      <div className="max-w-lg mx-auto px-4 py-6 relative">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
@@ -29,12 +34,12 @@ export default function Dashboard() {
           <div className="flex items-center gap-2">
             {user?.isPremium && (
               <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                <Star className="w-3 h-3" /> Премиум
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F9D56E"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> Премиум
               </span>
             )}
             <button
               onClick={() => navigate('/app/settings')}
-              className="w-9 h-9 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-purple-600 transition"
+              className="w-9 h-9 bg-white rounded-full shadow flex items-center justify-center text-text-secondary hover:text-purple-600 transition"
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -74,7 +79,7 @@ export default function Dashboard() {
         {/* Children profiles */}
         <div className="mb-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-gray-900">Дети</h2>
+            <h2 className="font-bold text-text-primary">Дети</h2>
             <button
               onClick={() => navigate('/app/children/new')}
               className="text-purple-600 text-sm font-medium flex items-center gap-1 hover:text-purple-800 transition"
@@ -109,12 +114,12 @@ export default function Dashboard() {
                           {child.hero.emoji}
                         </div>
                         <div>
-                          <h3 className="font-bold text-gray-900">{child.name}</h3>
-                          <p className="text-sm text-gray-500">{child.age} лет · {child.gender === 'girl' ? '👧' : '👦'}</p>
+                          <h3 className="font-bold text-text-primary">{child.name}</h3>
+                          <p className="text-sm text-text-secondary">{child.age} лет · {child.gender === 'girl' ? '👧' : '👦'}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-400">{childStories.length} историй</p>
+                        <p className="text-xs text-text-muted">{childStories.length} историй</p>
                         {child.toys.length > 0 && (
                           <p className="text-xs text-purple-500">{child.toys.length} игрушки 🧸</p>
                         )}
@@ -142,7 +147,7 @@ export default function Dashboard() {
                         }}
                         className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1 hover:opacity-90 transition"
                       >
-                        <Sparkles className="w-4 h-4" /> Сказку!
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z"/></svg> Сказку!
                       </button>
                       <button
                         onClick={() => navigate(`/app/library?child=${child.id}`)}
@@ -162,7 +167,7 @@ export default function Dashboard() {
         {stories.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-gray-900">Последние истории</h2>
+              <h2 className="font-bold text-text-primary">Последние истории</h2>
               <button
                 onClick={() => navigate('/app/library')}
                 className="text-purple-600 text-sm font-medium hover:text-purple-800 transition"
@@ -183,8 +188,8 @@ export default function Dashboard() {
                       📖
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm truncate">{story.title}</p>
-                      <p className="text-xs text-gray-500 truncate">{story.question}</p>
+                      <p className="font-semibold text-text-primary text-sm truncate">{story.title}</p>
+                      <p className="text-xs text-text-secondary truncate">{story.question}</p>
                       {storyChild && <p className="text-xs text-purple-400">{storyChild.name}</p>}
                     </div>
                     {story.rating > 0 && (

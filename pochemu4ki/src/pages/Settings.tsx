@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut, Plus, Trash2, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import DecorationLayer from '../components/Decorations';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -22,8 +23,12 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
-      <div className="max-w-lg mx-auto px-4 py-6">
+    <div
+      className="min-h-screen relative overflow-hidden page-enter"
+      style={{ background: 'var(--bg-primary)' }}
+    >
+      <DecorationLayer preset="minimal" />
+      <div className="max-w-lg mx-auto px-4 py-6 relative">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button
@@ -32,25 +37,25 @@ export default function Settings() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Настройки</h1>
+          <h1 className="text-xl font-bold text-text-primary">Настройки</h1>
         </div>
 
         {/* Account */}
         <div className="bg-white rounded-2xl shadow-sm border border-purple-100 p-5 mb-4">
-          <h2 className="font-bold text-gray-900 mb-3">Аккаунт</h2>
+          <h2 className="font-bold text-text-primary mb-3">Аккаунт</h2>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-xl font-bold">
               {user?.email?.[0]?.toUpperCase()}
             </div>
             <div>
-              <p className="font-medium text-gray-900">{user?.email}</p>
+              <p className="font-medium text-text-primary">{user?.email}</p>
               <div className="flex items-center gap-2 mt-0.5">
                 {user?.isPremium ? (
                   <span className="text-xs bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                     <Crown className="w-3 h-3" /> Премиум
                   </span>
                 ) : (
-                  <span className="text-xs text-gray-500">Бесплатный тариф</span>
+                  <span className="text-xs text-text-secondary">Бесплатный тариф</span>
                 )}
               </div>
             </div>
@@ -68,7 +73,7 @@ export default function Settings() {
         {/* Children */}
         <div className="bg-white rounded-2xl shadow-sm border border-purple-100 p-5 mb-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-gray-900">Профили детей</h2>
+            <h2 className="font-bold text-text-primary">Профили детей</h2>
             <button
               onClick={() => navigate('/app/children/new')}
               className="text-purple-600 text-sm font-medium flex items-center gap-1 hover:text-purple-800 transition"
@@ -77,15 +82,15 @@ export default function Settings() {
             </button>
           </div>
           {children.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-4">Профилей пока нет</p>
+            <p className="text-text-muted text-sm text-center py-4">Профилей пока нет</p>
           ) : (
             <div className="space-y-2">
               {children.map(child => (
                 <div key={child.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
                   <span className="text-2xl">{child.hero.emoji}</span>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900 text-sm">{child.name}</p>
-                    <p className="text-xs text-gray-500">{child.age} лет · {child.toys.length} игрушки</p>
+                    <p className="font-medium text-text-primary text-sm">{child.name}</p>
+                    <p className="text-xs text-text-secondary">{child.age} лет · {child.toys.length} игрушки</p>
                   </div>
                   <button
                     onClick={() => handleDeleteChild(child.id, child.name)}
@@ -101,13 +106,13 @@ export default function Settings() {
 
         {/* Subscription */}
         <div className="bg-white rounded-2xl shadow-sm border border-purple-100 p-5 mb-4">
-          <h2 className="font-bold text-gray-900 mb-3">Подписка</h2>
+          <h2 className="font-bold text-text-primary mb-3">Подписка</h2>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-text-secondary">
                 {user?.isPremium ? 'Премиум активен' : 'Бесплатный тариф'}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-text-secondary">
                 {user?.isPremium ? 'Безлимитные истории' : `Использовано: ${user?.storiesUsed || 0} из 3`}
               </p>
             </div>

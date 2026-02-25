@@ -16,12 +16,12 @@ router.post('/generate', async (req: AuthRequest, res: Response) => {
     res.status(400).json({ error: 'childId и вопрос обязательны' });
     return;
   }
-  const child = store.getChildById(childId);
+  const child = await store.getChildById(childId);
   if (!child || child.userId !== req.userId) {
     res.status(404).json({ error: 'Профиль ребёнка не найден' });
     return;
   }
-  const user = store.getUserById(req.userId!);
+  const user = await store.getUserById(req.userId!);
   if (!user) {
     res.status(404).json({ error: 'Пользователь не найден' });
     return;
@@ -48,37 +48,37 @@ router.post('/generate', async (req: AuthRequest, res: Response) => {
     createdAt: new Date().toISOString(),
   };
 
-  store.saveStory(story);
+  await store.saveStory(story);
   user.storiesUsed = (user.storiesUsed || 0) + 1;
-  store.saveUser(user);
+  await store.saveUser(user);
 
   res.status(201).json(story);
 });
 
 // GET /api/stories
-router.get('/', (req: AuthRequest, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   const { childId } = req.query;
-  let stories = store.getStoriesByUser(req.userId!);
+  let stories = await store.getStoriesByUser(req.userId!);
   if (childId) stories = stories.filter(s => s.childId === childId);
   res.json(stories);
 });
 
 // GET /api/stories/:id
-router.get('/:id', (req: AuthRequest, res: Response) => {
-  const story = store.getStoryById(req.params.id);
+router.get('/:id', async (req: AuthRequest, res: Response) => {
+  const story = await store.getStoryById(req.params.id);
   if (!story || story.userId !== req.userId) {
     res.status(404).json({ error: 'История не найдена' });
     return;
   }
   // Increment readCount
   story.readCount = (story.readCount || 0) + 1;
-  store.saveStory(story);
+  await store.saveStory(story);
   res.json(story);
 });
 
 // PUT /api/stories/:id
-router.put('/:id', (req: AuthRequest, res: Response) => {
-  const story = store.getStoryById(req.params.id);
+router.put('/:id', async (req: AuthRequest, res: Response) => {
+  const story = await store.getStoryById(req.params.id);
   if (!story || story.userId !== req.userId) {
     res.status(404).json({ error: 'История не найдена' });
     return;
@@ -86,18 +86,18 @@ router.put('/:id', (req: AuthRequest, res: Response) => {
   const { isSaved, rating } = req.body;
   if (isSaved !== undefined) story.isSaved = Boolean(isSaved);
   if (rating !== undefined) story.rating = Number(rating);
-  store.saveStory(story);
+  await store.saveStory(story);
   res.json(story);
 });
 
 // DELETE /api/stories/:id
-router.delete('/:id', (req: AuthRequest, res: Response) => {
-  const story = store.getStoryById(req.params.id);
+router.delete('/:id', async (req: AuthRequest, res: Response) => {
+  const story = await store.getStoryById(req.params.id);
   if (!story || story.userId !== req.userId) {
     res.status(404).json({ error: 'История не найдена' });
     return;
   }
-  store.deleteStory(req.params.id);
+  await store.deleteStory(req.params.id);
   res.json({ success: true });
 });
 
