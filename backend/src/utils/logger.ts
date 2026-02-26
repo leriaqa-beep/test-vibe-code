@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const LOGS_DIR = path.join(__dirname, '../../../logs');
+const LOGS_DIR = path.join(__dirname, '../../logs');
 
 function getLogPath(subdir: string, prefix: string): string {
   const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
