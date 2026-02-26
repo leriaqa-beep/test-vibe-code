@@ -14,7 +14,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 
 // POST /api/children
 router.post('/', async (req: AuthRequest, res: Response) => {
-  const { name, age, gender, hero, toys, interests } = req.body;
+  const { name, age, gender, hero, toys, useToys, interests } = req.body;
   if (!name || !age || !gender) {
     res.status(400).json({ error: 'Имя, возраст и пол обязательны' });
     return;
@@ -27,6 +27,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     gender,
     hero: hero || { name: 'Волшебный дракон', emoji: '🐉' },
     toys: (toys || []).map((t: Partial<Toy>) => ({ ...t, id: t.id || uuidv4() })),
+    useToys: useToys !== false,
     interests: interests || [],
     createdAt: new Date().toISOString(),
   };
