@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ChildProfile } from '../db/store';
+import { logger } from '../utils/logger';
 
 interface StoryInput {
   question: string;
@@ -175,7 +176,7 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
   const category = categorize(question);
 
   if (!model) {
-    console.warn('[Gemini] GEMINI_API_KEY not configured, using fallback template');
+    logger.ai('GEMINI_API_KEY not configured, using fallback template');
     return generateFallback(input);
   }
 
@@ -220,14 +221,14 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
       throw new Error('Invalid response shape from Gemini');
     }
 
-    console.log(`[Gemini] Story generated: "${parsed.title}"`);
+    logger.info(`[Gemini] Story generated: "${parsed.title}"`);
     return {
       title: parsed.title,
       content: parsed.content,
       imageUrl: getImageUrl(category),
     };
   } catch (err) {
-    console.error('[Gemini] Generation failed, using fallback:', err);
+    logger.ai('Generation failed, using fallback', err instanceof Error ? err : new Error(String(err)));
     return generateFallback(input);
   }
 }

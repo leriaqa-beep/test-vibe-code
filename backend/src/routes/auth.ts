@@ -6,6 +6,7 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { v4 as uuidv4 } from 'uuid';
 import { store } from '../db/store';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { logger } from '../utils/logger';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'pochemu-ka-secret-key-2024';
@@ -35,42 +36,60 @@ router.get('/google', (req: Request, res: Response, next) => {
     res.redirect(`${FRONTEND_URL}/auth?error=google_not_configured`);
     return;
   }
+  // Save frontend origin so callback can redirect back to the correct port
+  const referer = req.get('Referer') || req.get('Origin') || '';
+  const match = referer.match(/^(https?:\/\/localhost:\d+)/);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (req as any).session.frontendUrl = match ? match[1] : FRONTEND_URL;
   passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res, next);
 });
 
 // GET /api/auth/google/callback — handle Google response
-router.get(
-  '/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: `${FRONTEND_URL}/auth?error=google_failed` }),
-  async (req: Request, res: Response) => {
-    const profile = req.user as import('passport-google-oauth20').Profile;
+router.get('/google/callback', (req: Request, res: Response, next) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const frontendUrl = (req as any).session?.frontendUrl || FRONTEND_URL;
+
+  passport.authenticate('google', { session: false }, (err: Error | null, user: unknown, info: unknown) => {
+    if (err) {
+      logger.error('[Google OAuth] Strategy error', err);
+      return res.redirect(`${frontendUrl}/auth?error=google_failed`);
+    }
+    if (!user) {
+      logger.warn('[Google OAuth] Authentication failed', info);
+      return res.redirect(`${frontendUrl}/auth?error=google_failed`);
+    }
+
+    const profile = user as import('passport-google-oauth20').Profile;
     const googleId = profile.id;
     const email = profile.emails?.[0]?.value || `${googleId}@google.com`;
 
-    // Find or create user
-    let user = await store.getUserByGoogleId(googleId);
-    if (!user) {
-      user = await store.getUserByEmail(email);
-    }
-    if (!user) {
-      user = {
-        id: uuidv4(),
-        email,
-        passwordHash: '',
-        googleId,
-        createdAt: new Date().toISOString(),
-        isPremium: false,
-        storiesUsed: 0,
-      };
-    } else if (!user.googleId) {
-      user = { ...user, googleId };
-    }
-    await store.saveUser(user);
+    (async () => {
+      let dbUser = await store.getUserByGoogleId(googleId);
+      if (!dbUser) dbUser = await store.getUserByEmail(email);
+      if (!dbUser) {
+        dbUser = {
+          id: uuidv4(),
+          email,
+          passwordHash: '',
+          googleId,
+          createdAt: new Date().toISOString(),
+          isPremium: false,
+          storiesUsed: 0,
+        };
+      } else if (!dbUser.googleId) {
+        dbUser = { ...dbUser, googleId };
+      }
+      await store.saveUser(dbUser);
 
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '30d' });
-    res.redirect(`${FRONTEND_URL}/auth/callback?token=${token}`);
-  }
-);
+      const token = jwt.sign({ userId: dbUser.id, email: dbUser.email }, JWT_SECRET, { expiresIn: '30d' });
+      logger.info(`[Google OAuth] Success for ${email} → redirecting to ${frontendUrl}`);
+      res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+    })().catch((asyncErr: Error) => {
+      logger.error('[Google OAuth] Async error', asyncErr);
+      res.redirect(`${frontendUrl}/auth?error=google_failed`);
+    });
+  })(req, res, next);
+});
 
 // POST /api/auth/register
 router.post('/register', async (req: Request, res: Response) => {

@@ -4,3 +4,5 @@ dist/
 data/db.json
 *.local
 .DS_Store
+backend/logs/*.log
+backend/logs/**/*.log
