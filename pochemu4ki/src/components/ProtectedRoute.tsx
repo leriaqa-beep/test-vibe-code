@@ -6,11 +6,16 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
-        <div className="text-center">
-          <div className="text-4xl animate-bounce mb-4">✨</div>
-          <p className="text-purple-600 font-medium">Загрузка...</p>
+      <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <img
+            src="/assets/mascot/mascot-think.png"
+            alt=""
+            style={{ width: '64px', height: '64px', display: 'block', margin: '0 auto 12px', animation: 'mascot-pulse 2s ease-in-out infinite' }}
+          />
+          <p style={{ fontFamily: 'var(--font-display)', color: 'var(--text-secondary)', fontWeight: 600 }}>Загрузка...</p>
         </div>
+        <style>{`@keyframes mascot-pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.05);opacity:0.8} }`}</style>
       </div>
     );
   }

@@ -75,7 +75,7 @@ export default function Auth() {
             className="inline-flex items-center gap-2"
             style={{ color: 'var(--text-primary)' }}
           >
-            <span className="text-3xl">✨</span>
+            <img src="/assets/mascot/mascot-logo.png" alt="Почему-Ка" style={{ width: '60px', height: '60px' }} />
             <span className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>Почему-Ка!</span>
           </button>
           <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Магические сказки для вашего ребёнка</p>

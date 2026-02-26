@@ -14,15 +14,16 @@ test-vibe-code/
 │   └── src/
 │       ├── routes/   # auth.ts, children.ts, stories.ts
 │       ├── services/ # storyGenerator.ts (Gemini AI + fallback templates)
-│       ├── db/       # store.ts (Supabase client wrapper)
+│       ├── db/       # store.ts (local JSON flat-file persistence)
 │       └── middleware/auth.ts  # JWT verification
 ├── pochemu4ki/       # React 19 + Vite + TypeScript frontend (port 5173)
 │   └── src/
-│       ├── context/  # AuthContext.tsx, AppContext.tsx
-│       ├── pages/    # Landing, Auth, Dashboard, ChildSetup, NewStory, StoryView, Library...
-│       ├── api/      # client.ts (centralized API client with Bearer token injection)
-│       └── types.ts  # Shared TypeScript interfaces, FREE_STORY_LIMIT = 3
-└── data/             # Local data storage (legacy)
+│       ├── context/    # AuthContext.tsx, AppContext.tsx
+│       ├── pages/      # Landing, Auth, Dashboard, ChildSetup, NewStory, StoryView, Library...
+│       ├── components/ # ProtectedRoute, VoiceInput, Mascot/, Decorations, WaveDivider
+│       ├── api/        # client.ts (centralized API client with Bearer token injection)
+│       └── types.ts    # Shared TypeScript interfaces, FREE_STORY_LIMIT = 3
+└── data/db.json      # Flat-file database (auto-created on first run)
 ```
 
 ## Commands
@@ -46,54 +47,41 @@ npm run lint    # ESLint
 npm run preview # Preview production build
 ```
 
-### Full startup
+No test framework is configured.
 
-```bash
-# Terminal 1
-cd backend && npm install && npm run dev
-
-# Terminal 2
-cd pochemu4ki && npm install && npm run dev
-```
-
-No test framework is configured — tests do not exist yet.
-
-## Required Environment Variables
+## Environment Variables
 
 **backend/.env:**
 ```
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-JWT_SECRET=
-SESSION_SECRET=
-GEMINI_API_KEY=           # optional — falls back to templates if missing
-GOOGLE_CLIENT_ID=         # optional — for OAuth
-GOOGLE_CLIENT_SECRET=     # optional — for OAuth
+JWT_SECRET=                    # defaults to 'pochemu-ka-secret-key-2024'
+SESSION_SECRET=                # defaults to same fallback
+GEMINI_API_KEY=                # optional — falls back to templates if missing
+GOOGLE_CLIENT_ID=              # optional — for Google OAuth
+GOOGLE_CLIENT_SECRET=          # optional — for Google OAuth
 GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
 FRONTEND_URL=http://localhost:5173
 PORT=3001
 ```
 
-**pochemu4ki/.env:**
-```
-VITE_API_URL=http://localhost:3001/api
-```
+Frontend has no required env vars for local dev. `VITE_SUPABASE_*` in `.env` are unused placeholders.
 
 ## Architecture
 
 ### Backend
 
-- **Auth:** JWT (Bearer token) for API calls + Passport.js Google OAuth2 for social login. Tokens stored in localStorage on the frontend.
-- **Database:** All DB operations go through `backend/src/db/store.ts` — a typed wrapper around the Supabase client. Never call Supabase directly from routes.
-- **Story generation** (`backend/src/services/storyGenerator.ts`): Sends a structured prompt to Gemini 2.0 Flash with child profile data (name, age, gender, interests, toys, hero). Falls back to 12+ hard-coded category templates if Gemini fails. Includes Russian gender-aware grammar for verb conjugation.
-- **Usage limits:** `storiesUsed` counter on the user record, enforced in `backend/src/routes/stories.ts` before calling the generator.
+- **Database:** `backend/src/db/store.ts` is a typed wrapper over a local JSON file at `/data/db.json`. All DB operations (users, children, stories) go through `store.*` methods — never read/write `db.json` directly from routes.
+- **Auth:** JWT (Bearer token, 30-day expiry) for API calls + Passport.js Google OAuth2. OAuth callback saves the frontend origin in `express-session` so the redirect goes to the correct localhost port.
+- **CORS:** Dynamically allows any `http://localhost:<port>` origin — safe for dev where Vite may bind to 5173, 5174, 5175 etc.
+- **Story generation** (`backend/src/services/storyGenerator.ts`): Sends a structured prompt to Gemini 2.0 Flash with the full child profile (name, age, gender, interests, toys, hero). Falls back to hard-coded category templates if Gemini fails or `GEMINI_API_KEY` is absent. Includes Russian gender-aware verb conjugation.
+- **Usage limits:** `user.storiesUsed` counter enforced in `stories.ts` before calling the generator. Free tier = 3 stories.
 
 ### Frontend
 
-- **State:** Two contexts — `AuthContext` (JWT + user identity) and `AppContext` (children profiles + stories).
+- **State:** Two contexts — `AuthContext` (JWT + user identity, token in `localStorage['auth_token']`) and `AppContext` (children profiles + stories list).
 - **API calls:** All go through `pochemu4ki/src/api/client.ts` which injects the Bearer token automatically.
-- **Routes:** Protected routes are wrapped in `ProtectedRoute.tsx`. Key protected routes: `/app/*`.
+- **Protected routes:** Wrapped in `ProtectedRoute.tsx`; all `/app/*` routes require authentication.
 - **Voice input:** `VoiceInput.tsx` uses Web Speech API with `ru-RU` locale.
+- **Mascot:** `components/Mascot/Mascot.tsx` renders `<img src="/assets/mascot/mascot-{emotion}.png">`. PNG files must exist in `pochemu4ki/public/assets/mascot/`. Supported emotions: `joy | think | explain | surprise | calm | hero | logo`.
 
 ### API Endpoints
 
@@ -105,14 +93,15 @@ VITE_API_URL=http://localhost:3001/api
 | GET | `/api/auth/me` | Validate token, get current user |
 | GET/POST | `/api/children` | List / create child profiles |
 | PUT/DELETE | `/api/children/:id` | Update / delete child profile |
-| POST | `/api/stories/generate` | Generate story via Gemini (body: `{ childId, question }`) |
+| POST | `/api/stories/generate` | Generate story via Gemini (body: `{ childId, question, context }`) |
 | GET | `/api/stories` | List stories (`?childId=` filter supported) |
-| GET/PUT/DELETE | `/api/stories/:id` | Read / update (save/rate) / delete story |
+| GET/PUT/DELETE | `/api/stories/:id` | Read (increments readCount) / update (isSaved, rating) / delete |
 | GET | `/api/health` | Health check |
 
 ## Key Design Decisions
 
 - **Language:** The entire product (UI, AI prompts, generated content) is in Russian.
 - **Gemini model:** Uses `gemini-2.0-flash` — do not change without testing prompt quality.
-- **CORS:** Backend only allows `localhost:5173` and `localhost:5174` in dev. Update `backend/src/index.ts` for production.
-- **Supabase service role key** is used server-side only — never expose it to the frontend.
+- **No Supabase in current dev setup:** The `@supabase/supabase-js` package is installed but unused. `store.ts` uses `fs` + JSON. Future migration path is prepared.
+- **Icons:** Lucide icons default to `stroke="currentColor"` with no fill. For star/sparkle icons, use custom inline `<svg fill="#F9D56E">` (gold stars) or `fill="#9B8EC4"` (lavender sparkles) instead of Lucide to avoid black strokes on light backgrounds.
+- **Mascot images:** Never draw characters in SVG or CSS. Use PNG files from `pochemu4ki/public/assets/mascot/`.

@@ -73,12 +73,12 @@ export default function WaveDivider({
 
 /** Кремовый → Лавандовый */
 export function WaveCreamToLavender({ flip = false }: { flip?: boolean }) {
-  return <WaveDivider from="#FFFBF5" to="#F5F0FF" variant="gentle" flip={flip} height={80} />;
+  return <WaveDivider from="#FFFBF5" to="#F5F0FF" variant="gentle" flip={flip} height={48} />;
 }
 
 /** Лавандовый → Кремовый */
 export function WaveLavenderToCream({ flip = false }: { flip?: boolean }) {
-  return <WaveDivider from="#F5F0FF" to="#FFFBF5" variant="cloud" flip={flip} height={80} />;
+  return <WaveDivider from="#F5F0FF" to="#FFFBF5" variant="cloud" flip={flip} height={48} />;
 }
 
 /** Кремовый → Персиковый */

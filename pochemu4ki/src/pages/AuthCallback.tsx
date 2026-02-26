@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-
-
-const TOKEN_KEY = 'auth_token';
+import { useAuth } from '../context/AuthContext';
 
 export default function AuthCallback() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const { loginWithToken } = useAuth();
 
   useEffect(() => {
     const token = params.get('token');
@@ -17,17 +16,49 @@ export default function AuthCallback() {
       return;
     }
 
-    localStorage.setItem(TOKEN_KEY, token);
-    // Redirect to /app — AuthContext will pick up the token from localStorage
-    navigate('/app', { replace: true });
+    // Update AuthContext state before navigating so ProtectedRoute sees the user
+    loginWithToken(token)
+      .then(() => navigate('/app', { replace: true }))
+      .catch(() => navigate('/auth?error=google_failed', { replace: true }));
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center">
-      <div className="text-center text-white">
-        <svg className="w-12 h-12 animate-spin mx-auto mb-4 opacity-80" viewBox="0 0 24 24" fill="#fff"><path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z"/></svg>
-        <p className="text-lg font-medium">Входим через Google...</p>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--bg-primary)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div style={{ textAlign: 'center' }}>
+        <img
+          src="/assets/mascot/mascot-think.png"
+          alt="Загрузка"
+          style={{
+            width: '80px',
+            height: '80px',
+            display: 'block',
+            margin: '0 auto 16px',
+            animation: 'mascot-pulse 2s ease-in-out infinite',
+          }}
+        />
+        <p style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: '18px',
+          color: 'var(--text-primary)',
+          fontWeight: 600,
+        }}>
+          Входим через Google...
+        </p>
       </div>
+      <style>{`
+        @keyframes mascot-pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.05); opacity: 0.8; }
+        }
+      `}</style>
     </div>
   );
 }
