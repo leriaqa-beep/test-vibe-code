@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ArrowLeft, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../api/client';
 import DecorationLayer from '../components/Decorations';
 
 const plans = [
@@ -58,15 +60,26 @@ const plans = [
 
 export default function Pricing() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const [isActivating, setIsActivating] = useState(false);
+  const [activated, setActivated] = useState(false);
 
-  const handleSelect = (planId: string) => {
+  const handleSelect = async (planId: string) => {
     if (planId === 'free') {
       navigate('/app');
       return;
     }
-    // Demo: show coming soon
-    alert('Оплата скоро появится! Пока вы можете использовать бесплатную версию.');
+    setIsActivating(true);
+    try {
+      await api.users.activatePremium();
+      await refreshUser();
+      setActivated(true);
+      setTimeout(() => navigate('/app'), 1500);
+    } catch {
+      alert('Не удалось активировать Premium. Попробуйте ещё раз.');
+    } finally {
+      setIsActivating(false);
+    }
   };
 
   return (
@@ -88,6 +101,21 @@ export default function Pricing() {
             <h1 className="text-xl font-bold text-text-primary">Тарифы</h1>
             <p className="text-sm text-text-secondary">Выберите подходящий план</p>
           </div>
+        </div>
+
+        {/* Success banner */}
+        {activated && (
+          <div className="bg-green-50 border border-green-300 rounded-2xl p-4 mb-5 text-center">
+            <p className="text-green-800 font-bold text-sm">🎉 Premium активирован! Перенаправляем...</p>
+          </div>
+        )}
+
+        {/* Demo banner */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-3 mb-5 flex items-start gap-2">
+          <span className="text-yellow-600 text-sm">⚠️</span>
+          <p className="text-yellow-800 text-xs">
+            <strong>Демо-режим:</strong> кнопки активируют Premium мгновенно без оплаты. Платёжная система появится позже.
+          </p>
         </div>
 
         {/* Limit warning */}
@@ -143,8 +171,8 @@ export default function Pricing() {
 
               <button
                 onClick={() => handleSelect(plan.id)}
-                disabled={plan.id === 'free' && !user?.isPremium && false}
-                className={`w-full py-3 rounded-2xl font-semibold transition ${plan.highlight
+                disabled={isActivating || activated || (plan.id !== 'free' && !!user?.isPremium)}
+                className={`w-full py-3 rounded-2xl font-semibold transition disabled:opacity-60 ${plan.highlight
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90'
                   : plan.id === 'free'
                     ? 'bg-[var(--bg-secondary)] text-text-primary hover:bg-[var(--accent-primary-100)]'
@@ -152,10 +180,12 @@ export default function Pricing() {
                 }`}
               >
                 {plan.id === 'free'
-                  ? (user?.isPremium ? 'Ваш план' : 'Продолжить бесплатно')
-                  : plan.highlight
-                    ? 'Попробовать 7 дней бесплатно'
-                    : 'Выбрать план'}
+                  ? (user?.isPremium ? 'Текущий план' : 'Продолжить бесплатно')
+                  : user?.isPremium
+                    ? 'Premium активен ✓'
+                    : isActivating
+                      ? 'Активируем...'
+                      : 'Активировать (Демо)'}
               </button>
             </div>
           ))}

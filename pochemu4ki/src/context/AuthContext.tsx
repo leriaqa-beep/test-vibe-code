@@ -10,6 +10,8 @@ interface AuthContextValue {
   isLoading: boolean;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   registerWithEmail: (email: string, password: string) => Promise<void>;
+  loginWithToken: (token: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
   logout: () => void;
 }
 
@@ -67,6 +69,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   };
 
+  const loginWithToken = async (newToken: string) => {
+    const res = await fetch(`${BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${newToken}` },
+    });
+    if (!res.ok) throw new Error('Token validation failed');
+    const u: User = await res.json();
+    localStorage.setItem(TOKEN_KEY, newToken);
+    setToken(newToken);
+    setUser(u);
+  };
+
+  const refreshUser = async () => {
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (!stored) return;
+    const res = await fetch(`${BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${stored}` },
+    });
+    if (!res.ok) return;
+    const u: User = await res.json();
+    setUser(u);
+  };
+
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
@@ -74,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, loginWithEmail, registerWithEmail, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, loginWithEmail, registerWithEmail, loginWithToken, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

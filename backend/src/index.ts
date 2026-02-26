@@ -6,6 +6,7 @@ import passport from 'passport';
 import authRouter from './routes/auth';
 import childrenRouter from './routes/children';
 import storiesRouter from './routes/stories';
+import usersRouter from './routes/users';
 import { logger } from './utils/logger';
 
 const app = express();
@@ -44,6 +45,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use('/api/auth', authRouter);
 app.use('/api/children', childrenRouter);
 app.use('/api/stories', storiesRouter);
+app.use('/api/users', usersRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', version: '2.0.0' });
