@@ -4,6 +4,8 @@ import { ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import VoiceInput from '../components/VoiceInput';
 import DecorationLayer from '../components/Decorations';
+import Mascot from '../components/Mascot/Mascot';
+import { declineName } from '../utils/declineName';
 
 const QUICK_QUESTIONS = [
   { emoji: '🌧️', text: 'Почему идёт дождь?' },
@@ -54,9 +56,11 @@ export default function NewStory() {
       >
         <DecorationLayer preset="minimal" />
         <div className="text-center text-white relative">
-          <div className="text-6xl mb-6 animate-pulse-soft">✨</div>
+          <div className="flex justify-center mb-4 animate-float">
+            <Mascot emotion="think" size="sm" style={{ filter: 'drop-shadow(0 8px 24px rgba(255,255,255,0.25))' }} />
+          </div>
           <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: 'var(--font-display)' }}>
-            Создаём сказку для {child?.name || 'вашего ребёнка'}...
+            Создаём сказку для {child ? declineName(child.name, child.gender, 'родительный') : 'вашего ребёнка'}...
           </h2>
           <p className="mb-6" style={{ color: 'rgba(255,255,255,0.75)' }}>Собираем все ингредиенты волшебства</p>
           <div className="flex justify-center gap-2">
@@ -90,8 +94,17 @@ export default function NewStory() {
           </button>
           <div>
             <h1 className="text-lg font-bold text-text-primary">Новая сказка</h1>
-            {child && <p className="text-sm text-purple-600">для {child.name} {child.hero.emoji}</p>}
+            {child && <p className="text-sm text-purple-600">для {declineName(child.name, child.gender, 'родительный')} {child.hero.emoji}</p>}
           </div>
+        </div>
+
+        {/* Mascot */}
+        <div className="flex justify-center mb-4 animate-float">
+          <Mascot
+            emotion="explain"
+            size="sm"
+            style={{ filter: 'drop-shadow(0 8px 28px rgba(124,107,196,0.22))' }}
+          />
         </div>
 
         {/* Question input */}

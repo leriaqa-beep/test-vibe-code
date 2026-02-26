@@ -7,6 +7,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '../context/AppContext';
 import DecorationLayer from '../components/Decorations';
+import { declineName, prepositionO } from '../utils/declineName';
 
 // ---------- Hero catalogue (emoji kept for DB / display elsewhere) ----------
 const BASE_HEROES = [
@@ -34,40 +35,6 @@ const INTERESTS = [
 const TOY_TYPES = ['мишка', 'зайка', 'кукла', 'динозавр', 'котёнок', 'собачка', 'дракон', 'принцесса', 'машинка', 'другое'];
 
 interface ToyForm { id: string; nickname: string; type: string; description: string; }
-
-// ---------- Name declension (covers ~90% of Russian names) ----------
-function declineName(name: string, gender: 'boy' | 'girl' | null, padezh: 'родительный' | 'предложный'): string {
-  if (!name) return name;
-  const last = name[name.length - 1].toLowerCase();
-  const stem = name.slice(0, -1);
-  const sibilants = 'жшщчх';
-  const vowels = 'аеёиоуыэюя';
-
-  if (last === 'а') {
-    const prevChar = (stem[stem.length - 1] ?? '').toLowerCase();
-    const genSuffix = sibilants.includes(prevChar) ? 'и' : 'ы';
-    return padezh === 'родительный' ? stem + genSuffix : stem + 'е';
-  }
-  if (last === 'я') {
-    return padezh === 'родительный' ? stem + 'и' : stem + 'е';
-  }
-  if (last === 'й') {
-    return padezh === 'родительный' ? stem + 'я' : stem + 'е';
-  }
-  if (last === 'ь') {
-    return padezh === 'родительный' ? stem + 'и' : stem + 'и';
-  }
-  // Consonant ending — decline only masculine (or unknown)
-  if (!vowels.includes(last) && gender !== 'girl') {
-    return padezh === 'родительный' ? name + 'а' : name + 'е';
-  }
-  return name;
-}
-
-function prepositionO(word: string): string {
-  const vowels = 'аеёиоуыэюяАЕЁИОУЫЭЮЯ';
-  return vowels.includes(word[0] ?? '') ? 'об' : 'о';
-}
 
 // ---------- Component ----------
 export default function ChildSetup() {
