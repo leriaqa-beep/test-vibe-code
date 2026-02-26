@@ -20,6 +20,7 @@ export interface ChildProfile {
   gender: 'boy' | 'girl';
   hero: { name: string; emoji: string };
   toys: Toy[];
+  useToys: boolean;
   interests: string[];
   createdAt: string;
 }

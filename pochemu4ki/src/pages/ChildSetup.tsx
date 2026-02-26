@@ -82,6 +82,7 @@ export default function ChildSetup() {
   const [gender, setGender] = useState<'boy' | 'girl' | null>(null);
   const [hero, setHero]     = useState<{ name: string; emoji: string } | null>(null);
   const [toys, setToys]     = useState<ToyForm[]>([]);
+  const [useToys, setUseToys]   = useState(true);
   const [toyForm, setToyForm]   = useState<ToyForm>({ id: '', nickname: '', type: 'мишка', description: '' });
   const [addingToy, setAddingToy] = useState(false);
   const [interests, setInterests] = useState<string[]>([]);
@@ -108,7 +109,7 @@ export default function ChildSetup() {
     if (!hero || !gender) return;
     setSaving(true);
     try {
-      const child = await addChild({ name: name.trim(), age, gender, hero, toys, interests });
+      const child = await addChild({ name: name.trim(), age, gender, hero, toys, useToys, interests });
       navigate(`/app/children/${child.id}/story`);
     } catch {
       setSaving(false);
@@ -295,6 +296,20 @@ export default function ChildSetup() {
                 <Plus className="w-5 h-5" /> Добавить игрушку
               </button>
             )}
+
+            {/* useToys toggle */}
+            <button
+              onClick={() => setUseToys(v => !v)}
+              className="mt-4 w-full bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between hover:border-purple-300 transition"
+            >
+              <div className="text-left">
+                <p className="text-sm font-semibold text-gray-800">Включать игрушки как персонажей</p>
+                <p className="text-xs text-gray-500 mt-0.5">Любимые игрушки будут появляться в историях</p>
+              </div>
+              <div className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${useToys ? 'bg-purple-600' : 'bg-gray-300'}`}>
+                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${useToys ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </div>
+            </button>
           </div>
         )}
 
