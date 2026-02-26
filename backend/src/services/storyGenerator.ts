@@ -14,6 +14,25 @@ interface GeneratedStory {
   imageUrl: string;
 }
 
+function declineName(name: string, gender: string, padezh: 'родительный' | 'предложный'): string {
+  if (!name) return name;
+  const last = name[name.length - 1].toLowerCase();
+  const stem = name.slice(0, -1);
+  const sibilants = 'жшщчх';
+  const vowels = 'аеёиоуыэюя';
+  if (last === 'а') {
+    const prev = (stem[stem.length - 1] ?? '').toLowerCase();
+    return padezh === 'родительный' ? stem + (sibilants.includes(prev) ? 'и' : 'ы') : stem + 'е';
+  }
+  if (last === 'я') return padezh === 'родительный' ? stem + 'и' : stem + 'е';
+  if (last === 'й') return padezh === 'родительный' ? stem + 'я' : stem + 'е';
+  if (last === 'ь') return stem + 'и';
+  if (!vowels.includes(last) && gender !== 'girl') {
+    return padezh === 'родительный' ? name + 'а' : name + 'е';
+  }
+  return name;
+}
+
 function pickToy(child: ChildProfile): { nickname: string; type: string; description: string } {
   if (child.toys && child.toys.length > 0) {
     const toy = child.toys[Math.floor(Math.random() * child.toys.length)];
@@ -98,7 +117,7 @@ function generateFallback(input: StoryInput): GeneratedStory {
     : `\n\n${childName} ${g.smiled}. Теперь ${childName} ${g.knew} ответ — и мир стал немного понятнее.`;
 
   return {
-    title: `Волшебная история для ${childName}`,
+    title: `Волшебная история для ${declineName(childName, child.gender, 'родительный')}`,
     content: `${context ? `${context}\n\nИ тогда` : 'Однажды'} ${childName} ${g.asked} очень важный вопрос: «${question}»${toyLine1}
 
 К счастью, рядом оказался мудрый ${hero.name} ${hero.emoji}.

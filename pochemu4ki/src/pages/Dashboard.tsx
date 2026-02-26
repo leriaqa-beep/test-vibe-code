@@ -31,7 +31,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">✨</span>
+            <img src="/assets/mascot/mascot-logo.png" alt="Почему-Ка!" className="w-8 h-8 object-contain" />
             <span className="text-xl font-bold text-purple-700">Почему-Ка!</span>
           </div>
           <div className="flex items-center gap-2">
@@ -105,7 +105,7 @@ export default function Dashboard() {
           {children.length === 0 ? (
             <button
               onClick={() => navigate('/app/children/new')}
-              className="w-full border-2 border-dashed border-purple-200 rounded-xl py-10 flex flex-col items-center gap-3 text-purple-400 hover:bg-purple-50 transition"
+              className="w-full bg-purple-50 border border-purple-200 rounded-xl py-10 flex flex-col items-center gap-3 text-purple-400 hover:bg-purple-100 transition"
             >
               <UserPlus className="w-10 h-10 text-purple-400" />
               <div className="text-center">
