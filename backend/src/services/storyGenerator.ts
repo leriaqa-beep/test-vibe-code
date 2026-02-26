@@ -80,28 +80,37 @@ function getImageUrl(category: string): string {
 function generateFallback(input: StoryInput): GeneratedStory {
   const { question, context, child } = input;
   const childName = child.name;
-  const toy = pickToy(child);
   const hero = getHero(child);
   const category = categorize(question);
   const g = genderForm(child);
 
+  const shouldUseToys = child.useToys !== false && child.toys?.length > 0;
+  const toy = shouldUseToys ? pickToy(child) : null;
+
+  const toyLine1 = toy
+    ? `\n\nРядом был верный ${toy.type} ${toy.nickname}. Он моргнул большими глазами — такого вопроса ещё никто не задавал!`
+    : '';
+  const toyLine2 = toy
+    ? `, а ${toy.nickname} тихонечко кивал рядом`
+    : '';
+  const toyLine3 = toy
+    ? `\n\n${childName} ${g.smiled} и крепко ${g.hugged} ${toy.nickname}. Теперь ${childName} ${g.knew} ответ — и мир стал немного понятнее.`
+    : `\n\n${childName} ${g.smiled}. Теперь ${childName} ${g.knew} ответ — и мир стал немного понятнее.`;
+
   return {
     title: `Волшебная история для ${childName}`,
-    content: `${context ? `${context}\n\nИ тогда` : 'Однажды'} ${childName} ${g.asked} очень важный вопрос: «${question}»
-
-Рядом был верный ${toy.type} ${toy.nickname}. Он моргнул большими глазами — такого вопроса ещё никто не задавал!
+    content: `${context ? `${context}\n\nИ тогда` : 'Однажды'} ${childName} ${g.asked} очень важный вопрос: «${question}»${toyLine1}
 
 К счастью, рядом оказался мудрый ${hero.name} ${hero.emoji}.
 
 — ${childName}, это отличный вопрос! — сказал${g.suffix} ${hero.name}. — Знаешь, самые умные люди на свете — это те, кто не боится спрашивать.
 
-${hero.name} рассказал${g.suffix} ${childName} всё, что знал${g.suffix} об этом. История была долгой и интересной. ${childName} ${g.listened}, широко раскрыв глаза, а ${toy.nickname} тихонечко кивал рядом.
+${hero.name} рассказал${g.suffix} ${childName} всё, что знал${g.suffix} об этом. История была долгой и интересной. ${childName} ${g.listened}, широко раскрыв глаза${toyLine2}.
 
 В конце ${hero.name} сказал${g.suffix}:
 
 — ${childName}, ты ${g.adj}! Тот, кто задаёт вопросы, всегда узнаёт что-то новое. Продолжай быть ${g.curious}!
-
-${childName} ${g.smiled} и крепко ${g.hugged} ${toy.nickname}. Теперь ${childName} ${g.knew} ответ — и мир стал немного понятнее.
+${toyLine3}
 
 ✨ **Вывод для ${childName}:** Задавать вопросы — это здорово! Любопытные дети узнают о мире больше всех. Не останавливайся — спрашивай!`,
     imageUrl: getImageUrl(category),
@@ -180,11 +189,7 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
     return generateFallback(input);
   }
 
-  const toy = pickToy(child);
   const hero = getHero(child);
-  const toysDesc = child.toys?.length
-    ? child.toys.map(t => `${t.nickname} (${t.type}${t.description ? ', ' + t.description : ''})`).join(', ')
-    : `${toy.nickname} (${toy.type})`;
   const interestsDesc = child.interests?.length
     ? child.interests.join(', ')
     : 'разные темы';
@@ -194,15 +199,25 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
     ? 'пошла, сказала, обрадовалась, нашла, решила, умная, добрая, любопытная, весёлая'
     : 'пошёл, сказал, обрадовался, нашёл, решил, умный, добрый, любопытный, весёлый';
 
+  // useToys defaults to true for profiles created before this field was added
+  const shouldUseToys = child.useToys !== false && child.toys?.length > 0;
+
+  const toysSection = shouldUseToys
+    ? `- Любимые игрушки (ЖЁСТКОЕ ПРАВИЛО — читай внимательно):
+  ${child.toys.map(t => `  • ${t.nickname} — ${t.type}${t.description ? ` (${t.description})` : ''}`).join('\n')}
+  ⚠️ ОБЯЗАТЕЛЬНО: если в сказке появляются игрушки — используй ТОЛЬКО имена из списка выше, точно как написаны.
+  ЗАПРЕЩЕНО выдумывать других игрушек или персонажей-игрушек с другими именами.`
+    : '- Игрушки: НЕ включай в историю (ребёнок не хочет игрушки в историях)';
+
   const userMessage = `ВХОДНЫЕ ДАННЫЕ:
 - Имя ребёнка: ${child.name} (пол: ${genderLabel})
 - Возраст ребёнка: ${child.age} лет
 - Вопрос, который задал ребёнок: ${question}${context ? `\n- Контекст: ${context}` : ''}
 
-ДОПОЛНИТЕЛЬНЫЙ КОНТЕКСТ О РЕБЁНКЕ (используй для персонализации):
+ПЕРСОНАЛИЗАЦИЯ (обязательно используй):
 - Любимый герой: ${hero.name} ${hero.emoji}
-- Любимые игрушки: ${toysDesc}
-- Интересы: ${interestsDesc}
+${toysSection}
+- Интересы ребёнка: ${interestsDesc}
 
 ГРАММАТИКА (строго обязательно):
 - Ребёнок — ${genderLabel.toUpperCase()}. Все глаголы, прилагательные и причастия согласуй с полом: ${genderVerbs}
