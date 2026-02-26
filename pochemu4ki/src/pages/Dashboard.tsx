@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, BookOpen, Settings } from 'lucide-react';
+import { Plus, BookOpen, Settings, UserPlus, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { FREE_STORY_LIMIT } from '../types';
@@ -16,7 +16,9 @@ export default function Dashboard() {
     loadStories();
   }, []);
 
-  const storiesLeft = user ? Math.max(0, FREE_STORY_LIMIT - (user.storiesUsed || 0)) : 0;
+  const storiesUsed = user?.storiesUsed || 0;
+  const storiesLeft = Math.max(0, FREE_STORY_LIMIT - storiesUsed);
+  const limitReached = !user?.isPremium && storiesUsed >= FREE_STORY_LIMIT;
 
   return (
     <div
@@ -25,6 +27,7 @@ export default function Dashboard() {
     >
       <DecorationLayer preset="dashboard" />
       <div className="max-w-lg mx-auto px-4 py-6 relative">
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
@@ -34,55 +37,66 @@ export default function Dashboard() {
           <div className="flex items-center gap-2">
             {user?.isPremium && (
               <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F9D56E"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> Премиум
+                <Crown className="w-3 h-3" /> Премиум
               </span>
             )}
             <button
               onClick={() => navigate('/app/settings')}
-              className="w-9 h-9 bg-white rounded-full shadow flex items-center justify-center text-text-secondary hover:text-purple-600 transition"
+              className="w-9 h-9 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-purple-600 transition"
             >
               <Settings className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Welcome */}
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-3xl p-5 mb-5">
-          <h1 className="text-xl font-bold mb-1">Добро пожаловать! 👋</h1>
-          <p className="text-purple-200 text-sm truncate max-w-[90%]">
-            {user?.email} · {children.length} {children.length === 1 ? 'ребёнок' : children.length < 5 ? 'детей' : 'детей'}
+        {/* Welcome card */}
+        <div className="bg-purple-50 border border-purple-100 rounded-xl p-5 mb-4 shadow-sm">
+          <h1 className="text-lg font-bold text-gray-900 mb-0.5">Добро пожаловать!</h1>
+          <p className="text-sm text-gray-600 truncate">
+            {user?.email}
+            {children.length > 0 && (
+              <> · {children.length} {children.length === 1 ? 'ребёнок' : 'детей'}</>
+            )}
           </p>
-          {!user?.isPremium && (
-            <div className="mt-3 bg-white/20 rounded-2xl p-3">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium">Бесплатные истории</span>
-                <span className="text-sm font-bold">{storiesLeft} / {FREE_STORY_LIMIT}</span>
-              </div>
-              <div className="h-2 bg-white/30 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-white rounded-full transition-all"
-                  style={{ width: `${(storiesLeft / FREE_STORY_LIMIT) * 100}%` }}
-                />
-              </div>
-              {storiesLeft === 0 && (
-                <button
-                  onClick={() => navigate('/app/pricing')}
-                  className="mt-2 w-full bg-white text-purple-700 text-xs font-bold py-1.5 rounded-xl hover:bg-yellow-50 transition"
-                >
-                  Получить безлимит →
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
-        {/* Children profiles */}
+        {/* Stories usage bar (non-premium only) */}
+        {!user?.isPremium && (
+          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-gray-800">Бесплатные истории</span>
+              <span className={`text-sm font-bold ${limitReached ? 'text-red-600' : 'text-purple-600'}`}>
+                {storiesUsed} / {FREE_STORY_LIMIT}
+              </span>
+            </div>
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
+              <div
+                className={`h-full rounded-full transition-all ${limitReached ? 'bg-red-500' : 'bg-purple-600'}`}
+                style={{ width: `${Math.min((storiesUsed / FREE_STORY_LIMIT) * 100, 100)}%` }}
+              />
+            </div>
+            {limitReached ? (
+              <button
+                onClick={() => navigate('/app/pricing')}
+                className="w-full bg-purple-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-purple-700 transition flex items-center justify-center gap-1"
+              >
+                <Crown className="w-4 h-4" /> Подключить Premium
+              </button>
+            ) : (
+              <p className="text-xs text-gray-500">
+                Осталось {storiesLeft} {storiesLeft === 1 ? 'история' : 'истории'} — хватит на сегодня!
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Children section */}
         <div className="mb-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-text-primary">Дети</h2>
+            <h2 className="font-bold text-gray-900">Дети</h2>
             <button
               onClick={() => navigate('/app/children/new')}
-              className="text-purple-600 text-sm font-medium flex items-center gap-1 hover:text-purple-800 transition"
+              className="flex items-center gap-1.5 bg-purple-600 text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-purple-700 transition"
             >
               <Plus className="w-4 h-4" /> Добавить
             </button>
@@ -91,12 +105,12 @@ export default function Dashboard() {
           {children.length === 0 ? (
             <button
               onClick={() => navigate('/app/children/new')}
-              className="w-full border-2 border-dashed border-purple-300 rounded-3xl py-8 flex flex-col items-center gap-3 text-purple-500 hover:bg-purple-50 transition"
+              className="w-full border-2 border-dashed border-purple-200 rounded-xl py-10 flex flex-col items-center gap-3 text-purple-400 hover:bg-purple-50 transition"
             >
-              <span className="text-4xl">👶</span>
+              <UserPlus className="w-10 h-10 text-purple-400" />
               <div className="text-center">
-                <p className="font-semibold">Добавьте первого ребёнка</p>
-                <p className="text-sm text-purple-400">Укажите имя, возраст и любимые игрушки</p>
+                <p className="font-semibold text-gray-700">Добавьте первого ребёнка</p>
+                <p className="text-sm text-gray-500">Укажите имя, возраст и любимые игрушки</p>
               </div>
             </button>
           ) : (
@@ -106,22 +120,22 @@ export default function Dashboard() {
                 return (
                   <div
                     key={child.id}
-                    className="bg-white rounded-3xl p-4 shadow-sm border border-purple-100"
+                    className="bg-white rounded-xl p-4 shadow-sm border border-gray-200"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center text-2xl">
+                        <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl">
                           {child.hero.emoji}
                         </div>
                         <div>
-                          <h3 className="font-bold text-text-primary">{child.name}</h3>
-                          <p className="text-sm text-text-secondary">{child.age} лет · {child.gender === 'girl' ? '👧' : '👦'}</p>
+                          <h3 className="font-bold text-gray-900">{child.name}</h3>
+                          <p className="text-sm text-gray-600">{child.age} лет · {child.gender === 'girl' ? '👧' : '👦'}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-text-muted">{childStories.length} историй</p>
+                        <p className="text-xs text-gray-400">{childStories.length} историй</p>
                         {child.toys.length > 0 && (
-                          <p className="text-xs text-purple-500">{child.toys.length} игрушки 🧸</p>
+                          <p className="text-xs text-purple-600">{child.toys.length} игрушки 🧸</p>
                         )}
                       </div>
                     </div>
@@ -139,19 +153,20 @@ export default function Dashboard() {
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => {
-                          if (!user?.isPremium && (user?.storiesUsed || 0) >= FREE_STORY_LIMIT) {
+                          if (limitReached) {
                             navigate('/app/pricing');
                           } else {
                             navigate(`/app/children/${child.id}/story`);
                           }
                         }}
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1 hover:opacity-90 transition"
+                        className="bg-purple-600 text-white py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-purple-700 transition"
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z"/></svg> Сказку!
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z"/></svg>
+                        Сказку!
                       </button>
                       <button
                         onClick={() => navigate(`/app/library?child=${child.id}`)}
-                        className="border border-purple-200 text-purple-600 py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1 hover:bg-purple-50 transition"
+                        className="border border-purple-600 text-purple-600 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-purple-50 transition"
                       >
                         <BookOpen className="w-4 h-4" /> Библиотека
                       </button>
@@ -167,7 +182,7 @@ export default function Dashboard() {
         {stories.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-text-primary">Последние истории</h2>
+              <h2 className="font-bold text-gray-900">Последние истории</h2>
               <button
                 onClick={() => navigate('/app/library')}
                 className="text-purple-600 text-sm font-medium hover:text-purple-800 transition"
@@ -182,15 +197,15 @@ export default function Dashboard() {
                   <button
                     key={story.id}
                     onClick={() => navigate(`/app/story/${story.id}`)}
-                    className="w-full bg-white rounded-2xl p-4 shadow-sm border border-purple-100 text-left flex items-center gap-3 hover:border-purple-300 transition"
+                    className="w-full bg-white rounded-xl p-4 shadow-sm border border-gray-200 text-left flex items-center gap-3 hover:border-purple-300 transition"
                   >
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center text-lg flex-shrink-0">
+                    <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0">
                       📖
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-text-primary text-sm truncate">{story.title}</p>
-                      <p className="text-xs text-text-secondary truncate">{story.question}</p>
-                      {storyChild && <p className="text-xs text-purple-400">{storyChild.name}</p>}
+                      <p className="font-semibold text-gray-900 text-sm truncate">{story.title}</p>
+                      <p className="text-xs text-gray-600 truncate">{story.question}</p>
+                      {storyChild && <p className="text-xs text-purple-600">{storyChild.name}</p>}
                     </div>
                     {story.rating > 0 && (
                       <span className="text-xs text-yellow-500 flex-shrink-0">{'★'.repeat(story.rating)}</span>
@@ -201,6 +216,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
