@@ -339,8 +339,8 @@ export default function DecorationLayer({ preset = 'minimal' }: DecorationLayerP
   if (preset === 'story') {
     return (
       <div className="decor-layer">
-        <Star  x="4%"  y="15%" size={16} color="#F9D56E" delay={0}   rotate={10} />
-        <Star  x="92%" y="20%" size={14} color="#F9D56E" delay={1}   rotate={25} />
+        <TinyStars x="2%"  y="12%" color="#C9BCFD" delay={0} />
+        <TinyStars x="89%" y="18%" color="#C9BCFD" delay={1} />
         <Heart x="5%"  y="65%" size={22} color="#E8A0BF" delay={0.5} />
         <Heart x="91%" y="70%" size={18} color="#F4A261" delay={1.5} />
         <Leaf  x="92%" y="45%" size={32} color="#6BB89C" delay={0.3} rotate={-20} />
