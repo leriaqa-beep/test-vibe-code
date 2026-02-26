@@ -5,6 +5,8 @@ import { useApp } from '../context/AppContext';
 import type { Story } from '../types';
 import { api } from '../api/client';
 import DecorationLayer from '../components/Decorations';
+import Mascot from '../components/Mascot/Mascot';
+import HeroImage from '../components/HeroImage';
 
 /* ── Парсер контента истории ────────────────────────────────── */
 type Block =
@@ -241,7 +243,7 @@ export default function StoryView() {
             padding: '5px 14px',
             border: '1px solid rgba(255,255,255,0.25)',
           }}>
-            <span style={{ fontSize: 18 }}>{child.hero.emoji}</span>
+            <HeroImage emoji={child.hero.emoji} size="xs" />
             <span style={{ color: '#fff', fontSize: 'var(--text-sm)', fontWeight: 600 }}>{child.name}</span>
           </div>
         )}
@@ -274,18 +276,27 @@ export default function StoryView() {
           </p>
         </div>
 
-        {/* Заголовок */}
-        <h1 style={{
-          fontFamily: 'var(--font-display)',
-          fontWeight: 700,
-          fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
-          color: 'var(--text-primary)',
-          letterSpacing: '-0.025em',
-          margin: '0 0 var(--space-8)',
-          lineHeight: 1.2,
-        }}>
-          {story.title}
-        </h1>
+        {/* Mascot + Заголовок */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-4)', marginBottom: 'var(--space-8)' }}>
+          <div style={{ flexShrink: 0, marginTop: 4 }}>
+            <Mascot
+              emotion="explain"
+              size="sm"
+              style={{ width: 80, height: 96, filter: 'drop-shadow(0 4px 16px rgba(124,107,196,0.2))' }}
+            />
+          </div>
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontWeight: 700,
+            fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.025em',
+            margin: 0,
+            lineHeight: 1.2,
+          }}>
+            {story.title}
+          </h1>
+        </div>
 
         {/* ── Контент истории ── */}
         <div className="story-text">

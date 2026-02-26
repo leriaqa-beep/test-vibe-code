@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut, Plus, Trash2, Crown } from 'lucide-react';
+import HeroImage from '../components/HeroImage';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import DecorationLayer from '../components/Decorations';
@@ -87,7 +88,7 @@ export default function Settings() {
             <div className="space-y-2">
               {children.map(child => (
                 <div key={child.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-                  <span className="text-2xl">{child.hero.emoji}</span>
+                  <HeroImage emoji={child.hero.emoji} size="sm" />
                   <div className="flex-1">
                     <p className="font-medium text-text-primary text-sm">{child.name}</p>
                     <p className="text-xs text-text-secondary">{child.age} лет · {child.toys.length} игрушки</p>

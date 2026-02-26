@@ -6,6 +6,7 @@ import VoiceInput from '../components/VoiceInput';
 import DecorationLayer from '../components/Decorations';
 import Mascot from '../components/Mascot/Mascot';
 import { declineName } from '../utils/declineName';
+import HeroImage from '../components/HeroImage';
 
 const QUICK_QUESTIONS = [
   { emoji: '🌧️', text: 'Почему идёт дождь?' },
@@ -94,7 +95,7 @@ export default function NewStory() {
           </button>
           <div>
             <h1 className="text-lg font-bold text-text-primary">Новая сказка</h1>
-            {child && <p className="text-sm text-purple-600">для {declineName(child.name, child.gender, 'родительный')} {child.hero.emoji}</p>}
+            {child && <p className="text-sm text-purple-600 flex items-center gap-1">для {declineName(child.name, child.gender, 'родительный')} <HeroImage emoji={child.hero.emoji} size="xs" /></p>}
           </div>
         </div>
 

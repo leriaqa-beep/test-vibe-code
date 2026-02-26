@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Heart, ArrowLeft, LayoutGrid, List } from 'lucide-react';
+import HeroImage from '../components/HeroImage';
 import { useApp } from '../context/AppContext';
 import DecorationLayer from '../components/Decorations';
 
@@ -148,7 +149,7 @@ export default function Library() {
                 onClick={() => setActiveChildId(activeChildId === c.id ? '' : c.id)}
                 className={`flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-full border transition ${activeChildId === c.id ? 'border-purple-500 bg-purple-100 text-purple-700' : 'border-gray-200 text-text-secondary hover:border-purple-300'}`}
               >
-                {c.hero.emoji} {c.name}
+                <HeroImage emoji={c.hero.emoji} size="xs" /> {c.name}
               </button>
             ))}
           </div>
@@ -195,7 +196,7 @@ export default function Library() {
                     <div className="flex items-center justify-between">
                       {child && (
                         <span className="text-xs text-purple-500 flex items-center gap-1">
-                          {child.hero.emoji} {child.name}
+                          <HeroImage emoji={child.hero.emoji} size="xs" /> {child.name}
                         </span>
                       )}
                       {story.rating > 0 && (
@@ -231,7 +232,7 @@ export default function Library() {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {child && (
-                        <span className="text-sm" title={child.name}>{child.hero.emoji}</span>
+                        <HeroImage emoji={child.hero.emoji} size="xs" className="opacity-80" />
                       )}
                       {story.rating > 0 ? (
                         <span className="text-xs text-yellow-500 flex items-center gap-0.5">

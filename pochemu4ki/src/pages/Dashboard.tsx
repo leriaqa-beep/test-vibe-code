@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, BookOpen, Settings, UserPlus, Crown } from 'lucide-react';
+import HeroImage from '../components/HeroImage';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { FREE_STORY_LIMIT } from '../types';
@@ -124,8 +125,8 @@ export default function Dashboard() {
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl">
-                          {child.hero.emoji}
+                        <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                          <HeroImage emoji={child.hero.emoji} size="md" />
                         </div>
                         <div>
                           <h3 className="font-bold text-gray-900">{child.name}</h3>
