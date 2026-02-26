@@ -10,69 +10,19 @@ import HeroImage from '../components/HeroImage';
 
 /* ── Парсер контента истории ────────────────────────────────── */
 type Block =
-  | { type: 'chapter'; title: string }
   | { type: 'paragraph'; text: string }
-  | { type: 'bold'; text: string }
-  | { type: 'fact-start' }
-  | { type: 'fact-item'; text: string }
-  | { type: 'discussion'; text: string }
-  | { type: 'conclusion'; text: string };
+  | { type: 'bold'; text: string };
 
 function parseContent(raw: string): Block[] {
-  const paragraphs = raw.split('\n\n').filter(p => p.trim());
-  const blocks: Block[] = [];
-  let inFact = false;
-
-  for (const para of paragraphs) {
-    const t = para.trim();
-
-    // Заголовок главы: ## или #
-    if (/^#{1,3}\s+/.test(t)) {
-      inFact = false;
-      blocks.push({ type: 'chapter', title: t.replace(/^#{1,3}\s+/, '') });
-      continue;
-    }
-
-    // Начало блока фактов
-    if (t.includes('🔬') || /А ты знал\?/i.test(t)) {
-      inFact = true;
-      blocks.push({ type: 'fact-start' });
-      // Если после маркера есть текст — это первый факт
-      const rest = t.replace(/.*🔬[^?]*\?/, '').replace(/.*А ты знал\?/i, '').trim();
-      if (rest) blocks.push({ type: 'fact-item', text: rest });
-      continue;
-    }
-
-    // Блок обсуждения
-    if (t.includes('💬') || /Поговорите вместе/i.test(t)) {
-      inFact = false;
-      blocks.push({ type: 'discussion', text: t.replace(/^💬\s*/, '') });
-      continue;
-    }
-
-    // Вывод
-    if ((t.includes('✨') && /Вывод/i.test(t)) || (t.startsWith('**') && /Вывод/i.test(t))) {
-      inFact = false;
-      const clean = t.replace(/\*\*/g, '').replace(/^✨\s*/, '');
-      blocks.push({ type: 'conclusion', text: clean });
-      continue;
-    }
-
-    if (inFact) {
-      blocks.push({ type: 'fact-item', text: t.replace(/^[-•]\s*/, '') });
-      continue;
-    }
-
-    // Жирный абзац
-    if (t.startsWith('**') && t.endsWith('**')) {
-      blocks.push({ type: 'bold', text: t.replace(/\*\*/g, '') });
-      continue;
-    }
-
-    blocks.push({ type: 'paragraph', text: t });
-  }
-
-  return blocks;
+  return raw.split('\n\n')
+    .filter(p => p.trim())
+    .map(p => {
+      const t = p.trim();
+      if (t.startsWith('**') && t.endsWith('**')) {
+        return { type: 'bold' as const, text: t.replace(/\*\*/g, '') };
+      }
+      return { type: 'paragraph' as const, text: t };
+    });
 }
 
 /* Рендер inline-разметки **bold** */
@@ -157,30 +107,6 @@ export default function StoryView() {
 
   const child = children.find(c => c.id === story.childId);
   const blocks = parseContent(story.content);
-
-  /* Группируем fact-start + fact-items в единый блок */
-  const groupedBlocks: (Block | { type: 'fact-group'; items: string[] })[] = [];
-  let factItems: string[] = [];
-  let inFactGroup = false;
-
-  for (const b of blocks) {
-    if (b.type === 'fact-start') {
-      inFactGroup = true;
-      factItems = [];
-    } else if (inFactGroup && b.type === 'fact-item') {
-      factItems.push(b.text);
-    } else {
-      if (inFactGroup) {
-        groupedBlocks.push({ type: 'fact-group', items: [...factItems] });
-        inFactGroup = false;
-        factItems = [];
-      }
-      groupedBlocks.push(b);
-    }
-  }
-  if (inFactGroup && factItems.length > 0) {
-    groupedBlocks.push({ type: 'fact-group', items: factItems });
-  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: 'var(--font-body)' }}>
@@ -300,198 +226,26 @@ export default function StoryView() {
 
         {/* ── Контент истории ── */}
         <div className="story-text">
-          {groupedBlocks.map((block, i) => {
-            switch (block.type) {
-
-              case 'chapter':
-                return (
-                  <div key={i} style={{ marginTop: i > 0 ? 56 : 0, marginBottom: 'var(--space-4)' }}>
-                    {i > 0 && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
-                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, var(--border-muted))' }} />
-                        <span style={{ color: 'var(--accent-warm)', fontSize: '1rem', letterSpacing: 6 }}>✦</span>
-                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, var(--border-muted))' }} />
-                      </div>
-                    )}
-                    <h2 style={{
-                      fontFamily: 'var(--font-display)',
-                      fontWeight: 700,
-                      fontSize: 'clamp(1.2rem, 2.5vw, 1.5rem)',
-                      color: 'var(--accent-primary)',
-                      lineHeight: 1.3,
-                      borderLeft: '3px solid var(--accent-warm)',
-                      paddingLeft: 'var(--space-4)',
-                      margin: '0 0 var(--space-4)',
-                    }}>
-                      {renderInline(block.type === 'chapter' ? (block as { type: 'chapter'; title: string }).title : '')}
-                    </h2>
-                  </div>
-                );
-
-              case 'paragraph':
-                return (
-                  <p key={i} style={{ marginBottom: 'var(--space-5)' }}>
-                    {renderInline((block as { type: 'paragraph'; text: string }).text)}
-                  </p>
-                );
-
-              case 'bold':
-                return (
-                  <p key={i} style={{
-                    fontWeight: 700,
-                    color: 'var(--accent-primary)',
-                    background: 'var(--bg-secondary)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: 'var(--space-3) var(--space-4)',
-                    marginBottom: 'var(--space-4)',
-                  }}>
-                    {(block as { type: 'bold'; text: string }).text}
-                  </p>
-                );
-
-              case 'fact-group': {
-                const g = block as { type: 'fact-group'; items: string[] };
-                return (
-                  <div key={i} style={{
-                    borderRadius: 20,
-                    overflow: 'hidden',
-                    border: '1.5px solid var(--accent-secondary-100)',
-                    boxShadow: '0 4px 16px rgba(107,184,156,0.12)',
-                    margin: '36px 0',
-                  }}>
-                    {/* Заголовок карточки */}
-                    <div style={{
-                      background: 'var(--accent-secondary)',
-                      padding: '14px 24px',
-                      display: 'flex', alignItems: 'center', gap: 10,
-                    }}>
-                      <span style={{ fontSize: 20 }}>🔬</span>
-                      <h3 style={{
-                        fontFamily: 'var(--font-display)',
-                        fontWeight: 700,
-                        fontSize: 'var(--text-base)',
-                        color: '#fff',
-                        margin: 0,
-                        letterSpacing: '-0.01em',
-                      }}>
-                        А ты знал?
-                      </h3>
-                    </div>
-                    {/* Список фактов */}
-                    <div style={{
-                      background: 'linear-gradient(135deg, #F0FAF7 0%, #E8F7F2 100%)',
-                      padding: '20px 24px',
-                      display: 'flex', flexDirection: 'column', gap: 16,
-                    }}>
-                      {g.items.map((item, ii) => (
-                        <div key={ii} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                          <span style={{
-                            minWidth: 26, height: 26, borderRadius: '50%',
-                            background: 'var(--accent-secondary)',
-                            color: '#fff',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 12, fontWeight: 700, flexShrink: 0, marginTop: 2,
-                          }}>
-                            {ii + 1}
-                          </span>
-                          <p style={{
-                            color: 'var(--text-primary)',
-                            lineHeight: 'var(--leading-relaxed)',
-                            fontSize: 'var(--text-base)',
-                            margin: 0, paddingTop: 2,
-                          }}>
-                            {renderInline(item)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-
-              case 'discussion': {
-                const d = block as { type: 'discussion'; text: string };
-                return (
-                  <div key={i} style={{
-                    background: 'var(--bg-secondary)',
-                    border: '1.5px solid var(--accent-primary-100)',
-                    borderRadius: 20,
-                    padding: '20px 24px',
-                    margin: '24px 0',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <span style={{ fontSize: 18 }}>💬</span>
-                      <span style={{
-                        fontFamily: 'var(--font-display)',
-                        fontWeight: 700,
-                        fontSize: 'var(--text-xs)',
-                        color: 'var(--accent-primary)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                      }}>
-                        Поговорите вместе
-                      </span>
-                    </div>
-                    <p style={{
-                      color: 'var(--text-primary)',
-                      lineHeight: 'var(--leading-relaxed)',
-                      margin: 0,
-                      fontStyle: 'italic',
-                      fontWeight: 500,
-                    }}>
-                      {renderInline(d.text.replace(/💬\s*/, '').replace(/Поговорите вместе:\s*/i, ''))}
-                    </p>
-                  </div>
-                );
-              }
-
-              case 'conclusion': {
-                const c = block as { type: 'conclusion'; text: string };
-                return (
-                  <div key={i} style={{
-                    background: 'var(--gradient-button)',
-                    borderRadius: 24,
-                    padding: 'var(--space-6)',
-                    margin: '36px 0 8px',
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}>
-                    {/* Декоративный фоновый символ */}
-                    <span style={{
-                      position: 'absolute', top: -15, right: 10,
-                      fontSize: 70, lineHeight: 1,
-                      opacity: 0.1, userSelect: 'none',
-                    }}>✨</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, position: 'relative' }}>
-                      <span style={{ fontSize: 20 }}>✨</span>
-                      <span style={{
-                        fontFamily: 'var(--font-display)',
-                        fontWeight: 700,
-                        fontSize: 'var(--text-xs)',
-                        color: 'rgba(255,255,255,0.85)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                      }}>
-                        Вывод
-                      </span>
-                    </div>
-                    <p style={{
-                      color: '#fff',
-                      lineHeight: 'var(--leading-relaxed)',
-                      margin: 0,
-                      fontWeight: 500,
-                      fontSize: 'var(--text-base)',
-                      position: 'relative',
-                    }}>
-                      {renderInline(c.text.replace(/Вывод для [^:]+:\s*/i, '').replace(/✨\s*/, ''))}
-                    </p>
-                  </div>
-                );
-              }
-
-              default:
-                return null;
+          {blocks.map((block, i) => {
+            if (block.type === 'bold') {
+              return (
+                <p key={i} style={{
+                  fontWeight: 700,
+                  color: 'var(--accent-primary)',
+                  background: 'var(--bg-secondary)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: 'var(--space-3) var(--space-4)',
+                  marginBottom: 'var(--space-4)',
+                }}>
+                  {block.text}
+                </p>
+              );
             }
+            return (
+              <p key={i} style={{ marginBottom: 'var(--space-5)' }}>
+                {renderInline(block.text)}
+              </p>
+            );
           })}
         </div>
 

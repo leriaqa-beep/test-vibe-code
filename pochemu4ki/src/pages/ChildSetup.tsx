@@ -76,7 +76,9 @@ export default function ChildSetup() {
     if (!hero || !gender) return;
     setSaving(true);
     try {
-      const child = await addChild({ name: name.trim(), age, gender, hero, toys, useToys, interests });
+      const raw = name.trim();
+      const normalizedName = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+      const child = await addChild({ name: normalizedName, age, gender, hero, toys, useToys, interests });
       navigate(`/app/children/${child.id}/story`);
     } catch {
       setSaving(false);

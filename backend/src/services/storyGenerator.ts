@@ -124,7 +124,7 @@ function generateFallback(input: StoryInput): GeneratedStory {
 
 — ${question}
 
-${hero.name} ${hero.emoji} оказался рядом — он всегда появлялся именно тогда, когда нужен.${toyMoment}
+${hero.name} оказался рядом — он всегда появлялся именно тогда, когда нужен.${toyMoment}
 
 — Знаешь, — тихо сказал${g.suffix} ${hero.name}, — это один из самых важных вопросов на свете.
 
@@ -204,14 +204,17 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
 
   const userMessage = `Напиши тёплую сказку для ${child.name} (${genderLabel}, ${child.age} лет).
 Вопрос ребёнка: «${question}»${context ? `\nСитуация (от родителя): ${context}` : ''}
-Герой-помощник: ${hero.name} ${hero.emoji}${shouldUseToys && child.toys?.length > 0 ? `\nЛюбимые игрушки (могут появиться в истории): ${child.toys.map(t => t.nickname).join(', ')}` : ''}
+Герой-помощник: ${hero.name}${shouldUseToys && child.toys?.length > 0 ? `\nЛюбимые игрушки (могут появиться в истории): ${child.toys.map(t => t.nickname).join(', ')}` : ''}
 Помни: имя ${child.name} склоняй правильно по падежам. Пол: ${genderLabel}.`;
+
+  logger.info(`[Gemini] Sending prompt:\n--- SYSTEM ---\n${SYSTEM_PROMPT}\n--- USER ---\n${userMessage}`);
 
   try {
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: userMessage }] }],
     });
     const raw = result.response.text().trim();
+    logger.info(`[Gemini] Raw response:\n${raw}`);
     // Strip markdown code fences if Gemini adds them
     const jsonText = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
     const parsed = JSON.parse(jsonText) as { title: string; content: string };
