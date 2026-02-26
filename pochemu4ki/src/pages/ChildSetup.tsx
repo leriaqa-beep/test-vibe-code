@@ -208,24 +208,27 @@ export default function ChildSetup() {
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Любимый герой {nameGen}</h2>
             <p className="text-sm text-gray-500 mb-6">Этот персонаж будет помогать в каждой сказке</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-4">
               {BASE_HEROES.map(h => {
                 const selected = hero?.name === h.name;
                 return (
-                  <button
-                    key={h.name}
-                    onClick={() => setHero({ name: h.name, emoji: h.emoji })}
-                    className={`rounded-xl border-2 p-4 transition flex flex-col items-center gap-2 text-center
-                      ${selected
-                        ? 'border-purple-600 shadow-md'
-                        : 'border-gray-200 bg-white hover:border-purple-300'}`}
-                  >
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${h.gradient} flex items-center justify-center`}>
-                      <img src={h.image} alt={h.name} className="w-10 h-10 object-contain" />
-                    </div>
-                    <span className="text-xs font-semibold text-gray-800 leading-tight">{h.name}</span>
-                    {selected && <Check className="w-4 h-4 text-purple-600" />}
-                  </button>
+                  <div key={h.name} className="flex flex-col items-center gap-2">
+                    <button
+                      onClick={() => setHero({ name: h.name, emoji: h.emoji })}
+                      className="w-full"
+                    >
+                      <img src={h.image} alt={h.name} className="w-full aspect-square object-contain" />
+                    </button>
+                    <button
+                      onClick={() => setHero({ name: h.name, emoji: h.emoji })}
+                      className={`text-xs font-bold px-3 py-1 rounded-full transition
+                        ${selected
+                          ? 'bg-green-100 text-green-700 ring-2 ring-green-300 shadow-sm shadow-green-200'
+                          : 'bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600'}`}
+                    >
+                      {h.name}
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -236,7 +239,11 @@ export default function ChildSetup() {
         {step === 4 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Любимые игрушки {nameGen}</h2>
-            <p className="text-sm text-gray-500 mb-6">Они станут персонажами сказок. Можно пропустить</p>
+            <p className="text-sm text-gray-500 mb-4">Они станут персонажами сказок. Можно пропустить</p>
+
+            <div className="flex justify-center my-4">
+              <img src="/assets/mascot/mascot-joy.png" alt="Маскот" className="w-28 h-28 object-contain" />
+            </div>
 
             {toys.length > 0 && (
               <div className="space-y-2 mb-4">
