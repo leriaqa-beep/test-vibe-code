@@ -117,12 +117,15 @@ input, textarea, select {
   font-size: var(--text-base);
 }
 
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  padding: 0;
-  font-family: var(--font-body);
+/* NOTE: must be inside @layer base so Tailwind utilities (@layer utilities) override it */
+@layer base {
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    font-family: var(--font-body);
+  }
 }
 
 a {

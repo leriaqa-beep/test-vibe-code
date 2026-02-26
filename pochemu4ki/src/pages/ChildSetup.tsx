@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus, Trash2, ChevronRight, ChevronLeft, Check,
-  User, Sparkles, Eye, Flame, Star, Shield, Moon,
+  User,
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '../context/AppContext';
@@ -10,12 +10,12 @@ import DecorationLayer from '../components/Decorations';
 
 // ---------- Hero catalogue (emoji kept for DB / display elsewhere) ----------
 const BASE_HEROES = [
-  { name: 'Единорог Радуга',  emoji: '🦄', Icon: Sparkles, gradient: 'from-purple-100 to-pink-100',   color: 'text-purple-600' },
-  { name: 'Мудрая Сова',      emoji: '🦉', Icon: Eye,      gradient: 'from-amber-100 to-yellow-100',   color: 'text-amber-600'  },
-  { name: 'Добрый Дракон',    emoji: '🐉', Icon: Flame,    gradient: 'from-red-100 to-orange-100',     color: 'text-red-500'    },
-  { name: 'Фея Звёздочка',    emoji: '🧚', Icon: Star,     gradient: 'from-blue-100 to-cyan-100',      color: 'text-blue-500'   },
-  { name: 'Храбрый Лев',      emoji: '🦁', Icon: Shield,   gradient: 'from-amber-100 to-amber-200',    color: 'text-amber-700'  },
-  { name: 'Волшебный Кот',    emoji: '🐱', Icon: Moon,     gradient: 'from-indigo-100 to-purple-100',  color: 'text-indigo-600' },
+  { name: 'Единорог Радуга', emoji: '🦄', image: '/heroes/unicorn.png', gradient: 'from-purple-100 to-pink-100'  },
+  { name: 'Мудрая Сова',     emoji: '🦉', image: '/heroes/owl.png',     gradient: 'from-amber-100 to-yellow-100' },
+  { name: 'Добрый Дракон',   emoji: '🐉', image: '/heroes/dragon.png',  gradient: 'from-red-100 to-orange-100'   },
+  { name: 'Фея Звёздочка',   emoji: '🧚', image: '/heroes/fairy.png',   gradient: 'from-blue-100 to-cyan-100'    },
+  { name: 'Храбрый Лев',     emoji: '🦁', image: '/heroes/lion.png',    gradient: 'from-amber-100 to-amber-200'  },
+  { name: 'Волшебный Кот',   emoji: '🐱', image: '/heroes/cat.png',     gradient: 'from-indigo-100 to-purple-100'},
 ];
 
 const INTERESTS = [
@@ -221,7 +221,7 @@ export default function ChildSetup() {
                         : 'border-gray-200 bg-white hover:border-purple-300'}`}
                   >
                     <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${h.gradient} flex items-center justify-center`}>
-                      <h.Icon className={`w-8 h-8 ${h.color}`} />
+                      <img src={h.image} alt={h.name} className="w-10 h-10 object-contain" />
                     </div>
                     <span className="text-xs font-semibold text-gray-800 leading-tight">{h.name}</span>
                     {selected && <Check className="w-4 h-4 text-purple-600" />}
