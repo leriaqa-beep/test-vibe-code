@@ -8,3 +8,4 @@ backend/logs/*.log
 backend/logs/**/*.log
 logs/
 data/*.txt
+.claude/
