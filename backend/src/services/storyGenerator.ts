@@ -45,8 +45,12 @@ function getHero(child: ChildProfile): { name: string; emoji: string } {
   return child.hero || { name: 'Волшебный Дракон', emoji: '🐉' };
 }
 
+function normalizeGender(gender: string): 'girl' | 'boy' {
+  return gender === 'female' || gender === 'girl' ? 'girl' : 'boy';
+}
+
 function genderForm(child: ChildProfile) {
-  const f = child.gender === 'girl';
+  const f = normalizeGender(child.gender) === 'girl';
   return {
     asked:    f ? 'задала'        : 'задал',
     listened: f ? 'слушала'       : 'слушал',
@@ -213,7 +217,7 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
   }
 
   const hero = getHero(child);
-  const genderLabel = child.gender === 'girl' ? 'девочка' : 'мальчик';
+  const genderLabel = normalizeGender(child.gender) === 'girl' ? 'девочка' : 'мальчик';
   const shouldUseToys = child.useToys !== false && child.toys?.length > 0;
 
   const userMessage = `Напиши тёплую сказку для ${child.name} (${genderLabel}, ${child.age} лет).
