@@ -6,3 +6,5 @@ data/db.json
 .DS_Store
 backend/logs/*.log
 backend/logs/**/*.log
+logs/
+data/*.txt
