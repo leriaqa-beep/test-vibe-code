@@ -1,5 +1,4 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import { supabase } from './supabase';
 
 // --- Types ---
 
@@ -48,34 +47,53 @@ export interface Story {
   createdAt: string;
 }
 
-// --- Local JSON persistence ---
+// --- Mappers: snake_case (DB) → camelCase (TypeScript) ---
 
-interface DbData {
-  users: Record<string, User>;
-  children: Record<string, ChildProfile>;
-  stories: Record<string, Story>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapUser(row: any): User {
+  return {
+    id: row.id,
+    email: row.email,
+    passwordHash: row.password_hash || '',
+    googleId: row.google_id || undefined,
+    createdAt: row.created_at,
+    isPremium: row.is_premium,
+    storiesUsed: row.stories_used,
+  };
 }
 
-const DB_PATH = path.join(__dirname, '../../../data/db.json');
-
-function ensureDir() {
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapChild(row: any): ChildProfile {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    age: row.age,
+    gender: row.gender,
+    hero: row.hero,
+    toys: row.toys || [],
+    useToys: row.use_toys,
+    interests: row.interests || [],
+    createdAt: row.created_at,
+  };
 }
 
-function loadDb(): DbData {
-  ensureDir();
-  try {
-    if (fs.existsSync(DB_PATH)) {
-      return JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
-    }
-  } catch {}
-  return { users: {}, children: {}, stories: {} };
-}
-
-function saveDb(db: DbData) {
-  ensureDir();
-  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), 'utf-8');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapStory(row: any): Story {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    childId: row.child_id || '',
+    title: row.title,
+    question: row.question,
+    context: row.context || '',
+    content: row.content,
+    imageUrl: row.image_url || '',
+    isSaved: row.is_saved,
+    rating: row.rating || 0,
+    readCount: row.read_count || 0,
+    createdAt: row.created_at,
+  };
 }
 
 // --- Store ---
@@ -83,69 +101,139 @@ function saveDb(db: DbData) {
 export const store = {
   // Users
   async getUserById(id: string): Promise<User | undefined> {
-    return loadDb().users[id];
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error || !data) return undefined;
+    return mapUser(data);
   },
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const db = loadDb();
-    return Object.values(db.users).find(u => u.email.toLowerCase() === email.toLowerCase());
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .ilike('email', email)
+      .single();
+    if (error || !data) return undefined;
+    return mapUser(data);
   },
 
   async getUserByGoogleId(googleId: string): Promise<User | undefined> {
-    const db = loadDb();
-    return Object.values(db.users).find(u => u.googleId === googleId);
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('google_id', googleId)
+      .single();
+    if (error || !data) return undefined;
+    return mapUser(data);
   },
 
   async saveUser(user: User): Promise<void> {
-    const db = loadDb();
-    db.users[user.id] = user;
-    saveDb(db);
+    const { error } = await supabase.from('users').upsert(
+      {
+        id: user.id,
+        email: user.email,
+        password_hash: user.passwordHash,
+        google_id: user.googleId || null,
+        is_premium: user.isPremium,
+        stories_used: user.storiesUsed,
+        created_at: user.createdAt,
+      },
+      { onConflict: 'id' }
+    );
+    if (error) throw error;
   },
 
   // Children
   async getChildrenByUser(userId: string): Promise<ChildProfile[]> {
-    const db = loadDb();
-    return Object.values(db.children)
-      .filter(c => c.userId === userId);
+    const { data, error } = await supabase
+      .from('children')
+      .select('*')
+      .eq('user_id', userId);
+    if (error || !data) return [];
+    return data.map(mapChild);
   },
 
   async getChildById(id: string): Promise<ChildProfile | undefined> {
-    return loadDb().children[id];
+    const { data, error } = await supabase
+      .from('children')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error || !data) return undefined;
+    return mapChild(data);
   },
 
   async saveChild(child: ChildProfile): Promise<void> {
-    const db = loadDb();
-    db.children[child.id] = child;
-    saveDb(db);
+    const { error } = await supabase.from('children').upsert(
+      {
+        id: child.id,
+        user_id: child.userId,
+        name: child.name,
+        age: child.age,
+        gender: child.gender,
+        hero: child.hero,
+        toys: child.toys,
+        use_toys: child.useToys,
+        interests: child.interests,
+        created_at: child.createdAt,
+      },
+      { onConflict: 'id' }
+    );
+    if (error) throw error;
   },
 
   async deleteChild(id: string): Promise<void> {
-    const db = loadDb();
-    delete db.children[id];
-    saveDb(db);
+    const { error } = await supabase.from('children').delete().eq('id', id);
+    if (error) throw error;
   },
 
   // Stories
   async getStoriesByUser(userId: string): Promise<Story[]> {
-    const db = loadDb();
-    return Object.values(db.stories)
-      .filter(s => s.userId === userId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const { data, error } = await supabase
+      .from('stories')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error || !data) return [];
+    return data.map(mapStory);
   },
 
   async getStoryById(id: string): Promise<Story | undefined> {
-    return loadDb().stories[id];
+    const { data, error } = await supabase
+      .from('stories')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error || !data) return undefined;
+    return mapStory(data);
   },
 
   async saveStory(story: Story): Promise<void> {
-    const db = loadDb();
-    db.stories[story.id] = story;
-    saveDb(db);
+    const { error } = await supabase.from('stories').upsert(
+      {
+        id: story.id,
+        user_id: story.userId,
+        child_id: story.childId || null,
+        title: story.title,
+        question: story.question,
+        context: story.context,
+        content: story.content,
+        image_url: story.imageUrl,
+        is_saved: story.isSaved,
+        rating: story.rating,
+        read_count: story.readCount,
+        created_at: story.createdAt,
+      },
+      { onConflict: 'id' }
+    );
+    if (error) throw error;
   },
 
   async deleteStory(id: string): Promise<void> {
-    const db = loadDb();
-    delete db.stories[id];
-    saveDb(db);
+    const { error } = await supabase.from('stories').delete().eq('id', id);
+    if (error) throw error;
   },
 };
