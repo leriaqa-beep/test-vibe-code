@@ -21,6 +21,9 @@
     "passport-google-oauth20": "^2.0.0",
     "uuid": "^9.0.0"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",

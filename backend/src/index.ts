@@ -12,9 +12,12 @@ import { logger } from './utils/logger';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) {
+    if (!origin) return callback(null, true);
+    if (/^http:\/\/localhost:\d+$/.test(origin) || origin === FRONTEND_URL) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
