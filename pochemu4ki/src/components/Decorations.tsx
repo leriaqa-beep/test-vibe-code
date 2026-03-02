@@ -8,6 +8,7 @@ interface DecorProps {
   x?: string | number;
   y?: string | number;
   size?: number;
+  width?: number;
   color?: string;
   delay?: number;
   rotate?: number;
