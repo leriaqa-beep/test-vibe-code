@@ -4,7 +4,7 @@ import { ArrowLeft, BookOpen, Check, Download, Loader } from 'lucide-react';
 import HeroImage from '../components/HeroImage';
 import { useApp } from '../context/AppContext';
 import DecorationLayer from '../components/Decorations';
-import type { Story, ChildProfile } from '../types';
+import type { ChildProfile } from '../types';
 
 export default function BookCreate() {
   const navigate = useNavigate();
