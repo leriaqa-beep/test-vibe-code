@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Heart, ArrowLeft, LayoutGrid, List } from 'lucide-react';
+import { Search, Heart, ArrowLeft, LayoutGrid, List, BookMarked } from 'lucide-react';
 import HeroImage from '../components/HeroImage';
 import { useApp } from '../context/AppContext';
 import DecorationLayer from '../components/Decorations';
@@ -83,6 +83,15 @@ export default function Library() {
               {filtered.length} из {stories.length} {stories.length === 1 ? 'история' : 'историй'}
             </p>
           </div>
+          {/* Book create button */}
+          <button
+            onClick={() => navigate(`/app/book/create${activeChildId ? `?child=${activeChildId}` : ''}`)}
+            className="w-9 h-9 bg-white rounded-xl shadow-sm border border-purple-100 flex items-center justify-center text-purple-500 hover:bg-purple-50 hover:text-purple-700 transition"
+            title="Создать книгу"
+          >
+            <BookMarked className="w-4 h-4" />
+          </button>
+
           {/* View toggle */}
           <div className="flex items-center bg-white rounded-xl shadow-sm border border-purple-100 p-1 gap-1">
             <button

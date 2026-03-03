@@ -15,6 +15,7 @@ import Library from './pages/Library';
 import Settings from './pages/Settings';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
+import BookCreate from './pages/BookCreate';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Onboarding from './pages/Onboarding';
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/app/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
             <Route path="/app/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/app/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+            <Route path="/app/book/create" element={<ProtectedRoute><BookCreate /></ProtectedRoute>} />
             <Route path="/app/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
             {/* Public static */}
