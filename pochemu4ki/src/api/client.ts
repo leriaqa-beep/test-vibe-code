@@ -53,5 +53,7 @@ export const api = {
       request<{ success: boolean; message: string }>('/users/activate-premium', { method: 'POST' }),
     subscriptionStatus: () =>
       request<{ isPremium: boolean; storiesUsed: number; freeLimit: number }>('/users/subscription-status'),
+    deleteAccount: () =>
+      request<{ success: boolean }>('/users/me', { method: 'DELETE' }),
   },
 };

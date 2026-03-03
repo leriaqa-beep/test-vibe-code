@@ -34,4 +34,16 @@ router.get('/subscription-status', async (req: AuthRequest, res: Response) => {
   });
 });
 
+// DELETE /api/users/me — delete account and all data
+router.delete('/me', async (req: AuthRequest, res: Response) => {
+  const userId = req.userId!;
+  const user = await store.getUserById(userId);
+  if (!user) {
+    res.status(404).json({ error: 'Пользователь не найден' });
+    return;
+  }
+  await store.deleteUser(userId);
+  res.json({ success: true });
+});
+
 export default router;
