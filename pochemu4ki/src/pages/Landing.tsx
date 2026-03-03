@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Users, Check, Zap, ChevronRight, Menu, X, Star } from 'lucide-react';
+import { Check, Zap, ChevronRight, Menu, X } from 'lucide-react';
 import DecorationLayer from '../components/Decorations';
 import WaveDivider, { WaveCreamToLavender, WaveLavenderToCream } from '../components/WaveDivider';
 
@@ -99,36 +99,6 @@ const betaCards = [
     mascotSrc: '/assets/mascot/mascot-calm.png',
   },
 ];
-
-/* ── Карточка статистики ────────────────────────────────────── */
-function StatCard({ icon, iconBg, value, label }: { icon: React.ReactNode; iconBg: string; value: string; label: string }) {
-  return (
-    <div
-      className="card flex flex-col items-center gap-2 py-4 px-3 text-center"
-      style={{ borderColor: 'var(--border-muted)' }}
-    >
-      <div
-        style={{
-          width: 52, height: 52,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: iconBg,
-          marginBottom: 4,
-        }}
-      >
-        {icon}
-      </div>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-2xl)', color: 'var(--accent-primary)' }}>
-        {value}
-      </div>
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', fontWeight: 600 }}>
-        {label}
-      </div>
-    </div>
-  );
-}
 
 /* ── Главный компонент ───────────────────────────────────────── */
 export default function Landing() {
