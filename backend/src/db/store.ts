@@ -259,4 +259,13 @@ export const store = {
   async deleteResetToken(token: string): Promise<void> {
     await supabase.from('password_reset_tokens').delete().eq('token', token);
   },
+
+  // Delete user with all associated data
+  async deleteUser(userId: string): Promise<void> {
+    await supabase.from('password_reset_tokens').delete().eq('user_id', userId);
+    await supabase.from('stories').delete().eq('user_id', userId);
+    await supabase.from('children').delete().eq('user_id', userId);
+    const { error } = await supabase.from('users').delete().eq('id', userId);
+    if (error) throw error;
+  },
 };

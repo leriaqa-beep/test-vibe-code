@@ -1,15 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Plus, Trash2, Crown, Pencil } from 'lucide-react';
+import { ArrowLeft, LogOut, Plus, Trash2, Crown, Pencil, AlertTriangle } from 'lucide-react';
 import HeroImage from '../components/HeroImage';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import DecorationLayer from '../components/Decorations';
+import { api } from '../api/client';
 
 export default function Settings() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { children, loadChildren, deleteChild } = useApp();
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => { loadChildren(); }, []);
 
@@ -21,6 +24,18 @@ export default function Settings() {
   const handleDeleteChild = async (id: string, name: string) => {
     if (!confirm(`Удалить профиль ${name} и все его истории?`)) return;
     await deleteChild(id);
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await api.users.deleteAccount();
+      logout();
+      navigate('/');
+    } catch {
+      setDeleting(false);
+      setDeleteConfirm(false);
+    }
   };
 
   return (
@@ -137,11 +152,48 @@ export default function Settings() {
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 text-red-500 font-medium py-3 rounded-2xl border border-red-200 hover:bg-red-50 transition"
+          className="w-full flex items-center justify-center gap-2 text-red-500 font-medium py-3 rounded-2xl border border-red-200 hover:bg-red-50 transition mb-3"
         >
           <LogOut className="w-4 h-4" />
           Выйти из аккаунта
         </button>
+
+        {/* Delete account */}
+        {!deleteConfirm ? (
+          <button
+            onClick={() => setDeleteConfirm(true)}
+            className="w-full text-xs text-text-muted py-2 hover:text-red-500 transition"
+          >
+            Удалить аккаунт
+          </button>
+        ) : (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+            <div className="flex items-start gap-3 mb-3">
+              <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-red-700">Удалить аккаунт навсегда?</p>
+                <p className="text-xs text-red-600 mt-1">
+                  Все профили детей, истории и данные будут удалены без возможности восстановления.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="flex-1 bg-red-600 text-white text-sm font-semibold py-2 rounded-xl hover:bg-red-700 disabled:opacity-60 transition"
+              >
+                {deleting ? 'Удаляем...' : 'Да, удалить'}
+              </button>
+              <button
+                onClick={() => setDeleteConfirm(false)}
+                className="flex-1 border border-red-200 text-red-600 text-sm font-medium py-2 rounded-xl hover:bg-red-100 transition"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
