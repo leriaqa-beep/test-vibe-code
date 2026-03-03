@@ -1,7 +1,11 @@
 import { Router, Request, Response } from 'express';
+import { Resend } from 'resend';
 import { store } from '../db/store';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { supabase } from '../db/supabase';
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 
 const router = Router();
 router.use(authMiddleware);
@@ -64,6 +68,25 @@ router.post('/feedback', async (req: AuthRequest & Request, res: Response) => {
     res.status(500).json({ error: 'Не удалось сохранить отзыв' });
     return;
   }
+
+  // Send email notification to admin
+  if (resend && ADMIN_EMAIL) {
+    const stars = rating ? '★'.repeat(rating) + '☆'.repeat(5 - rating) : '—';
+    resend.emails.send({
+      from: process.env.EMAIL_FROM || 'Почему-Ка! <noreply@pochemu4ki.app>',
+      to: ADMIN_EMAIL,
+      subject: `📬 Новый отзыв${rating ? ` · ${stars}` : ''}`,
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;padding:24px">
+          <h2 style="color:#7C6BC4;margin-top:0">Новый отзыв · Почему-Ка!</h2>
+          ${rating ? `<p style="font-size:20px;letter-spacing:2px;margin:0 0 12px">${stars}</p>` : ''}
+          <p style="background:#F5F3FF;border-radius:8px;padding:14px 16px;font-size:15px;line-height:1.6;color:#2D2B3D">${text.trim().replace(/\n/g, '<br>')}</p>
+          ${page ? `<p style="color:#7A7890;font-size:12px;margin:8px 0 0">Страница: ${page}</p>` : ''}
+        </div>
+      `,
+    }).catch(() => { /* silent — feedback already saved */ });
+  }
+
   res.json({ success: true });
 });
 
