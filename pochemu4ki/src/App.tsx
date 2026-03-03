@@ -13,6 +13,7 @@ import StoryView from './pages/StoryView';
 import Library from './pages/Library';
 import Settings from './pages/Settings';
 import Pricing from './pages/Pricing';
+import Privacy from './pages/Privacy';
 
 export default function App() {
   return (
@@ -33,6 +34,9 @@ export default function App() {
             <Route path="/app/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
             <Route path="/app/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/app/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+
+            {/* Public static */}
+            <Route path="/privacy" element={<Privacy />} />
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />

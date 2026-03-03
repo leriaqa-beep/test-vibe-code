@@ -55,7 +55,7 @@ const plans = [
     price: '0',
     period: '',
     storiesLimit: '3 истории',
-    features: ['3 истории в месяц', 'Голосовой ввод', 'Персонализация', 'Библиотека историй'],
+    features: ['3 истории бесплатно', 'Голосовой ввод', 'Персонализация', 'Библиотека историй'],
     cta: 'Начать бесплатно',
     highlight: false,
   },
@@ -79,20 +79,23 @@ const plans = [
   },
 ];
 
-const testimonials = [
+const betaCards = [
   {
-    name: 'Мария, мама Сони (4 года)',
-    text: 'Соня каждый вечер просит: «Мама, задай ещё вопрос!» Теперь мы объясняем всё через сказки с её любимой куклой Малинкой.',
+    emoji: '🎁',
+    title: 'Premium бесплатно',
+    text: 'Все первые пользователи получают полный Premium доступ на время бета-теста. Без карты.',
     mascotSrc: '/assets/mascot/mascot-joy.png',
   },
   {
-    name: 'Алексей, папа Миши (6 лет)',
-    text: 'Сын спросил «почему люди умирают» — я растерялся. Приложение создало мягкую, добрую сказку, которая помогла ему понять.',
+    emoji: '💬',
+    title: 'Ваш отзыв важен',
+    text: 'Мы в самом начале пути. Каждый комментарий помогает нам сделать приложение лучше для ваших детей.',
     mascotSrc: '/assets/mascot/mascot-explain.png',
   },
   {
-    name: 'Екатерина, мама Лизы (5 лет)',
-    text: 'Дочка боялась темноты. После трёх сказок с её зайкой Пушинкой она перестала бояться — теперь засыпает сама!',
+    emoji: '🚀',
+    title: 'Ранний доступ',
+    text: 'Станьте частью сообщества с самого старта. Первые пользователи формируют продукт вместе с нами.',
     mascotSrc: '/assets/mascot/mascot-calm.png',
   },
 ];
@@ -367,26 +370,26 @@ export default function Landing() {
                 </span>
               </div>
 
-              {/* Статистика — три отдельные карточки */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
-                <StatCard
-                  icon={<BookOpen size={28} color="#7C6BC4" strokeWidth={1.8} />}
-                  iconBg="#F0EBFF"
-                  value="1000+"
-                  label="историй создано"
-                />
-                <StatCard
-                  icon={<Users size={28} color="#6BB89C" strokeWidth={1.8} />}
-                  iconBg="#E8F5EE"
-                  value="500+"
-                  label="довольных семей"
-                />
-                <StatCard
-                  icon={<Star size={28} color="#F4A261" strokeWidth={1.8} />}
-                  iconBg="#FFF0E8"
-                  value="4.9"
-                  label="средняя оценка"
-                />
+              {/* Бета-баннер */}
+              <div style={{
+                marginTop: 'var(--space-2)',
+                background: 'linear-gradient(135deg, #F5F0FF 0%, #FFF0F5 100%)',
+                border: '1.5px solid rgba(124,107,196,0.2)',
+                borderRadius: 'var(--radius-xl)',
+                padding: 'var(--space-4) var(--space-5)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-3)',
+              }}>
+                <span style={{ fontSize: 28, flexShrink: 0 }}>🚀</span>
+                <div>
+                  <p style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--accent-primary)', margin: 0 }}>
+                    Бета-запуск — Premium бесплатно
+                  </p>
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+                    Первые пользователи получают полный доступ. Ваш отзыв помогает нам стать лучше.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -537,36 +540,47 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
+      {/* ── Beta section ── */}
       <WaveDivider from="var(--bg-primary)" to="var(--bg-warm)" variant="cloud" height={40} />
       <section style={{ background: 'var(--bg-warm)', padding: 'var(--space-8) 0' }}>
         <div className="content-container">
-          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
-            Что говорят родители
-          </h2>
+          <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
+            <span style={{
+              display: 'inline-block',
+              background: 'linear-gradient(135deg, #7C6BC4, #E8A0BF)',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: 'var(--text-sm)',
+              padding: '6px 20px',
+              borderRadius: 'var(--radius-full)',
+              marginBottom: 'var(--space-3)',
+            }}>
+              🚀 Бета-версия
+            </span>
+            <h2 className="section-title" style={{ marginBottom: 'var(--space-3)' }}>
+              Станьте первыми
+            </h2>
+            <p className="section-subtitle" style={{ maxWidth: 520, margin: '0 auto' }}>
+              Почему-Ка! только начинает свой путь. Мы приглашаем первых пользователей помочь нам создать лучшее приложение для детей.
+            </p>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-4)' }} className="reviews-grid">
-            {testimonials.map((t, i) => (
-              <div key={i} className="card" style={{ padding: 'var(--space-6)' }}>
-                <div style={{ display: 'flex', gap: 2, marginBottom: 'var(--space-3)' }}>
-                  {[1,2,3,4,5].map(s => (
-                    <Star key={s} size={18} fill="#F9D56E" color="#F4A261" strokeWidth={1.5} />
-                  ))}
-                </div>
-                <p style={{
+            {betaCards.map((c, i) => (
+              <div key={i} className="card" style={{ padding: 'var(--space-6)', textAlign: 'center' }}>
+                <div style={{ fontSize: 40, marginBottom: 'var(--space-3)' }}>{c.emoji}</div>
+                <img src={c.mascotSrc} alt="" style={{ width: 64, height: 64, objectFit: 'contain', display: 'block', margin: '0 auto var(--space-3)' }} />
+                <h3 style={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 700,
+                  fontSize: 'var(--text-lg)',
                   color: 'var(--text-primary)',
-                  fontStyle: 'italic',
-                  lineHeight: 'var(--leading-relaxed)',
-                  marginBottom: 'var(--space-4)',
-                  fontSize: 'var(--text-base)',
+                  marginBottom: 'var(--space-2)',
                 }}>
-                  «{t.text}»
+                  {c.title}
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', lineHeight: 'var(--leading-relaxed)', fontSize: 'var(--text-sm)', margin: 0 }}>
+                  {c.text}
                 </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                  <img src={t.mascotSrc} alt="" style={{ width: 60, height: 60, borderRadius: '50%' }} />
-                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                    {t.name}
-                  </span>
-                </div>
               </div>
             ))}
           </div>
@@ -712,7 +726,15 @@ export default function Landing() {
           <img src="/assets/mascot/mascot-logo.png" alt="Почему-Ка" style={{ width: '80px', height: '80px' }} />
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--accent-primary)' }}>Почему-Ка!</span>
         </div>
-        <p>© 2024 Почему-Ка!. Магия историй для любопытных детей.</p>
+        <p>© 2026 Почему-Ка!. Магия историй для любопытных детей.</p>
+        <div style={{ marginTop: 'var(--space-2)', display: 'flex', justifyContent: 'center', gap: 'var(--space-4)' }}>
+          <button
+            onClick={() => navigate('/privacy')}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 'var(--text-xs)', cursor: 'pointer', textDecoration: 'underline' }}
+          >
+            Политика конфиденциальности
+          </button>
+        </div>
       </footer>
 
       {/* ── Адаптивность ── */}

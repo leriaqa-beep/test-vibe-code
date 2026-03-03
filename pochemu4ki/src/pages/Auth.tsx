@@ -30,6 +30,7 @@ export default function Auth() {
     ''
   );
   const [loading, setLoading] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const { loginWithEmail, registerWithEmail, user } = useAuth();
   const navigate = useNavigate();
 
@@ -138,9 +139,32 @@ export default function Auth() {
               </div>
             )}
 
+            {isRegister && (
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={e => setAgreed(e.target.checked)}
+                  style={{ marginTop: 2, accentColor: 'var(--accent-primary)', flexShrink: 0, width: 16, height: 16 }}
+                />
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                  Я ознакомился(-ась) с{' '}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'var(--accent-primary)', textDecoration: 'underline' }}
+                  >
+                    Политикой конфиденциальности
+                  </a>{' '}
+                  и согласен(-на) на обработку персональных данных
+                </span>
+              </label>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (isRegister && !agreed)}
               className="w-full text-white py-3 rounded-xl font-semibold text-sm shadow-md disabled:opacity-60 flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-100"
               style={{ background: 'var(--gradient-button)' }}
             >
