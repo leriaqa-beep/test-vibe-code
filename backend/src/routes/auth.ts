@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
+import { Resend } from 'resend';
 import { store } from '../db/store';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { logger } from '../utils/logger';
@@ -11,6 +13,8 @@ import { logger } from '../utils/logger';
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'pochemu-ka-secret-key-2024';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const EMAIL_FROM = process.env.EMAIL_FROM || 'Почему-Ка! <noreply@pochemu4ki.app>';
 
 // --- Google OAuth strategy ---
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
@@ -166,6 +170,87 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 
   res.json({ id: user.id, email: user.email, isPremium: user.isPremium, storiesUsed: user.storiesUsed });
+});
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req: Request, res: Response) => {
+  const { email } = req.body as { email?: string };
+  if (!email) {
+    res.status(400).json({ error: 'Email обязателен' });
+    return;
+  }
+
+  // Always respond with success to avoid email enumeration
+  res.json({ message: 'Если аккаунт существует, ссылка для сброса отправлена на email' });
+
+  const user = await store.getUserByEmail(email);
+  if (!user || !user.passwordHash) return; // no account or Google-only account
+
+  const token = crypto.randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+  await store.saveResetToken(token, user.id, expiresAt);
+
+  const resetUrl = `${FRONTEND_URL}/reset-password?token=${token}`;
+
+  if (resend) {
+    resend.emails.send({
+      from: EMAIL_FROM,
+      to: email,
+      subject: 'Сброс пароля — Почему-Ка!',
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#FFFBF5;border-radius:16px">
+          <img src="https://pochemu4ki-app.onrender.com/assets/mascot/mascot-think.png" width="64" style="display:block;margin:0 auto 16px" alt="Маскот"/>
+          <h1 style="font-size:22px;color:#2D2B3D;text-align:center;margin:0 0 8px">Сброс пароля</h1>
+          <p style="color:#7A7890;text-align:center;margin:0 0 24px">Нажмите кнопку ниже, чтобы задать новый пароль. Ссылка действует 1 час.</p>
+          <a href="${resetUrl}" style="display:block;background:linear-gradient(135deg,#7C6BC4,#C86DD7);color:#fff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:12px;font-weight:600;font-size:15px">
+            Сбросить пароль
+          </a>
+          <p style="color:#ABA9C0;font-size:12px;text-align:center;margin-top:20px">
+            Если вы не запрашивали сброс пароля — проигнорируйте это письмо.
+          </p>
+        </div>
+      `,
+    }).catch((err: Error) => logger.error('[ForgotPassword] Email send error', err));
+  } else {
+    logger.info(`[ForgotPassword] RESEND_API_KEY not set. Reset URL: ${resetUrl}`);
+  }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req: Request, res: Response) => {
+  const { token, password } = req.body as { token?: string; password?: string };
+  if (!token || !password) {
+    res.status(400).json({ error: 'Токен и новый пароль обязательны' });
+    return;
+  }
+  if (password.length < 6) {
+    res.status(400).json({ error: 'Пароль должен быть не менее 6 символов' });
+    return;
+  }
+
+  const record = await store.getResetToken(token);
+  if (!record) {
+    res.status(400).json({ error: 'Ссылка недействительна или уже использована' });
+    return;
+  }
+  if (record.expiresAt < new Date()) {
+    await store.deleteResetToken(token);
+    res.status(400).json({ error: 'Ссылка истекла. Запросите новую' });
+    return;
+  }
+
+  const user = await store.getUserById(record.userId);
+  if (!user) {
+    res.status(400).json({ error: 'Пользователь не найден' });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  await store.saveUser({ ...user, passwordHash });
+  await store.deleteResetToken(token);
+
+  logger.info(`[ResetPassword] Password updated for ${user.email}`);
+  res.json({ message: 'Пароль успешно изменён' });
 });
 
 export default router;
