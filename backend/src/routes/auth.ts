@@ -169,7 +169,8 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
     return;
   }
 
-  res.json({ id: user.id, email: user.email, isPremium: user.isPremium, storiesUsed: user.storiesUsed });
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+  res.json({ id: user.id, email: user.email, isPremium: user.isPremium, storiesUsed: user.storiesUsed, isAdmin: ADMIN_EMAIL !== '' && user.email === ADMIN_EMAIL });
 });
 
 // POST /api/auth/forgot-password

@@ -48,6 +48,10 @@ export const api = {
       request<{ success: boolean }>(`/stories/${id}`, { method: 'DELETE' }),
   },
 
+  admin: {
+    stats: () => request<import('../types').AdminStats>('/admin/stats'),
+  },
+
   users: {
     activatePremium: () =>
       request<{ success: boolean; message: string }>('/users/activate-premium', { method: 'POST' }),

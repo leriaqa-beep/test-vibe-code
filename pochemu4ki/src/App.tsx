@@ -19,6 +19,7 @@ import BookCreate from './pages/BookCreate';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Onboarding from './pages/Onboarding';
+import AdminDashboard from './pages/AdminDashboard';
 import FeedbackButton from './components/FeedbackButton';
 import { useAuth } from './context/AuthContext';
 
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="/app/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
             <Route path="/app/book/create" element={<ProtectedRoute><BookCreate /></ProtectedRoute>} />
             <Route path="/app/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+            <Route path="/app/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
 
             {/* Public static */}
             <Route path="/privacy" element={<Privacy />} />

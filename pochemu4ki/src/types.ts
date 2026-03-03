@@ -3,6 +3,30 @@ export interface User {
   email: string;
   isPremium: boolean;
   storiesUsed: number;
+  isAdmin?: boolean;
+}
+
+export interface AdminUserEntry {
+  id: string;
+  email: string;
+  createdAt: string;
+  storiesUsed: number;
+  isPremium: boolean;
+  childrenCount: number;
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  totalStories: number;
+  totalChildren: number;
+  newUsersWeek: number;
+  newUsersMonth: number;
+  newStoriesWeek: number;
+  newStoriesMonth: number;
+  usersWithStories: number;
+  avgRating: number;
+  storiesByDay: { date: string; count: number }[];
+  userList: AdminUserEntry[];
 }
 
 export interface Toy {
