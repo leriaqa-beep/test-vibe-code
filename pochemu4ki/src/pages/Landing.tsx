@@ -295,7 +295,7 @@ export default function Landing() {
                   style={{ fontSize: 'var(--text-sm)', textTransform: 'none', letterSpacing: 0, padding: '6px 16px' }}
                 >
                   <img src="/assets/mascot/mascot-joy.png" alt="" style={{ width: '18px', height: '18px', objectFit: 'contain', flexShrink: 0 }} />
-                  Более 1000 историй создано родителями
+                  🚀 Бета-версия — Premium бесплатно для первых
                 </span>
               </div>
 
