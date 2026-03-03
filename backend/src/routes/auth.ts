@@ -77,7 +77,7 @@ router.get('/google/callback', (req: Request, res: Response, next) => {
           passwordHash: '',
           googleId,
           createdAt: new Date().toISOString(),
-          isPremium: false,
+          isPremium: true, // beta: all new users get Premium
           storiesUsed: 0,
         };
       } else if (!dbUser.googleId) {
@@ -120,7 +120,7 @@ router.post('/register', async (req: Request, res: Response) => {
     email,
     passwordHash,
     createdAt: new Date().toISOString(),
-    isPremium: false,
+    isPremium: true, // beta: all new users get Premium
     storiesUsed: 0,
   };
   await store.saveUser(user);

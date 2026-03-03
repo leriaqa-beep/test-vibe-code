@@ -18,12 +18,20 @@ import Privacy from './pages/Privacy';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Onboarding from './pages/Onboarding';
+import FeedbackButton from './components/FeedbackButton';
+import { useAuth } from './context/AuthContext';
+
+function AuthFeedbackButton() {
+  const { user } = useAuth();
+  return user ? <FeedbackButton /> : null;
+}
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <AppProvider>
+          <AuthFeedbackButton />
           <Routes>
             {/* Public */}
             <Route path="/" element={<Landing />} />

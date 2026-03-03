@@ -50,6 +50,22 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Beta banner */}
+        <div
+          className="rounded-xl px-4 py-3 mb-4 flex items-center gap-3"
+          style={{ background: 'linear-gradient(135deg,#f3f0ff,#fce7f3)', border: '1px solid #e9d5ff' }}
+        >
+          <span style={{ fontSize: 20 }}>🚀</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold" style={{ color: 'var(--accent-primary)' }}>
+              Бета-версия · Premium бесплатно
+            </p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              Вы среди первых! Все функции открыты — расскажите нам, что думаете
+            </p>
+          </div>
+        </div>
+
         {/* Welcome card */}
         <div className="bg-purple-50 border border-purple-100 rounded-xl p-5 mb-4 shadow-sm">
           <h1 className="text-lg font-bold text-gray-900 mb-0.5">Добро пожаловать!</h1>

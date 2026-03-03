@@ -55,5 +55,10 @@ export const api = {
       request<{ isPremium: boolean; storiesUsed: number; freeLimit: number }>('/users/subscription-status'),
     deleteAccount: () =>
       request<{ success: boolean }>('/users/me', { method: 'DELETE' }),
+    sendFeedback: (text: string, rating?: number, page?: string) =>
+      request<{ success: boolean }>('/users/feedback', {
+        method: 'POST',
+        body: JSON.stringify({ text, rating, page }),
+      }),
   },
 };
