@@ -1,19 +1,19 @@
 import { Font } from '@react-pdf/renderer';
 
-// PT Sans — full Cyrillic support via Google Fonts CDN
+// PT Sans — full Cyrillic support, hosted locally in public/assets/fonts/
 Font.register({
   family: 'PTSans',
   fonts: [
     {
-      src: 'https://fonts.gstatic.com/s/ptsans/v17/jizaRExUiTo99u79P0WOxOGMMDQ.ttf',
+      src: '/assets/fonts/PTSans-Regular.ttf',
       fontWeight: 'normal',
     },
     {
-      src: 'https://fonts.gstatic.com/s/ptsans/v17/jizaBExUiTo99u79B_mh0O6tLR8a8zI.ttf',
+      src: '/assets/fonts/PTSans-Bold.ttf',
       fontWeight: 'bold',
     },
     {
-      src: 'https://fonts.gstatic.com/s/ptsans/v17/jizfRExUiTo99u79D4-ExdymKzMTk.ttf',
+      src: '/assets/fonts/PTSans-Italic.ttf',
       fontStyle: 'italic',
       fontWeight: 'normal',
     },
