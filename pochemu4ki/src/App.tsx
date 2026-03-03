@@ -17,6 +17,7 @@ import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Onboarding from './pages/Onboarding';
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/app/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
             <Route path="/app/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/app/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+            <Route path="/app/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
             {/* Public static */}
             <Route path="/privacy" element={<Privacy />} />

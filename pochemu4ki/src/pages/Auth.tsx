@@ -45,10 +45,11 @@ export default function Auth() {
     try {
       if (isRegister) {
         await registerWithEmail(email, password);
+        navigate('/app/onboarding');
       } else {
         await loginWithEmail(email, password);
+        navigate('/app');
       }
-      navigate('/app');
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message || 'Что-то пошло не так');
