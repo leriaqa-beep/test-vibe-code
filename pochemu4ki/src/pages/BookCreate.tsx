@@ -16,6 +16,7 @@ export default function BookCreate() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bookTitle, setBookTitle] = useState('Сборник сказок');
   const [generating, setGenerating] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [step, setStep] = useState<'select' | 'title'>('select');
 
   useEffect(() => {
@@ -60,35 +61,44 @@ export default function BookCreate() {
   const handleDownload = useCallback(async () => {
     if (selectedStories.length === 0) return;
     setGenerating(true);
+    setPdfError(null);
     try {
       const child = (children.find(c => c.id === activeChildId) || children[0]) as ChildProfile;
-      if (!child) return;
+      if (!child) throw new Error('Профиль ребёнка не найден');
 
       // Dynamic import — loads @react-pdf/renderer only when needed
-      const { pdf } = await import('@react-pdf/renderer');
-      const { BookDocument } = await import('../components/BookPDF/BookPDF');
+      const [{ pdf }, { BookDocument }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('../components/BookPDF/BookPDF'),
+      ]);
 
       const mascotUrl = `${window.location.origin}/assets/mascot/mascot-joy.png`;
 
-      const blob = await pdf(
+      const instance = pdf(
         <BookDocument
           title={bookTitle}
           child={child}
           stories={selectedStories}
           mascotUrl={mascotUrl}
         />
-      ).toBlob();
+      );
 
-      const url  = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href  = url;
-      link.download = `${bookTitle.replace(/[^а-яёА-ЯЁa-zA-Z0-9 ]/g, '').trim() || 'книга'}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      const blob = await instance.toBlob();
+      const filename = `${bookTitle.replace(/[^а-яёА-ЯЁa-zA-Z0-9 ]/g, '').trim() || 'книга'}.pdf`;
+
+      // Use anchor with object URL — works in all modern browsers
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement('a'), {
+        href: url,
+        download: filename,
+        style: 'display:none',
+      });
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
     } catch (e) {
       console.error('PDF generation error:', e);
+      setPdfError(e instanceof Error ? e.message : 'Не удалось создать PDF. Попробуйте ещё раз.');
     } finally {
       setGenerating(false);
     }
@@ -280,6 +290,11 @@ export default function BookCreate() {
             {generating && (
               <p className="text-center text-xs text-text-muted mt-3">
                 Загружаем шрифты и формируем PDF — это займёт несколько секунд
+              </p>
+            )}
+            {pdfError && (
+              <p className="text-center text-xs text-red-500 mt-3 bg-red-50 rounded-xl px-3 py-2">
+                ⚠️ {pdfError}
               </p>
             )}
 

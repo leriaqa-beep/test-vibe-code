@@ -86,10 +86,10 @@ export default function Library() {
           {/* Book create button */}
           <button
             onClick={() => navigate(`/app/book/create${activeChildId ? `?child=${activeChildId}` : ''}`)}
-            className="w-9 h-9 bg-white rounded-xl shadow-sm border border-purple-100 flex items-center justify-center text-purple-500 hover:bg-purple-50 hover:text-purple-700 transition"
-            title="Создать книгу"
+            className="flex items-center gap-1.5 bg-purple-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm hover:bg-purple-700 transition flex-shrink-0"
           >
-            <BookMarked className="w-4 h-4" />
+            <BookMarked className="w-3.5 h-3.5" />
+            Создать книгу
           </button>
 
           {/* View toggle */}
