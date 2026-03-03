@@ -1,6 +1,7 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { store } from '../db/store';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { supabase } from '../db/supabase';
 
 const router = Router();
 router.use(authMiddleware);
@@ -43,6 +44,26 @@ router.delete('/me', async (req: AuthRequest, res: Response) => {
     return;
   }
   await store.deleteUser(userId);
+  res.json({ success: true });
+});
+
+// POST /api/users/feedback — store beta feedback (auth optional via query)
+router.post('/feedback', async (req: AuthRequest & Request, res: Response) => {
+  const { text, rating, page } = req.body as { text?: string; rating?: number; page?: string };
+  if (!text?.trim()) {
+    res.status(400).json({ error: 'Текст отзыва обязателен' });
+    return;
+  }
+  const { error } = await supabase.from('feedback').insert({
+    user_id: req.userId || null,
+    text: text.trim(),
+    rating: rating || null,
+    page: page || null,
+  });
+  if (error) {
+    res.status(500).json({ error: 'Не удалось сохранить отзыв' });
+    return;
+  }
   res.json({ success: true });
 });
 
