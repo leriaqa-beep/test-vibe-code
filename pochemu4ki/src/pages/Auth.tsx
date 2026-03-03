@@ -4,7 +4,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import DecorationLayer from '../components/Decorations';
 
-const BACKEND_URL = 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 function GoogleIcon() {
   return (
@@ -57,7 +57,7 @@ export default function Auth() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${BACKEND_URL}/api/auth/google`;
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   return (
