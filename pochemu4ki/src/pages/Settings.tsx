@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Plus, Trash2, Crown } from 'lucide-react';
+import { ArrowLeft, LogOut, Plus, Trash2, Crown, Pencil } from 'lucide-react';
 import HeroImage from '../components/HeroImage';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
@@ -93,6 +93,12 @@ export default function Settings() {
                     <p className="font-medium text-text-primary text-sm">{child.name}</p>
                     <p className="text-xs text-text-secondary">{child.age} лет · {child.toys.length} игрушки</p>
                   </div>
+                  <button
+                    onClick={() => navigate(`/app/children/${child.id}/edit`)}
+                    className="text-purple-400 hover:text-purple-600 transition p-1"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={() => handleDeleteChild(child.id, child.name)}
                     className="text-red-400 hover:text-red-600 transition p-1"

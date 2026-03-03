@@ -8,6 +8,7 @@ import Auth from './pages/Auth';
 import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard';
 import ChildSetup from './pages/ChildSetup';
+import ChildEdit from './pages/ChildEdit';
 import NewStory from './pages/NewStory';
 import StoryView from './pages/StoryView';
 import Library from './pages/Library';
@@ -29,6 +30,7 @@ export default function App() {
             {/* Protected app */}
             <Route path="/app" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/app/children/new" element={<ProtectedRoute><ChildSetup /></ProtectedRoute>} />
+            <Route path="/app/children/:childId/edit" element={<ProtectedRoute><ChildEdit /></ProtectedRoute>} />
             <Route path="/app/children/:childId/story" element={<ProtectedRoute><NewStory /></ProtectedRoute>} />
             <Route path="/app/story/:id" element={<ProtectedRoute><StoryView /></ProtectedRoute>} />
             <Route path="/app/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
