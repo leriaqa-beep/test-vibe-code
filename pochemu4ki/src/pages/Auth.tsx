@@ -133,6 +133,19 @@ export default function Auth() {
               </button>
             </div>
 
+            {!isRegister && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-xs font-medium"
+                  style={{ color: 'var(--accent-primary)' }}
+                >
+                  Забыли пароль?
+                </button>
+              </div>
+            )}
+
             {error && (
               <div className="bg-red-50 text-red-600 text-xs rounded-xl px-3 py-2">
                 {error}

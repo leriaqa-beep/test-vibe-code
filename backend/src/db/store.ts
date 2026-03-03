@@ -236,4 +236,27 @@ export const store = {
     const { error } = await supabase.from('stories').delete().eq('id', id);
     if (error) throw error;
   },
+
+  // Password reset tokens
+  async saveResetToken(token: string, userId: string, expiresAt: Date): Promise<void> {
+    const { error } = await supabase.from('password_reset_tokens').upsert(
+      { token, user_id: userId, expires_at: expiresAt.toISOString() },
+      { onConflict: 'token' }
+    );
+    if (error) throw error;
+  },
+
+  async getResetToken(token: string): Promise<{ userId: string; expiresAt: Date } | undefined> {
+    const { data, error } = await supabase
+      .from('password_reset_tokens')
+      .select('user_id, expires_at')
+      .eq('token', token)
+      .single();
+    if (error || !data) return undefined;
+    return { userId: data.user_id, expiresAt: new Date(data.expires_at) };
+  },
+
+  async deleteResetToken(token: string): Promise<void> {
+    await supabase.from('password_reset_tokens').delete().eq('token', token);
+  },
 };
