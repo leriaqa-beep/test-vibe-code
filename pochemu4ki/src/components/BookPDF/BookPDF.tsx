@@ -1,5 +1,5 @@
 import {
-  Document, Page, View, Text, Image, Svg, Rect, Circle, Defs,
+  Document, Page, View, Text, Image, Svg, Rect, Defs,
   LinearGradient as PdfGrad, Stop, StyleSheet,
 } from '@react-pdf/renderer';
 import './fonts';
@@ -12,7 +12,6 @@ const DARK    = '#2D2B3D';
 const MUTED   = '#7A7890';
 const LIGHT_P = '#EDE8FA';
 const GOLD    = '#F9D56E';
-const DEEP    = '#1A0D55';
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
@@ -42,102 +41,6 @@ const s = StyleSheet.create({
   footerDot: { fontFamily: 'PTSans', fontSize: 9, color: '#D1C8F5', marginLeft: 5, marginRight: 5 },
 });
 
-// ── Cover background SVG ──────────────────────────────────────────────────────
-function CoverBg() {
-  return (
-    <Svg width={595} height={842} style={{ position: 'absolute', top: 0, left: 0 }}>
-      <Defs>
-        <PdfGrad id="cBg" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0"    stopColor="#1A0D55" stopOpacity={1} />
-          <Stop offset="0.5"  stopColor="#5B4BA8" stopOpacity={1} />
-          <Stop offset="1"    stopColor="#9B8EC4" stopOpacity={1} />
-        </PdfGrad>
-        <PdfGrad id="cTop" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#000000" stopOpacity={0.3} />
-          <Stop offset="1" stopColor="#000000" stopOpacity={0}   />
-        </PdfGrad>
-        <PdfGrad id="cBot" x1="0" y1="1" x2="0" y2="0">
-          <Stop offset="0" stopColor="#000000" stopOpacity={0.35} />
-          <Stop offset="1" stopColor="#000000" stopOpacity={0}    />
-        </PdfGrad>
-        <PdfGrad id="gLine" x1="0" y1="0" x2="1" y2="0">
-          <Stop offset="0"    stopColor={GOLD} stopOpacity={0} />
-          <Stop offset="0.2"  stopColor={GOLD} stopOpacity={1} />
-          <Stop offset="0.8"  stopColor={GOLD} stopOpacity={1} />
-          <Stop offset="1"    stopColor={GOLD} stopOpacity={0} />
-        </PdfGrad>
-      </Defs>
-
-      {/* Gradient fill */}
-      <Rect x={0} y={0} width={595} height={842} fill="url(#cBg)" />
-      {/* Depth vignette */}
-      <Rect x={0} y={0}   width={595} height={180} fill="url(#cTop)" />
-      <Rect x={0} y={662} width={595} height={180} fill="url(#cBot)" />
-
-      {/* Ornamental double border */}
-      <Rect x={18} y={18} width={559} height={806} rx={20} fill="none" strokeWidth={1.5} stroke="rgba(255,255,255,0.27)" />
-      <Rect x={28} y={28} width={539} height={786} rx={14} fill="none" strokeWidth={0.7}  stroke="rgba(249,213,110,0.22)" />
-
-      {/* Corner accent circles */}
-      <Circle cx={48}  cy={48}  r={5} fill="rgba(255,255,255,0.1)" />
-      <Circle cx={547} cy={48}  r={5} fill="rgba(255,255,255,0.1)" />
-      <Circle cx={48}  cy={794} r={5} fill="rgba(255,255,255,0.1)" />
-      <Circle cx={547} cy={794} r={5} fill="rgba(255,255,255,0.1)" />
-
-      {/* Gold horizontal divider */}
-      <Rect x={148} y={516} width={300} height={1.5} rx={0.75} fill="url(#gLine)" />
-
-      {/* Stars top */}
-      <Circle cx={65}  cy={72}  r={2.5} fill="rgba(255,255,255,0.85)" />
-      <Circle cx={125} cy={44}  r={1.5} fill="rgba(249,213,110,0.9)"  />
-      <Circle cx={210} cy={82}  r={2}   fill="rgba(255,255,255,0.55)" />
-      <Circle cx={297} cy={36}  r={3}   fill="rgba(255,255,255,0.65)" />
-      <Circle cx={375} cy={58}  r={1.5} fill="rgba(249,213,110,0.75)" />
-      <Circle cx={466} cy={46}  r={2}   fill="rgba(255,255,255,0.7)"  />
-      <Circle cx={528} cy={90}  r={2.5} fill="rgba(249,213,110,0.65)" />
-      <Circle cx={58}  cy={138} r={1.5} fill="rgba(255,255,255,0.4)"  />
-      <Circle cx={492} cy={118} r={2}   fill="rgba(255,255,255,0.5)"  />
-      <Circle cx={160} cy={108} r={1}   fill="rgba(249,213,110,0.8)"  />
-      <Circle cx={435} cy={93}  r={1}   fill="rgba(255,255,255,0.6)"  />
-      <Circle cx={320} cy={110} r={1.5} fill="rgba(249,213,110,0.5)"  />
-
-      {/* Stars bottom */}
-      <Circle cx={78}  cy={742} r={2}   fill="rgba(255,255,255,0.4)"  />
-      <Circle cx={162} cy={788} r={1.5} fill="rgba(249,213,110,0.6)"  />
-      <Circle cx={298} cy={758} r={2.5} fill="rgba(255,255,255,0.35)" />
-      <Circle cx={442} cy={778} r={1.5} fill="rgba(249,213,110,0.7)"  />
-      <Circle cx={518} cy={748} r={2}   fill="rgba(255,255,255,0.5)"  />
-      <Circle cx={200} cy={808} r={1}   fill="rgba(255,255,255,0.4)"  />
-      <Circle cx={390} cy={818} r={1}   fill="rgba(249,213,110,0.5)"  />
-    </Svg>
-  );
-}
-
-// ── Back cover background ─────────────────────────────────────────────────────
-function BackCoverBg() {
-  return (
-    <Svg width={595} height={842} style={{ position: 'absolute', top: 0, left: 0 }}>
-      <Defs>
-        <PdfGrad id="backBg" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#2A1870" stopOpacity={1} />
-          <Stop offset="1" stopColor="#1A0D55" stopOpacity={1} />
-        </PdfGrad>
-      </Defs>
-      <Rect x={0} y={0} width={595} height={842} fill="url(#backBg)" />
-      <Rect x={18} y={18} width={559} height={806} rx={20} fill="none" strokeWidth={1.5} stroke="rgba(255,255,255,0.2)" />
-      {/* Soft glow */}
-      <Circle cx={297} cy={380} r={230} fill="rgba(124,107,196,0.07)" />
-      <Circle cx={297} cy={380} r={140} fill="rgba(124,107,196,0.09)" />
-      {/* Stars */}
-      <Circle cx={100} cy={100} r={2}   fill="rgba(255,255,255,0.5)"  />
-      <Circle cx={500} cy={80}  r={1.5} fill="rgba(249,213,110,0.7)"  />
-      <Circle cx={150} cy={700} r={1.5} fill="rgba(255,255,255,0.4)"  />
-      <Circle cx={450} cy={720} r={2}   fill="rgba(249,213,110,0.6)"  />
-      <Circle cx={297} cy={60}  r={2.5} fill="rgba(255,255,255,0.6)"  />
-      <Circle cx={297} cy={780} r={2}   fill="rgba(255,255,255,0.4)"  />
-    </Svg>
-  );
-}
 
 // ── Small gradient line divider ───────────────────────────────────────────────
 function GradLine({ id, color, width = 280 }: { id: string; color: string; width?: number }) {
@@ -200,85 +103,70 @@ export function BookDocument({ title, child, stories, mascotUrl }: BookDocumentP
       {/* ══════════════════════════════════════════════════
           ОБЛОЖКА
       ══════════════════════════════════════════════════ */}
-      <Page size="A4" style={{ backgroundColor: DEEP }}>
-        {/* Gradient stars background */}
-        <CoverBg />
+      <Page size="A4" style={{ backgroundColor: '#1E1060', flexDirection: 'column' }}>
 
-        {/* All cover content - absolute layer on top of SVG */}
-        <View style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '0 60',
-        }}>
+        {/* ── Decorative borders (View-based, no SVG z-order issues) ── */}
+        <View style={{ position: 'absolute', top: 18, left: 18, right: 18, bottom: 18, borderRadius: 20, border: '1.5px solid rgba(255,255,255,0.22)' }} />
+        <View style={{ position: 'absolute', top: 28, left: 28, right: 28, bottom: 28, borderRadius: 14, border: '0.7px solid rgba(249,213,110,0.25)' }} />
 
-          {/* Top label */}
-          <Text style={{
-            fontFamily: 'PTSans', fontSize: 9,
-            color: 'rgba(249,213,110,0.82)', letterSpacing: 3,
-            marginBottom: 24, textAlign: 'center',
-          }}>
+        {/* ── Corner star dots ── */}
+        <View style={{ position: 'absolute', top: 55, left: 55, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.7)' }} />
+        <View style={{ position: 'absolute', top: 55, right: 55, width: 3, height: 3, borderRadius: 1.5, backgroundColor: GOLD }} />
+        <View style={{ position: 'absolute', bottom: 55, left: 55, width: 3, height: 3, borderRadius: 1.5, backgroundColor: GOLD }} />
+        <View style={{ position: 'absolute', bottom: 55, right: 55, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.7)' }} />
+        <View style={{ position: 'absolute', top: 38, left: 120, width: 2, height: 2, borderRadius: 1, backgroundColor: 'rgba(249,213,110,0.8)' }} />
+        <View style={{ position: 'absolute', top: 44, right: 140, width: 2.5, height: 2.5, borderRadius: 1.25, backgroundColor: 'rgba(255,255,255,0.6)' }} />
+        <View style={{ position: 'absolute', top: 60, left: 240, width: 2, height: 2, borderRadius: 1, backgroundColor: 'rgba(255,255,255,0.5)' }} />
+
+        {/* ── Top spacer ── */}
+        <View style={{ flex: 1 }} />
+
+        {/* ── Main content — normal flow, no absolute ── */}
+        <View style={{ flexDirection: 'column', alignItems: 'center', paddingLeft: 60, paddingRight: 60 }}>
+
+          {/* Series label */}
+          <Text style={{ fontFamily: 'PTSans', fontSize: 9, color: GOLD, letterSpacing: 3, marginBottom: 22, textAlign: 'center' }}>
             СКАЗКИ ДЛЯ ДЕТЕЙ
           </Text>
 
-          {/* Mascot */}
-          <Image
-            src={mascotUrl}
-            style={{ width: 150, height: 150, objectFit: 'contain', marginBottom: 28 }}
-          />
+          {/* Mascot image */}
+          <Image src={mascotUrl} style={{ width: 140, height: 140, marginBottom: 26 }} />
 
           {/* Book title */}
-          <Text style={{
-            fontFamily: 'PTSans', fontWeight: 'bold',
-            fontSize: 28, color: '#FFFFFF',
-            textAlign: 'center', lineHeight: 1.3,
-            marginBottom: 20, letterSpacing: -0.3,
-          }}>
+          <Text style={{ fontFamily: 'PTSans', fontWeight: 'bold', fontSize: 26, color: '#FFFFFF', textAlign: 'center', lineHeight: 1.35, marginBottom: 18 }}>
             {title}
           </Text>
 
-          {/* Gold accent line */}
-          <GradLine id="covLine1" color={GOLD} width={280} />
+          {/* Gold divider */}
+          <GradLine id="covLine1" color={GOLD} width={260} />
 
-          {/* "ДЛЯ" label */}
-          <Text style={{
-            fontFamily: 'PTSans', fontWeight: 'bold',
-            fontSize: 11, color: 'rgba(255,255,255,0.55)',
-            letterSpacing: 4, marginTop: 22, marginBottom: 10,
-            textAlign: 'center',
-          }}>
+          {/* "ДЛЯ" */}
+          <Text style={{ fontFamily: 'PTSans', fontWeight: 'bold', fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: 4, marginTop: 20, marginBottom: 8, textAlign: 'center' }}>
             ДЛЯ
           </Text>
 
-          {/* ★ Child name — THE WOW MOMENT ★ */}
-          <Text style={{
-            fontFamily: 'PTSans', fontWeight: 'bold',
-            fontSize: 52, color: GOLD,
-            textAlign: 'center', lineHeight: 1.05,
-            marginBottom: 14,
-          }}>
+          {/* Child name */}
+          <Text style={{ fontFamily: 'PTSans', fontWeight: 'bold', fontSize: 52, color: GOLD, textAlign: 'center', lineHeight: 1.05, marginBottom: 12 }}>
             {child.name}
           </Text>
 
-          {/* Age + story count */}
-          <Text style={{
-            fontFamily: 'PTSans', fontSize: 13,
-            color: 'rgba(255,255,255,0.55)',
-            textAlign: 'center',
-          }}>
-            {child.age} {ageWord(child.age)}  •  {stories.length} {storiesWord(stories.length)}
+          {/* Age + count */}
+          <Text style={{ fontFamily: 'PTSans', fontSize: 12, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
+            {child.age} {ageWord(child.age)}  ·  {stories.length} {storiesWord(stories.length)}
           </Text>
+
         </View>
 
-        {/* Brand at bottom — separate absolute element */}
-        <View style={{ position: 'absolute', bottom: 36, left: 0, right: 0, alignItems: 'center' }}>
-          <Text style={{
-            fontFamily: 'PTSans', fontWeight: 'bold',
-            fontSize: 9, color: 'rgba(255,255,255,0.3)',
-            letterSpacing: 3, textAlign: 'center',
-          }}>
+        {/* ── Bottom spacer ── */}
+        <View style={{ flex: 1 }} />
+
+        {/* ── Brand ── */}
+        <View style={{ paddingBottom: 36, alignItems: 'center' }}>
+          <Text style={{ fontFamily: 'PTSans', fontSize: 9, color: 'rgba(255,255,255,0.28)', letterSpacing: 3 }}>
             ПОЧЕМУ-КА!
           </Text>
         </View>
+
       </Page>
 
       {/* ══════════════════════════════════════════════════
@@ -357,57 +245,43 @@ export function BookDocument({ title, child, stories, mascotUrl }: BookDocumentP
       {/* ══════════════════════════════════════════════════
           ФИНАЛЬНАЯ СТРАНИЦА — ПОСВЯЩЕНИЕ
       ══════════════════════════════════════════════════ */}
-      <Page size="A4" style={{ backgroundColor: DEEP }}>
-        <BackCoverBg />
+      <Page size="A4" style={{ backgroundColor: '#1A0D55', flexDirection: 'column' }}>
 
-        <View style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '0 60',
-        }}>
-          {/* Mascot */}
-          <Image
-            src={mascotUrl}
-            style={{ width: 110, height: 110, objectFit: 'contain', marginBottom: 36 }}
-          />
+        {/* Decorative border */}
+        <View style={{ position: 'absolute', top: 18, left: 18, right: 18, bottom: 18, borderRadius: 20, border: '1.5px solid rgba(255,255,255,0.18)' }} />
 
-          <Text style={{
-            fontFamily: 'PTSans', fontWeight: 'bold',
-            fontSize: 16, color: 'rgba(255,255,255,0.65)',
-            textAlign: 'center', lineHeight: 1.5, marginBottom: 8,
-          }}>
+        {/* Top spacer */}
+        <View style={{ flex: 1 }} />
+
+        {/* Content */}
+        <View style={{ flexDirection: 'column', alignItems: 'center', paddingLeft: 60, paddingRight: 60 }}>
+          <Image src={mascotUrl} style={{ width: 110, height: 110, marginBottom: 32 }} />
+
+          <Text style={{ fontFamily: 'PTSans', fontWeight: 'bold', fontSize: 15, color: 'rgba(255,255,255,0.6)', textAlign: 'center', lineHeight: 1.5, marginBottom: 10 }}>
             Эта книга создана специально для
           </Text>
 
-          {/* Child name */}
-          <Text style={{
-            fontFamily: 'PTSans', fontWeight: 'bold',
-            fontSize: 44, color: GOLD,
-            textAlign: 'center', marginBottom: 36,
-          }}>
+          <Text style={{ fontFamily: 'PTSans', fontWeight: 'bold', fontSize: 44, color: GOLD, textAlign: 'center', marginBottom: 32 }}>
             {child.name}
           </Text>
 
-          <GradLine id="dedLine" color="rgba(255,255,255,0.35)" width={200} />
+          <GradLine id="dedLine" color="rgba(255,255,255,0.3)" width={200} />
 
-          <Text style={{
-            fontFamily: 'PTSans', fontStyle: 'italic',
-            fontSize: 14, color: 'rgba(255,255,255,0.5)',
-            textAlign: 'center', lineHeight: 1.8, marginTop: 28,
-          }}>
+          <Text style={{ fontFamily: 'PTSans', fontStyle: 'italic', fontSize: 13, color: 'rgba(255,255,255,0.45)', textAlign: 'center', lineHeight: 1.8, marginTop: 26 }}>
             Пусть вопросы никогда не заканчиваются,{'\n'}а ответы всегда звучат как сказка.
           </Text>
         </View>
 
+        {/* Bottom spacer */}
+        <View style={{ flex: 1 }} />
+
         {/* Brand */}
-        <View style={{ position: 'absolute', bottom: 36, left: 0, right: 0, alignItems: 'center' }}>
-          <Text style={{
-            fontFamily: 'PTSans', fontSize: 9,
-            color: 'rgba(255,255,255,0.28)', letterSpacing: 3, textAlign: 'center',
-          }}>
+        <View style={{ paddingBottom: 36, alignItems: 'center' }}>
+          <Text style={{ fontFamily: 'PTSans', fontSize: 9, color: 'rgba(255,255,255,0.25)', letterSpacing: 3 }}>
             ПОЧЕМУ-КА!  •  pochemu4ki-app.onrender.com
           </Text>
         </View>
+
       </Page>
 
     </Document>
