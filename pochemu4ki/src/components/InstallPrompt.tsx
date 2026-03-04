@@ -7,6 +7,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const DISMISSED_KEY = 'pwa_install_dismissed';
+// Value stored: 'never' = permanent | numeric string = timestamp of "later" (24h cooldown)
 
 function isIOS() {
   return /iPhone|iPad|iPod/.test(navigator.userAgent) && !(window as { MSStream?: unknown }).MSStream;
@@ -52,7 +53,8 @@ export default function InstallPrompt() {
     if (isInStandaloneMode()) return;
     if (!isMobile()) return;
     const dismissed = localStorage.getItem(DISMISSED_KEY);
-    if (dismissed && Date.now() - Number(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
+    if (dismissed === 'never') return; // permanent opt-out
+    if (dismissed && Date.now() - Number(dismissed) < 24 * 60 * 60 * 1000) return; // 24h cooldown
 
     if (isIOS()) {
       const t = setTimeout(() => setShowIOS(true), 3000);
@@ -75,7 +77,16 @@ export default function InstallPrompt() {
   }, [deferredPrompt]);
 
   function dismiss() {
+    // "Позже" — 24h cooldown, will show again next day
     localStorage.setItem(DISMISSED_KEY, String(Date.now()));
+    setVisible(false);
+    setShowIOS(false);
+    setDeferredPrompt(null);
+  }
+
+  function dismissForever() {
+    // "Больше не спрашивать" — permanent
+    localStorage.setItem(DISMISSED_KEY, 'never');
     setVisible(false);
     setShowIOS(false);
     setDeferredPrompt(null);
@@ -192,6 +203,13 @@ export default function InstallPrompt() {
             }}>
               Позже
             </button>
+            <button onClick={dismissForever} style={{
+              width: '100%', marginTop: 8,
+              background: 'none', border: 'none', padding: '6px',
+              fontSize: 12, color: '#ABA9C0', cursor: 'pointer', textDecoration: 'underline',
+            }}>
+              Больше не спрашивать
+            </button>
           </div>
         </div>
       </Overlay>
@@ -256,6 +274,13 @@ export default function InstallPrompt() {
             fontWeight: 600, color: '#7A7890', cursor: 'pointer',
           }}>
             Позже
+          </button>
+          <button onClick={dismissForever} style={{
+            width: '100%', marginTop: 8,
+            background: 'none', border: 'none', padding: '6px',
+            fontSize: 12, color: '#ABA9C0', cursor: 'pointer', textDecoration: 'underline',
+          }}>
+            Больше не спрашивать
           </button>
         </div>
       </div>
