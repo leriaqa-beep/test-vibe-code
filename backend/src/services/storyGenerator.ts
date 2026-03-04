@@ -127,9 +127,9 @@ async function generateStoryImage(storyId: string, category: string): Promise<st
   const prompt = `Children's picture book illustration, soft watercolor style, ${scene}, warm pastel tones, cozy and dreamy atmosphere, gentle golden light, cute and friendly, no text, no letters`;
 
   try {
-    // gemini-2.0-flash-preview-image-generation supports free image generation via generateContent
+    // gemini-2.5-flash-image is the free-tier native image generation model (Nano Banana)
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
