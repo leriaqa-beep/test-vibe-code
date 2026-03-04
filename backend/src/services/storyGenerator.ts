@@ -127,33 +127,40 @@ async function generateStoryImage(storyId: string, category: string): Promise<st
   const prompt = `Children's picture book illustration, soft watercolor style, ${scene}, warm pastel tones, cozy and dreamy atmosphere, gentle golden light, cute and friendly, no text, no letters`;
 
   try {
+    // gemini-2.0-flash-exp supports free image generation via generateContent
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          instances: [{ prompt }],
-          parameters: { sampleCount: 1, aspectRatio: '16:9' },
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
         }),
       }
     );
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Gemini Imagen ${response.status}: ${errText.slice(0, 200)}`);
+      throw new Error(`Gemini generateContent ${response.status}: ${errText.slice(0, 300)}`);
     }
 
-    const data = await response.json() as { predictions?: { bytesBase64Encoded?: string }[] };
-    const b64 = data.predictions?.[0]?.bytesBase64Encoded;
-    if (!b64) throw new Error('No image bytes in Gemini response');
+    type GeminiPart = { inlineData?: { mimeType: string; data: string }; text?: string };
+    type GeminiResp = { candidates?: { content?: { parts?: GeminiPart[] } }[] };
+    const data = await response.json() as GeminiResp;
+    const parts = data.candidates?.[0]?.content?.parts ?? [];
+    const imagePart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
+    const b64 = imagePart?.inlineData?.data;
+    const mimeType = imagePart?.inlineData?.mimeType ?? 'image/png';
+    if (!b64) throw new Error('No image part in Gemini response');
 
+    const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
     const buffer = Buffer.from(b64, 'base64');
-    const fileName = `${storyId}.png`;
+    const fileName = `${storyId}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from('story-images')
-      .upload(fileName, buffer, { contentType: 'image/png', upsert: true });
+      .upload(fileName, buffer, { contentType: mimeType, upsert: true });
 
     if (uploadError) throw uploadError;
 
@@ -161,7 +168,7 @@ async function generateStoryImage(storyId: string, category: string): Promise<st
       .from('story-images')
       .getPublicUrl(fileName);
 
-    logger.ai(`[Gemini Imagen] Image generated and uploaded: ${fileName}`);
+    logger.ai(`[Gemini Image] Generated and uploaded: ${fileName}`);
     return publicUrl;
   } catch (err) {
     logger.ai('Image generation failed, using fallback', err instanceof Error ? err : new Error(String(err)));
