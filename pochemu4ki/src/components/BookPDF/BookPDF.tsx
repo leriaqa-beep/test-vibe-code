@@ -349,25 +349,44 @@ export function BookDocument({ title, child, stories, baseUrl }: BookDocumentPro
         return (
           <View key={story.id}>
             {/* ── 4a. Страница-разделитель ─── */}
-            <Page size="A4" style={{ backgroundColor: C.coverBg, flexDirection: 'column' }}>
-              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 300, backgroundColor: C.coverMid, opacity: 0.25 }} />
-              <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 180, backgroundColor: C.coverBot, opacity: 0.4 }} />
-              {/* Stars (fewer) */}
-              {[{x:60,y:50,r:2.5},{x:535,y:44,r:2},{x:297,y:28,r:3.5},{x:80,y:780,r:2},{x:510,y:762,r:2.5}].map((d,i) => (
-                <View key={i} style={{ position: 'absolute', left: d.x-d.r, top: d.y-d.r, width: d.r*2, height: d.r*2, borderRadius: d.r, backgroundColor: C.goldLt, opacity: 0.6 }} />
-              ))}
-              <View style={{ position: 'absolute', top: 14, left: 14, right: 14, bottom: 14, borderRadius: 14, border: `1.5pt solid ${C.gold}`, opacity: 0.5 }} />
+            <Page size="A4" style={{ backgroundColor: C.parchment, flexDirection: 'column' }}>
+              <ParchFrame />
 
               <View style={{ flex: 1 }} />
               <View style={{ alignItems: 'center', paddingLeft: 52, paddingRight: 52 }}>
-                <Text style={{ fontFamily: 'Comfortaa', fontSize: 10, color: C.goldLt, letterSpacing: 3, marginBottom: 16, opacity: 0.7 }}>СКАЗКА {idx + 1}</Text>
-                <Image src={m('mascot-surprise.png')} style={{ width: 72, height: 72, marginBottom: 20 }} />
-                <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 30, color: C.white, textAlign: 'center', lineHeight: 1.25, marginBottom: 20 }}>
+                {/* Chapter label */}
+                <Text style={{ fontFamily: 'Comfortaa', fontSize: 9, color: C.purple, letterSpacing: 3, marginBottom: 22, opacity: 0.5 }}>
+                  СКАЗКА {idx + 1}
+                </Text>
+
+                {/* Mascot ~50mm = 142pt */}
+                <Image src={m('mascot-surprise.png')} style={{ width: 142, height: 142, marginBottom: 26 }} />
+
+                {/* Story title */}
+                <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 24, color: '#5B2C8B', textAlign: 'center', lineHeight: 1.35, marginBottom: 28 }}>
                   {story.title}
                 </Text>
-                <GradLine id={`div${idx}`} color={C.gold} width={200} />
+
+                {/* Decorative curl divider */}
+                <Svg width={280} height={22} viewBox="0 0 280 22">
+                  {/* Left curl */}
+                  <Path d="M 10,11 C 20,4 30,4 40,11 C 50,18 60,18 70,11 C 75,7 80,6 85,11" stroke={C.gold} strokeWidth={1.2} fill="none" opacity={0.55} />
+                  {/* Left line */}
+                  <Path d="M 85,11 L 112,11" stroke={C.gold} strokeWidth={0.8} fill="none" opacity={0.4} />
+                  {/* Center diamond */}
+                  <Path d="M 140,5 L 146,11 L 140,17 L 134,11 Z" fill={C.gold} opacity={0.6} />
+                  {/* Right line */}
+                  <Path d="M 168,11 L 195,11" stroke={C.gold} strokeWidth={0.8} fill="none" opacity={0.4} />
+                  {/* Right curl */}
+                  <Path d="M 195,11 C 200,6 205,7 210,11 C 220,18 230,18 240,11 C 250,4 260,4 270,11" stroke={C.gold} strokeWidth={1.2} fill="none" opacity={0.55} />
+                </Svg>
               </View>
               <View style={{ flex: 1 }} />
+
+              <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                <Image src={m('mascot-calm.png')} style={{ width: 16, height: 19, marginRight: 6 }} />
+                <Text style={{ fontFamily: 'PTSans', fontSize: 8, color: C.muted }}>Почему-Ка!</Text>
+              </View>
             </Page>
 
             {/* ── 4b. Страница с вопросом ─── */}
