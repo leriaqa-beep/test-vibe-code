@@ -80,14 +80,12 @@ export default function BookCreate() {
         import('../components/BookPDF/BookPDF'),
       ]);
 
-      const mascotUrl = `${window.location.origin}/assets/mascot/mascot-joy.png`;
-
       const instance = pdf(
         <BookDocument
           title={bookTitle}
           child={child}
           stories={selectedStories}
-          mascotUrl={mascotUrl}
+          baseUrl={window.location.origin}
         />
       );
 
