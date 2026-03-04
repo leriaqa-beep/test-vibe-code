@@ -157,7 +157,6 @@ export default function BookReader({ story, child }: BookReaderProps) {
           totalPages={totalPages}
           storyTitle={story.title}
           question={story.question}
-          imageUrl={story.imageUrl}
           heroImage={heroImage}
           child={child}
           isFirst={isFirst}
