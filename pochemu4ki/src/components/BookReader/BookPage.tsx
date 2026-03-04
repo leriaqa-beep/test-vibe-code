@@ -84,7 +84,6 @@ export interface BookPageProps {
   totalPages: number;
   storyTitle: string;
   question: string;
-  imageUrl?: string;
   heroImage?: string;
   child?: ChildProfile;
   isFirst?: boolean;   // first content page — shows title + question + mascot
@@ -97,7 +96,6 @@ export default function BookPage({
   totalPages,
   storyTitle,
   question,
-  imageUrl,
   heroImage,
   child,
   isFirst = false,
