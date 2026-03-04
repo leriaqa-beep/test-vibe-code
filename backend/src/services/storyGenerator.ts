@@ -127,15 +127,15 @@ async function generateStoryImage(storyId: string, category: string): Promise<st
   const prompt = `Children's picture book illustration, soft watercolor style, ${scene}, warm pastel tones, cozy and dreamy atmosphere, gentle golden light, cute and friendly, no text, no letters`;
 
   try {
-    // gemini-2.0-flash-exp supports free image generation via generateContent
+    // gemini-2.0-flash-preview-image-generation supports free image generation via generateContent
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
+          generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
         }),
       }
     );
@@ -290,7 +290,12 @@ function buildSystemPrompt(heroName: string): string {
 // Strip any non-Russian characters (Chinese, Vietnamese, Latin, etc.) Llama may inject
 function cleanStoryText(text: string): string {
   return text
-    .replace(/[^\u0400-\u04FF\u0020-\u007E\u00AB\u00BB\u2014\u2013\u2026\u201C\u201D\u201E\u2018\u2019\n\r\t\u2600-\u27BF\u{1F300}-\u{1F9FF}]/gu, '')
+    // Remove Latin words (Spanish "dijo", German "sagte", etc. that Llama injects)
+    .replace(/[a-zA-Z]+/g, '')
+    // Keep only Cyrillic, digits, common punctuation, whitespace, emoji
+    .replace(/[^\u0400-\u04FF\u0020-\u0040\u005B-\u0060\u007B-\u007E\u00AB\u00BB\u2014\u2013\u2026\u201C\u201D\u201E\u2018\u2019\n\r\t\u2600-\u27BF\u{1F300}-\u{1F9FF}]/gu, '')
+    // Fix spaces before punctuation left by removed words
+    .replace(/ ([,!?.;:])/g, '$1')
     .replace(/ {2,}/g, ' ')
     .trim();
 }
