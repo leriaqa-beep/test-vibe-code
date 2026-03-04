@@ -155,25 +155,27 @@ export default function BookPage({
         {/* First page: title block */}
         {isFirst && (
           <div style={{ marginBottom: 28 }}>
-            {/* Mascot-explain near title */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
+            {/* Mascot-explain centered, larger */}
+            <div style={{ textAlign: 'center', marginBottom: 12 }}>
               <img
                 src="/assets/mascot/mascot-explain.png"
                 alt=""
-                style={{ width: 56, height: 64, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 3px 8px rgba(124,58,237,0.25))' }}
+                style={{ width: 80, height: 92, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(124,58,237,0.28))' }}
               />
-              <h2 style={{
-                fontFamily: 'Literata, Georgia, serif',
-                fontWeight: 700,
-                fontSize: 'clamp(1.3rem, 4vw, 1.8rem)',
-                color: theme.accent,
-                lineHeight: 1.2,
-                margin: 0,
-                paddingTop: 4,
-              }}>
-                {storyTitle}
-              </h2>
             </div>
+
+            {/* Title centered */}
+            <h2 style={{
+              fontFamily: 'Literata, Georgia, serif',
+              fontWeight: 700,
+              fontSize: 'clamp(1.3rem, 4vw, 1.8rem)',
+              color: theme.accent,
+              lineHeight: 1.2,
+              margin: '0 0 16px',
+              textAlign: 'center',
+            }}>
+              {storyTitle}
+            </h2>
 
             {/* Question block */}
             <div style={{
@@ -202,17 +204,6 @@ export default function BookPage({
                 «{question}»
               </p>
             </div>
-
-            {/* Story image (AI-generated) */}
-            {imageUrl && (
-              <div style={{ borderRadius: 14, overflow: 'hidden', marginBottom: 20, boxShadow: `0 4px 20px ${theme.accent}28` }}>
-                <img
-                  src={imageUrl}
-                  alt={storyTitle}
-                  style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }}
-                />
-              </div>
-            )}
 
             {/* Ornamental divider */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, opacity: 0.5 }}>
