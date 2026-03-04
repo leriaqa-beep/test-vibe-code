@@ -15,6 +15,7 @@ export default function BookCreate() {
   const [activeChildId, setActiveChildId] = useState(defaultChildId);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bookTitle, setBookTitle] = useState('Сборник сказок');
+  const [titleEdited, setTitleEdited] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [step, setStep] = useState<'select' | 'title'>('select');
@@ -31,15 +32,20 @@ export default function BookCreate() {
     setSelected(new Set(childStories.map(s => s.id)));
   }, [activeChildId, stories]);
 
-  // Auto-fill title when child selected
+  // Reset edited flag when child selection changes so new child name auto-fills
+  useEffect(() => { setTitleEdited(false); }, [activeChildId]);
+
+  // Auto-fill title when child selected — skip if user manually edited or data not loaded
   useEffect(() => {
+    if (titleEdited) return;
+    if (children.length === 0) return;
     const child = children.find(c => c.id === activeChildId);
     if (child) {
       setBookTitle(`${child.name}: Сборник сказок`);
-    } else {
+    } else if (!activeChildId) {
       setBookTitle('Сборник сказок');
     }
-  }, [activeChildId, children]);
+  }, [activeChildId, children, titleEdited]);
 
   const filteredStories = activeChildId
     ? stories.filter(s => s.childId === activeChildId)
@@ -253,7 +259,7 @@ export default function BookCreate() {
               <input
                 type="text"
                 value={bookTitle}
-                onChange={e => setBookTitle(e.target.value)}
+                onChange={e => { setTitleEdited(true); setBookTitle(e.target.value); }}
                 maxLength={80}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-300 transition bg-white"
                 placeholder="Введите название книги..."
