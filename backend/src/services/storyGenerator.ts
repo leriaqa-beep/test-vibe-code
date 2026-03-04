@@ -1,8 +1,10 @@
 import Groq from 'groq-sdk';
 import { ChildProfile } from '../db/store';
 import { logger } from '../utils/logger';
+import { supabase } from '../db/supabase';
 
 interface StoryInput {
+  storyId: string;
   question: string;
   context: string;
   child: ChildProfile;
@@ -101,9 +103,75 @@ function getImageUrl(category: string): string {
   return images[category] || images.general;
 }
 
+const CATEGORY_SCENE: Record<string, string> = {
+  nature:     'magical forest with rain and rainbow, lush green trees, colorful flowers',
+  space:      'night sky full of stars, crescent moon, glowing galaxy, a small planet',
+  people:     'diverse happy children playing together in a sunny park',
+  growth:     'small child looking up at a tall tree, flowers blooming, sunrise',
+  sleep:      'cozy bedroom at night, soft moonlight through curtains, stars visible outside',
+  food:       'colorful fruits and vegetables arranged beautifully, warm kitchen',
+  friendship: 'two children holding hands and laughing in a sunlit meadow',
+  emotions:   'child with expressive face surrounded by glowing hearts and light',
+  kindness:   'child helping another child, glowing aura of warmth around them',
+  diversity:  'circle of joyful children of different backgrounds holding hands',
+  whatif:     'whimsical portal to fantasy world, floating islands, magical creatures',
+  tidiness:   'neat and cozy child\'s room with sunshine streaming in, toy shelves',
+  general:    'magical fairytale landscape, glowing forest path, warm golden light',
+};
+
+async function generateStoryImage(storyId: string, category: string): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return getImageUrl(category);
+
+  const scene = CATEGORY_SCENE[category] || CATEGORY_SCENE.general;
+  const prompt = `Children's picture book illustration, soft watercolor style, ${scene}, warm pastel tones, cozy and dreamy atmosphere, gentle golden light, cute and friendly, no text, no letters`;
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instances: [{ prompt }],
+          parameters: { sampleCount: 1, aspectRatio: '16:9' },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Gemini Imagen ${response.status}: ${errText.slice(0, 200)}`);
+    }
+
+    const data = await response.json() as { predictions?: { bytesBase64Encoded?: string }[] };
+    const b64 = data.predictions?.[0]?.bytesBase64Encoded;
+    if (!b64) throw new Error('No image bytes in Gemini response');
+
+    const buffer = Buffer.from(b64, 'base64');
+    const fileName = `${storyId}.png`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('story-images')
+      .upload(fileName, buffer, { contentType: 'image/png', upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('story-images')
+      .getPublicUrl(fileName);
+
+    logger.ai(`[Gemini Imagen] Image generated and uploaded: ${fileName}`);
+    return publicUrl;
+  } catch (err) {
+    logger.ai('Image generation failed, using fallback', err instanceof Error ? err : new Error(String(err)));
+    return getImageUrl(category);
+  }
+}
+
 // Fallback when Groq is unavailable
-function generateFallback(input: StoryInput): GeneratedStory {
-  const { question, context, child } = input;
+async function generateFallback(input: StoryInput): Promise<GeneratedStory> {
+  const { storyId, question, context, child } = input;
   const childName = child.name;
   const hero = getHero(child);
   const category = categorize(question);
@@ -124,6 +192,7 @@ function generateFallback(input: StoryInput): GeneratedStory {
     ? `${childName} ${g.smiled} и прижал${g.suffix === 'а' ? 'ась' : 'ся'} к ${toy.nickname}. За окном мигнула звезда — будто тоже услышала.`
     : `${childName} ${g.smiled} и посмотрел${g.suffix} на небо. Казалось, оно стало чуть ближе.`;
 
+  const imageUrl = await generateStoryImage(storyId, category);
   return {
     title: `Ответ для ${declineName(childName, child.gender, 'родительный')}`,
     content: `${opening}
@@ -139,7 +208,7 @@ ${hero.name} оказался рядом — он всегда появлялс�
 ${childName} ${g.listened} и не перебивал${g.suffix}. Слова складывались в картинки, картинки — в тепло внутри.
 
 ${closing}`,
-    imageUrl: getImageUrl(category),
+    imageUrl,
   };
 }
 
@@ -225,7 +294,7 @@ const groq = process.env.GROQ_API_KEY
   : null;
 
 export async function generateStory(input: StoryInput): Promise<GeneratedStory> {
-  const { question, context, child } = input;
+  const { storyId, question, context, child } = input;
   const category = categorize(question);
 
   if (!groq) {
@@ -247,16 +316,19 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
   logger.info(`[Groq] Sending prompt:\n--- SYSTEM ---\n${systemPrompt}\n--- USER ---\n${userMessage}`);
 
   try {
-    const completion = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-      temperature: 0.9,
-      max_tokens: 4096,
-      response_format: { type: 'json_object' },
-    });
+    const [completion, imageUrl] = await Promise.all([
+      groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage },
+        ],
+        temperature: 0.9,
+        max_tokens: 4096,
+        response_format: { type: 'json_object' },
+      }),
+      generateStoryImage(storyId, category),
+    ]);
 
     const responseText = completion.choices[0]?.message?.content || '';
     logger.info(`[Groq] Raw response:\n${responseText}`);
@@ -274,7 +346,7 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
     return {
       title: parsed.title,
       content: parsed.content,
-      imageUrl: getImageUrl(category),
+      imageUrl,
     };
   } catch (err) {
     logger.ai('Generation failed, using fallback', err instanceof Error ? err : new Error(String(err)));

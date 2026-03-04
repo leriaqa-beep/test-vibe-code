@@ -31,10 +31,11 @@ router.post('/generate', async (req: AuthRequest, res: Response) => {
     return;
   }
 
-  const generated = await generateStory({ question: question.trim(), context: context?.trim() || '', child });
+  const storyId = uuidv4();
+  const generated = await generateStory({ storyId, question: question.trim(), context: context?.trim() || '', child });
 
   const story: Story = {
-    id: uuidv4(),
+    id: storyId,
     userId: req.userId!,
     childId,
     title: generated.title,
