@@ -288,35 +288,53 @@ export function BookDocument({ title, child, stories, baseUrl }: BookDocumentPro
       </Page>
 
       {/* ════════════════════════════════════════════════════════════════
-          3. ОГЛАВЛЕНИЕ
+          3. ОГЛАВЛЕНИЕ (если сказок > 1)
       ════════════════════════════════════════════════════════════════ */}
+      {stories.length > 1 && (
       <Page size="A4" style={{ backgroundColor: C.parchment, flexDirection: 'column' }}>
         <ParchFrame />
-        <View style={{ padding: '52 52 72 52', flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-            <Image src={m('mascot-think.png')} style={{ width: 38, height: 44, marginRight: 12 }} />
-            <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 26, color: C.dark }}>Содержание</Text>
-          </View>
-          <GradLine id="toc0" color={C.gold} width={320} opacity={0.5} />
-          <View style={{ height: 20 }} />
+        <View style={{ paddingTop: 52, paddingLeft: 52, paddingRight: 52, paddingBottom: 72, flex: 1 }}>
 
-          {stories.map((story, idx) => (
-            <View key={story.id} style={{ flexDirection: 'row', alignItems: 'flex-start', paddingTop: 11, paddingBottom: 11, borderBottom: `0.8pt solid ${C.parchDark}` }}>
-              <View style={{ width: 24, height: 24, backgroundColor: C.purple, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12, flexShrink: 0, marginTop: 1 }}>
-                <Text style={{ fontFamily: 'PTSans', fontWeight: 'bold', fontSize: 10, color: C.white }}>{idx + 1}</Text>
+          {/* Header: mascot-think + title */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+            <Image src={m('mascot-think.png')} style={{ width: 42, height: 48, marginRight: 14, flexShrink: 0 }} />
+            <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 28, color: '#5B2C8B' }}>Оглавление</Text>
+          </View>
+          <GradLine id="toc0" color={C.gold} width={360} opacity={0.45} />
+          <View style={{ height: 24 }} />
+
+          {/* Story list with dot leaders */}
+          {stories.map((story, idx) => {
+            // page layout: cover(1) + endpaper(1) + toc(1) + per-story: 3 pages each
+            const pageNum = 4 + idx * 3;
+            return (
+              <View key={story.id} style={{ flexDirection: 'row', alignItems: 'flex-end', marginBottom: 18 }}>
+                {/* Number */}
+                <Text style={{ fontFamily: 'Literata', fontSize: 14, color: '#5B2C8B', marginRight: 8, flexShrink: 0, opacity: 0.7 }}>
+                  {idx + 1}.
+                </Text>
+                {/* Title */}
+                <Text style={{ fontFamily: 'Literata', fontSize: 14, color: C.dark, flexShrink: 1 }}>
+                  {story.title}
+                </Text>
+                {/* Dot leaders */}
+                <Text style={{ fontFamily: 'PTSans', fontSize: 9, color: C.muted, flexGrow: 1, letterSpacing: 4, marginLeft: 6, marginRight: 6, overflow: 'hidden', opacity: 0.5 }}>
+                  {' ·····················································································'}
+                </Text>
+                {/* Page number */}
+                <Text style={{ fontFamily: 'Literata', fontSize: 14, color: C.muted, flexShrink: 0 }}>
+                  {pageNum}
+                </Text>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 12, color: C.dark, lineHeight: 1.3 }}>{story.title}</Text>
-                <Text style={{ fontFamily: 'Literata', fontStyle: 'italic', fontSize: 10, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>«{story.question}»</Text>
-              </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
         <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
           <Image src={m('mascot-calm.png')} style={{ width: 16, height: 19, marginRight: 6 }} />
           <Text style={{ fontFamily: 'PTSans', fontSize: 8, color: C.muted }}>Почему-Ка!</Text>
         </View>
       </Page>
+      )}
 
       {/* ════════════════════════════════════════════════════════════════
           4. СТРАНИЦЫ СКАЗОК
