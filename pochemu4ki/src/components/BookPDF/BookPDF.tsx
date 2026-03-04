@@ -384,13 +384,6 @@ export function BookDocument({ title, child, stories, baseUrl }: BookDocumentPro
                 </View>
               </View>
 
-              {/* AI illustration */}
-              {story.imageUrl && story.imageUrl.startsWith('http') && (
-                <View style={{ marginTop: 10, marginLeft: 46, marginRight: 46, borderRadius: 10, overflow: 'hidden' }}>
-                  <Image src={story.imageUrl} style={{ width: '100%', height: 150 }} />
-                </View>
-              )}
-
               <Diamond color={C.gold} mt={10} mb={2} />
 
               {/* Story text */}

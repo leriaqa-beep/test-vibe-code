@@ -191,11 +191,7 @@ export default function Library() {
                   onClick={() => navigate(`/app/story/${story.id}`)}
                   className="w-full bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden flex hover:border-purple-300 transition text-left"
                 >
-                  {story.imageUrl && (
-                    <div className="w-24 h-24 flex-shrink-0 overflow-hidden">
-                      <img src={story.imageUrl} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  )}
+
                   <div className="flex-1 p-3 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <p className="font-semibold text-text-primary text-sm leading-tight line-clamp-2">{story.title}</p>
