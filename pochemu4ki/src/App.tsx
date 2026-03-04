@@ -21,6 +21,7 @@ import ResetPassword from './pages/ResetPassword';
 import Onboarding from './pages/Onboarding';
 import AdminDashboard from './pages/AdminDashboard';
 import FeedbackButton from './components/FeedbackButton';
+import InstallPrompt from './components/InstallPrompt';
 import { useAuth } from './context/AuthContext';
 
 function AuthFeedbackButton() {
@@ -34,6 +35,7 @@ export default function App() {
       <AuthProvider>
         <AppProvider>
           <AuthFeedbackButton />
+          <InstallPrompt />
           <Routes>
             {/* Public */}
             <Route path="/" element={<Landing />} />
