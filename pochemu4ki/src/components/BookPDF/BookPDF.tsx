@@ -1,5 +1,5 @@
 import {
-  Document, Page, View, Text, Image, Svg, Rect, Defs,
+  Document, Page, View, Text, Image, Svg, Rect, Defs, Circle, Path,
   LinearGradient as PdfGrad, Stop,
 } from '@react-pdf/renderer';
 import './fonts';
@@ -234,44 +234,56 @@ export function BookDocument({ title, child, stories, baseUrl }: BookDocumentPro
       {/* ════════════════════════════════════════════════════════════════
           2. ФОРЗАЦ (декоративная страница)
       ════════════════════════════════════════════════════════════════ */}
-      <Page size="A4" style={{ backgroundColor: C.warmCream, flexDirection: 'column' }}>
-        <ParchFrame />
-
-        {/* Decorative background dots */}
-        {Array.from({ length: 30 }).map((_, i) => {
-          const x = 30 + (i * 97) % 535;
-          const y = 30 + (i * 137) % 782;
-          return <View key={i} style={{ position: 'absolute', left: x, top: y, width: 3, height: 3, borderRadius: 1.5, backgroundColor: C.gold, opacity: 0.12 }} />;
-        })}
+      <Page size="A4" style={{ backgroundColor: '#F3EEFF', flexDirection: 'column' }}>
+        {/* Thin lavender border */}
+        <View style={{ position: 'absolute', top: 16, left: 16, right: 16, bottom: 16, borderRadius: 10, border: '0.8pt solid #C4B5FD', opacity: 0.4 }} />
 
         <View style={{ flex: 1 }} />
-        <View style={{ flexDirection: 'column', alignItems: 'center', paddingLeft: 60, paddingRight: 60 }}>
-          <Image src={m('mascot-surprise.png')} style={{ width: 90, height: 90, marginBottom: 24 }} />
 
-          <Text style={{ fontFamily: 'Comfortaa', fontSize: 13, color: C.muted, textAlign: 'center', letterSpacing: 1, marginBottom: 10 }}>
-            Эта волшебная книга принадлежит
-          </Text>
-          <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 44, color: C.purple, textAlign: 'center', lineHeight: 1.05, marginBottom: 16 }}>
-            {child.name}
-          </Text>
-
-          <GradLine id="endp1" color={C.gold} width={220} opacity={0.5} />
-
-          {heroUrl && (
-            <Image src={heroUrl} style={{ width: 72, height: 72, marginTop: 20, marginBottom: 16 }} />
-          )}
-          <Text style={{ fontFamily: 'Literata', fontStyle: 'italic', fontSize: 12, color: C.muted, textAlign: 'center', lineHeight: 1.7 }}>
-            Любимый герой: {child.hero?.name ?? '—'}
-          </Text>
-          <Text style={{ fontFamily: 'Literata', fontStyle: 'italic', fontSize: 11, color: C.muted, textAlign: 'center', lineHeight: 1.7, marginTop: 4, opacity: 0.75 }}>
-            {child.age} {ageWord(child.age)} · Создано с любовью в Почему-Ка!
-          </Text>
+        {/* Centered star/curl pattern */}
+        <View style={{ alignItems: 'center' }}>
+          <Svg width={440} height={380} viewBox="0 0 440 380">
+            {(() => {
+              const items: React.ReactElement[] = [];
+              const cols = 8, rows = 7;
+              const colStep = 55, rowStep = 52;
+              const startX = 27, startY = 26;
+              for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                  const cx = startX + c * colStep + (r % 2 === 1 ? colStep / 2 : 0);
+                  const cy = startY + r * rowStep;
+                  if (cx > 440) continue;
+                  const sz = 3.2 + Math.abs(Math.sin((r * 3 + c * 2) * 1.1)) * 1.8;
+                  const isGold = (r + c) % 6 === 0;
+                  const op = 0.22 + Math.abs(Math.sin((r + c) * 0.9)) * 0.28;
+                  const fill = isGold ? '#D4A853' : '#9B8EC4';
+                  // 4-pointed star (✦) via quadratic bezier
+                  const d = `M ${cx},${cy - sz} Q ${cx + sz * 0.28},${cy - sz * 0.28} ${cx + sz},${cy} Q ${cx + sz * 0.28},${cy + sz * 0.28} ${cx},${cy + sz} Q ${cx - sz * 0.28},${cy + sz * 0.28} ${cx - sz},${cy} Q ${cx - sz * 0.28},${cy - sz * 0.28} ${cx},${cy - sz} Z`;
+                  items.push(<Path key={`s${r}-${c}`} d={d} fill={fill} opacity={op} />);
+                  // Small dot between columns
+                  if (c < cols - 1) {
+                    const dx = cx + colStep / 2 - (r % 2 === 1 ? colStep / 2 : 0) + (r % 2 === 0 ? colStep / 2 : 0);
+                    if (dx < 440) {
+                      items.push(<Circle key={`d${r}-${c}`} cx={dx} cy={cy} r={1.1} fill="#9B8EC4" opacity={0.18} />);
+                    }
+                  }
+                }
+              }
+              return items;
+            })()}
+          </Svg>
         </View>
+
         <View style={{ flex: 1 }} />
 
-        <View style={{ position: 'absolute', bottom: 24, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-          <Image src={m('mascot-calm.png')} style={{ width: 16, height: 19, marginRight: 6 }} />
-          <Text style={{ fontFamily: 'PTSans', fontSize: 8, color: C.muted }}>Почему-Ка!</Text>
+        {/* Bottom text */}
+        <View style={{ paddingBottom: 44, alignItems: 'center' }}>
+          <Text style={{ fontFamily: 'PTSans', fontSize: 9, color: '#7C6BC4', textAlign: 'center', letterSpacing: 0.5, opacity: 0.7 }}>
+            Создано с любовью в приложении Почемучки
+          </Text>
+          <Text style={{ fontFamily: 'PTSans', fontSize: 8, color: '#9B8EC4', textAlign: 'center', marginTop: 5, opacity: 0.5 }}>
+            {new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </Text>
         </View>
       </Page>
 
