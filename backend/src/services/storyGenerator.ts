@@ -320,7 +320,7 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
 
   const userMessage = `Напиши тёплую сказку для ${child.name} (${genderLabel}, ${child.age} лет).
 Вопрос ребёнка: «${question}»${context ? `\nСитуация (от родителя): ${context}` : ''}
-ОБЯЗАТЕЛЬНЫЙ герой сказки (используй ТОЧНО это имя): ${hero.name}${shouldUseToys && child.toys?.length > 0 ? `\nЛюбимые игрушки (могут появиться в истории): ${child.toys.map(t => t.nickname).join(', ')}` : ''}
+ОБЯЗАТЕЛЬНЫЙ герой сказки (используй ТОЧНО это имя): ${hero.name}${shouldUseToys && child.toys?.length > 0 ? `\nОБЯЗАТЕЛЬНО включи в сказку любимую игрушку ребёнка (выбери одну): ${child.toys.map(t => `${t.nickname} — ${t.type}${t.description ? ', ' + t.description : ''}`).join('; ')}. Игрушка должна быть живым участником сцены (рядом лежала, слушала, ждала дома), НЕ просто упоминанием. ЗАПРЕЩЕНО придумывать другие игрушки.` : ''}
 Помни: имя ${child.name} склоняй правильно по падежам. Пол: ${genderLabel}.
 ВАЖНО: единственный герой-помощник в этой сказке — ${hero.name}. Никаких котов, сов, фей и других персонажей вместо него.`;
 

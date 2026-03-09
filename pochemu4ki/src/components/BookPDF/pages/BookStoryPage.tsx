@@ -93,7 +93,7 @@ export function BookStoryPage({
 
         <View style={{ alignItems: 'center' }}>
           <Image src={mascotJoyUrl} style={{ width: 113, height: 113, marginBottom: 10 }} />
-          <Text style={{ fontFamily: 'Comfortaa', fontStyle: 'italic', fontSize: 12, color: '#8B7355', textAlign: 'center' }}>
+          <Text style={{ fontFamily: 'PTSans', fontStyle: 'italic', fontSize: 12, color: '#8B7355', textAlign: 'center' }}>
             Сказка создана специально для {declineNameGenitive(child.name)}
           </Text>
         </View>
