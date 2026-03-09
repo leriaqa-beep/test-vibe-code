@@ -127,9 +127,8 @@ async function generateStoryImage(storyId: string, category: string): Promise<st
   const prompt = `Children's picture book illustration, soft watercolor style, ${scene}, warm pastel tones, cozy and dreamy atmosphere, gentle golden light, cute and friendly, no text, no letters`;
 
   try {
-    // gemini-2.5-flash-image is the free-tier native image generation model (Nano Banana)
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -154,22 +153,28 @@ async function generateStoryImage(storyId: string, category: string): Promise<st
     const mimeType = imagePart?.inlineData?.mimeType ?? 'image/png';
     if (!b64) throw new Error('No image part in Gemini response');
 
-    const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
-    const buffer = Buffer.from(b64, 'base64');
-    const fileName = `${storyId}.${ext}`;
+    // Try uploading to Supabase storage; fall back to data URL if upload fails
+    try {
+      const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
+      const buffer = Buffer.from(b64, 'base64');
+      const fileName = `${storyId}.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('story-images')
-      .upload(fileName, buffer, { contentType: mimeType, upsert: true });
+      const { error: uploadError } = await supabase.storage
+        .from('story-images')
+        .upload(fileName, buffer, { contentType: mimeType, upsert: true });
 
-    if (uploadError) throw uploadError;
+      if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('story-images')
-      .getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase.storage
+        .from('story-images')
+        .getPublicUrl(fileName);
 
-    logger.ai(`[Gemini Image] Generated and uploaded: ${fileName}`);
-    return publicUrl;
+      logger.ai(`[Gemini Image] Generated and uploaded: ${fileName}`);
+      return publicUrl;
+    } catch (uploadErr) {
+      logger.ai('[Gemini Image] Upload to Supabase failed, using data URL', uploadErr instanceof Error ? uploadErr : new Error(String(uploadErr)));
+      return `data:${mimeType};base64,${b64}`;
+    }
   } catch (err) {
     logger.ai('Image generation failed, using fallback', err instanceof Error ? err : new Error(String(err)));
     return getImageUrl(category);
