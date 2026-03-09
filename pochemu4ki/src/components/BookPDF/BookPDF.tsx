@@ -129,6 +129,45 @@ function CoverStars() {
   );
 }
 
+// ── Hero-adaptive page backgrounds ───────────────────────────────────────────
+const HERO_BG: Record<string, string> = {
+  '🦄': '#FAF5FF',
+  '🦉': '#FEFCE8',
+  '🐉': '#FFFBEB',
+  '🧚': '#FDF2F8',
+  '🦁': '#FFF7ED',
+  '🐱': '#F5F3FF',
+};
+function getHeroBg(emoji?: string): string {
+  return (emoji && HERO_BG[emoji]) ?? '#FDF6E3';
+}
+
+// ── Ornamental divider ── ✦ ── ────────────────────────────────────────────────
+function OrnamentalDivider({ mt = 6, mb = 8 }: { mt?: number; mb?: number }) {
+  return (
+    <View style={{ marginTop: mt, marginBottom: mb, alignItems: 'center' }}>
+      <Svg width={340} height={14} viewBox="0 0 340 14">
+        <Path d="M 10,7 L 156,7" stroke="#C9A96E" strokeWidth={0.4} fill="none" />
+        <Path d="M 170,3 L 174,7 L 170,11 L 166,7 Z" fill="#C9A96E" opacity={0.65} />
+        <Path d="M 184,7 L 330,7" stroke="#C9A96E" strokeWidth={0.4} fill="none" />
+      </Svg>
+    </View>
+  );
+}
+
+// ── Paragraph separator ── ✿ ── ──────────────────────────────────────────────
+function ParaSeparator() {
+  return (
+    <View style={{ marginTop: 8, marginBottom: 8, alignItems: 'center' }}>
+      <Svg width={180} height={14} viewBox="0 0 180 14">
+        <Path d="M 10,7 L 76,7"   stroke="#C9A96E" strokeWidth={0.3} fill="none" />
+        <Circle cx={90} cy={7} r={2.8} fill="#C9A96E" opacity={0.45} />
+        <Path d="M 104,7 L 170,7" stroke="#C9A96E" strokeWidth={0.3} fill="none" />
+      </Svg>
+    </View>
+  );
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface BookDocumentProps {
   title: string;
@@ -143,7 +182,7 @@ export function BookDocument({ title, child, stories, baseUrl }: BookDocumentPro
   const heroUrl = child.hero?.emoji && HERO[child.hero.emoji]
     ? `${baseUrl}${HERO[child.hero.emoji]}` : null;
 
-  // ── Shared page frame ─────────────────────────────────────────────────────
+  // ── Shared page frame (ToC, divider pages) ───────────────────────────────
   const ParchFrame = () => (
     <>
       <View style={{ position: 'absolute', top: 14, left: 14, right: 14, bottom: 14, borderRadius: 10, border: `1pt solid ${C.gold}`, opacity: 0.18 }} />
@@ -151,13 +190,30 @@ export function BookDocument({ title, child, stories, baseUrl }: BookDocumentPro
     </>
   );
 
-  // ── Story text page footer ────────────────────────────────────────────────
-  const StoryFooter = ({ storyIdx }: { storyIdx: number }) => (
-    <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-      <Image src={m('mascot-calm.png')} style={{ width: 16, height: 19, marginRight: 6 }} />
-      <Text style={{ fontFamily: 'PTSans', fontSize: 8, color: C.muted }}>Почему-Ка!</Text>
-      <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: C.gold, marginLeft: 6, marginRight: 6, opacity: 0.6 }} />
-      <Text style={{ fontFamily: 'PTSans', fontSize: 8, color: C.muted }}>{storyIdx + 1}</Text>
+  // ── Story text page frame with corner diamonds ────────────────────────────
+  const HeroFrame = () => (
+    <>
+      <View style={{ position: 'absolute', top: 14, left: 14, right: 14, bottom: 14, borderRadius: 8, border: '0.5pt solid #E8D5B7' }} />
+      {([
+        { top: 8,    left:  8 },
+        { top: 8,    right: 8 },
+        { bottom: 8, left:  8 },
+        { bottom: 8, right: 8 },
+      ] as Record<string, number>[]).map((pos, i) => (
+        <Svg key={i} width={12} height={12} style={{ position: 'absolute', ...pos }}>
+          <Path d="M6,1 L11,6 L6,11 L1,6 Z" fill="#C9A96E" opacity={0.55} />
+        </Svg>
+      ))}
+    </>
+  );
+
+  // ── Story text page footer ─ ✦ N ✦ ─ ────────────────────────────────────
+  const TextPageFooter = ({ pageNum }: { pageNum: number }) => (
+    <View style={{ position: 'absolute', bottom: 18, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+      <Image src={m('mascot-calm.png')} style={{ width: 23, height: 26, marginRight: 10 }} />
+      <Text style={{ fontFamily: 'Comfortaa', fontSize: 10, color: '#8B7355' }}>
+        {'─ ✦ '}{pageNum}{' ✦ ─'}
+      </Text>
     </View>
   );
 
@@ -305,8 +361,8 @@ export function BookDocument({ title, child, stories, baseUrl }: BookDocumentPro
 
           {/* Story list with dot leaders */}
           {stories.map((story, idx) => {
-            // page layout: cover(1) + endpaper(1) + toc(1) + per-story: 3 pages each
-            const pageNum = 4 + idx * 3;
+            // page layout: cover(1) + endpaper(1) + toc(1) + per-story: 2 pages each
+            const pageNum = 4 + idx * 2;
             return (
               <View key={story.id} style={{ flexDirection: 'row', alignItems: 'flex-end', marginBottom: 18 }}>
                 {/* Number */}
@@ -389,96 +445,80 @@ export function BookDocument({ title, child, stories, baseUrl }: BookDocumentPro
               </View>
             </Page>
 
-            {/* ── 4b. Страница с вопросом ─── */}
-            <Page size="A4" style={{ backgroundColor: C.parchment, flexDirection: 'column' }}>
-              <ParchFrame />
-              <View style={{ flex: 1 }} />
-              <View style={{ flexDirection: 'column', alignItems: 'center', paddingLeft: 56, paddingRight: 56 }}>
-                <Image src={m('mascot-hero.png')} style={{ width: 88, height: 96, marginBottom: 22 }} />
+            {/* ── 4b. Вопрос + текст сказки (объединённая страница) ─── */}
+            {(() => {
+              const tocOffset = stories.length > 1 ? 1 : 0;
+              const pageNum   = 4 + tocOffset + idx * 2;
+              return (
+                <Page size="A4" style={{ backgroundColor: getHeroBg(child.hero?.emoji), flexDirection: 'column' }}>
+                  <HeroFrame />
 
-                <Text style={{ fontFamily: 'Comfortaa', fontSize: 10, color: C.purple, letterSpacing: 2, marginBottom: 14, opacity: 0.7 }}>ВОПРОС РЕБЁНКА</Text>
+                  {/* Content area */}
+                  <View style={{ paddingTop: 71, paddingLeft: 57, paddingRight: 57, paddingBottom: 85 }}>
 
-                <View style={{ backgroundColor: C.purpleLt, borderRadius: 14, padding: '18 22', marginBottom: 22, borderLeft: `3pt solid ${C.purple}` }}>
-                  <Text style={{ fontFamily: 'Literata', fontStyle: 'italic', fontSize: 16, color: C.purple, textAlign: 'center', lineHeight: 1.65 }}>
-                    «{story.question}»
-                  </Text>
-                </View>
+                    {/* Header: title left + mascot-explain right */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 10, borderBottom: '0.3pt solid #E8D5B7', marginBottom: 0 }}>
+                      <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 22, color: '#5B2C8B', flex: 1, lineHeight: 1.25 }}>
+                        {story.title}
+                      </Text>
+                      <Image src={m('mascot-explain.png')} style={{ width: 34, height: 39, flexShrink: 0, marginLeft: 10 }} />
+                    </View>
 
-                <Diamond color={C.gold} mt={0} mb={16} />
+                    {/* ── ✦ ── */}
+                    <OrnamentalDivider mt={8} mb={10} />
 
-                <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 15, color: C.dark, textAlign: 'center' }}>
-                  — {child.name}, {child.age} {ageWord(child.age)}
-                </Text>
-                {heroUrl && (
-                  <Image src={heroUrl} style={{ width: 54, height: 54, marginTop: 16 }} />
-                )}
-              </View>
-              <View style={{ flex: 1 }} />
-              <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                <Image src={m('mascot-calm.png')} style={{ width: 16, height: 19, marginRight: 6 }} />
-                <Text style={{ fontFamily: 'PTSans', fontSize: 8, color: C.muted }}>Почему-Ка!</Text>
-              </View>
-            </Page>
-
-            {/* ── 4c. Страницы текста сказки ─── */}
-            <Page size="A4" style={{ backgroundColor: C.parchment, fontFamily: 'PTSans' }}>
-              <ParchFrame />
-
-              {/* Header */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 28, paddingLeft: 46, paddingRight: 46, paddingBottom: 12, borderBottom: `1.5pt solid ${C.parchDark}` }}>
-                <Image src={m('mascot-explain.png')} style={{ width: 40, height: 46, marginRight: 12, flexShrink: 0 }} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: 'Comfortaa', fontSize: 7, color: C.purple, letterSpacing: 2, marginBottom: 3, opacity: 0.65 }}>СКАЗКА {idx + 1}</Text>
-                  <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 17, color: C.dark, lineHeight: 1.25 }}>{story.title}</Text>
-                </View>
-              </View>
-
-              <Diamond color={C.gold} mt={10} mb={2} />
-
-              {/* Story text */}
-              <View style={{ paddingLeft: 46, paddingRight: 46, paddingBottom: 68 }}>
-
-                {/* Drop cap first paragraph */}
-                {firstPara.length > 0 && (
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
-                    <View style={{ marginRight: 3 }}>
-                      <Text style={{ fontFamily: 'Literata', fontWeight: 'bold', fontSize: 50, color: C.purple, lineHeight: 0.92 }}>
-                        {firstChar}
+                    {/* Question block */}
+                    <View style={{ backgroundColor: '#F3EEFF', borderRadius: 8, padding: 12, marginBottom: 14, flexDirection: 'row', alignItems: 'center' }}>
+                      <Image src={m('mascot-hero.png')} style={{ width: 43, height: 47, marginRight: 10, flexShrink: 0 }} />
+                      <Text style={{ fontFamily: 'Literata', fontStyle: 'italic', fontSize: 16, color: '#7C3AED', flex: 1, lineHeight: 1.6 }}>
+                        «{story.question}»
                       </Text>
                     </View>
-                    <Text style={{ fontFamily: 'Literata', fontSize: 12, color: C.dark, lineHeight: 1.9, flex: 1, marginTop: 10 }}>
-                      {firstRest}
-                    </Text>
-                  </View>
-                )}
 
-                {/* Rest of paragraphs */}
-                {restParas.map((para, pIdx) => (
-                  <View key={pIdx}>
-                    <Text style={{ fontFamily: 'Literata', fontSize: 12, color: C.dark, lineHeight: 1.9, marginBottom: 10 }}>
-                      {para}
-                    </Text>
-                    {/* Hero image after 3rd paragraph */}
-                    {pIdx === 2 && heroUrl && (
-                      <View style={{ alignItems: 'center', marginTop: 4, marginBottom: 12 }}>
-                        <Image src={heroUrl} style={{ width: 70, height: 70 }} />
+                    {/* Drop cap first paragraph */}
+                    {firstPara.length > 0 && (
+                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
+                        <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 42, color: '#7C3AED', lineHeight: 0.92, marginRight: 3 }}>
+                          {firstChar}
+                        </Text>
+                        <Text style={{ fontFamily: 'Literata', fontSize: 14, color: '#3D2B1F', lineHeight: 1.8, flex: 1, marginTop: 8 }}>
+                          {firstRest}
+                        </Text>
                       </View>
                     )}
+
+                    {/* Rest of paragraphs */}
+                    {restParas.map((para, pIdx) => (
+                      <View key={pIdx}>
+                        <Text style={{ fontFamily: 'Literata', fontSize: 14, color: '#3D2B1F', lineHeight: 1.8, textIndent: 20, marginBottom: 10 }}>
+                          {para}
+                        </Text>
+                        {/* Hero image once — after paragraph index 1 (3rd paragraph total) */}
+                        {pIdx === 1 && heroUrl && (
+                          <View style={{ alignItems: 'center', marginTop: 15, marginBottom: 15 }}>
+                            <Image src={heroUrl} style={{ width: 170, height: 170 }} />
+                            <View style={{ marginTop: 10, width: 200, height: 0.5, backgroundColor: '#C9A96E', opacity: 0.4 }} />
+                          </View>
+                        )}
+                        {/* Paragraph separator every 3 paragraphs */}
+                        {(pIdx + 1) % 3 === 0 && pIdx < restParas.length - 1 && <ParaSeparator />}
+                      </View>
+                    ))}
+
+                    {/* Ending */}
+                    <Diamond color={C.gold} mt={14} mb={12} />
+                    <View style={{ alignItems: 'center' }}>
+                      <Image src={m('mascot-joy.png')} style={{ width: 52, height: 52, marginBottom: 6 }} />
+                      <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 14, color: '#5B2C8B' }}>
+                        Конец
+                      </Text>
+                    </View>
                   </View>
-                ))}
 
-                {/* Ending */}
-                <Diamond color={C.gold} mt={14} mb={12} />
-                <View style={{ alignItems: 'center' }}>
-                  <Image src={m('mascot-joy.png')} style={{ width: 52, height: 52, marginBottom: 6 }} />
-                  <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 14, color: C.purple }}>
-                    Конец
-                  </Text>
-                </View>
-              </View>
-
-              <StoryFooter storyIdx={idx} />
-            </Page>
+                  <TextPageFooter pageNum={pageNum} />
+                </Page>
+              );
+            })()}
           </View>
         );
       })}
