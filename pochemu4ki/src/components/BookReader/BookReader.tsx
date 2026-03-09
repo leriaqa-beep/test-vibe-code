@@ -158,6 +158,7 @@ export default function BookReader({ story, child }: BookReaderProps) {
           storyTitle={story.title}
           question={story.question}
           heroImage={heroImage}
+          storyImageUrl={story.imageUrl || undefined}
           child={child}
           isFirst={isFirst}
           isLast={isLast}

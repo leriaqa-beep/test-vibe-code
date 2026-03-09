@@ -85,6 +85,7 @@ export interface BookPageProps {
   storyTitle: string;
   question: string;
   heroImage?: string;
+  storyImageUrl?: string;
   child?: ChildProfile;
   isFirst?: boolean;   // first content page — shows title + question + mascot
   isLast?: boolean;    // last content page — shows mascot-joy at end
@@ -97,6 +98,7 @@ export default function BookPage({
   storyTitle,
   question,
   heroImage,
+  storyImageUrl,
   child,
   isFirst = false,
   isLast = false,
@@ -244,7 +246,7 @@ export default function BookPage({
           })}
         </div>
 
-        {/* Last page: mascot-joy ending */}
+        {/* Last page: illustration + mascot-joy ending */}
         {isLast && (
           <div style={{ textAlign: 'center', marginTop: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, opacity: 0.45 }}>
@@ -252,6 +254,23 @@ export default function BookPage({
               <span style={{ fontSize: 14, color: theme.accent }}>✦</span>
               <div style={{ flex: 1, height: 1, background: `linear-gradient(to left, transparent, ${theme.border})` }} />
             </div>
+            {storyImageUrl && (
+              <div style={{ marginBottom: 24, display: 'inline-block' }}>
+                <img
+                  src={storyImageUrl}
+                  alt=""
+                  style={{
+                    width: 220,
+                    height: 160,
+                    objectFit: 'cover',
+                    borderRadius: 16,
+                    boxShadow: `0 4px 20px ${theme.accent}30`,
+                    border: `1.5px solid ${theme.border}`,
+                  }}
+                  onError={e => { (e.currentTarget.parentElement as HTMLDivElement).style.display = 'none'; }}
+                />
+              </div>
+            )}
             <img
               src="/assets/mascot/mascot-joy.png"
               alt=""
@@ -260,6 +279,8 @@ export default function BookPage({
                 height: 80,
                 objectFit: 'contain',
                 marginBottom: 12,
+                display: 'block',
+                margin: '0 auto 12px',
                 animation: 'bookMascotFloat 3s ease-in-out infinite',
                 filter: 'drop-shadow(0 4px 16px rgba(124,58,237,0.3))',
               }}
