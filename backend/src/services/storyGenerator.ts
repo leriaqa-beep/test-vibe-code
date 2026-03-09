@@ -84,23 +84,10 @@ function categorize(question: string): string {
   return 'general';
 }
 
-function getImageUrl(category: string): string {
-  const images: Record<string, string> = {
-    nature: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80',
-    space: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&q=80',
-    people: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80',
-    growth: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800&q=80',
-    sleep: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800&q=80',
-    food: 'https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=800&q=80',
-    friendship: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=800&q=80',
-    emotions: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=800&q=80',
-    kindness: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&q=80',
-    diversity: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80',
-    whatif: 'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=800&q=80',
-    tidiness: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
-    general: 'https://images.unsplash.com/photo-1481349518771-20055b2a7b24?w=800&q=80',
-  };
-  return images[category] || images.general;
+// Returns empty string when Gemini is not configured — no image is better than a random one
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getImageUrl(_category: string): string {
+  return '';
 }
 
 const CATEGORY_SCENE: Record<string, string> = {
