@@ -6,6 +6,39 @@ import { useApp } from '../context/AppContext';
 import DecorationLayer from '../components/Decorations';
 import type { ChildProfile } from '../types';
 
+// Resize an image to maxPx on its longest side and return a PNG data URL.
+// Preserves transparency. Falls back to the original src on any error.
+async function compressImage(src: string, maxPx: number): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.naturalWidth || maxPx, img.naturalHeight || maxPx));
+      const w = Math.max(1, Math.round(img.naturalWidth * scale));
+      const h = Math.max(1, Math.round(img.naturalHeight * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
+}
+
+// Max display size in PDF (pt) × 2× for retina, rounded up to nearest 50px.
+// Larger = better quality but heavier file. These are tuned for 150 DPI PDF output.
+const MASCOT_MAX_PX: Record<string, number> = {
+  'mascot-logo.png':     350,
+  'mascot-surprise.png': 300,
+  'mascot-calm.png':     300,
+  'mascot-joy.png':      250,
+  'mascot-hero.png':     100,
+  'mascot-explain.png':  100,
+  'mascot-think.png':    100,
+};
+
 export default function BookCreate() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -75,17 +108,35 @@ export default function BookCreate() {
       if (!child) throw new Error('Профиль ребёнка не найден');
 
       // Dynamic import — loads @react-pdf/renderer only when needed
-      const [{ pdf }, { BookDocument }] = await Promise.all([
+      const [{ pdf }, { BookDocument }, { HERO }] = await Promise.all([
         import('@react-pdf/renderer'),
         import('../components/BookPDF/BookPDF'),
+        import('../components/BookPDF/constants'),
       ]);
+
+      // Pre-compress all images to reduce PDF file size.
+      // Canvas rescales PNGs to the max display size needed in the PDF.
+      const origin = window.location.origin;
+      const compressions = Object.entries(MASCOT_MAX_PX).map(([name, px]) => {
+        const url = `${origin}/assets/mascot/${name}`;
+        return compressImage(url, px).then(data => [url, data] as const);
+      });
+      const heroEmoji = child.hero?.emoji;
+      const heroPath = heroEmoji && HERO[heroEmoji] ? HERO[heroEmoji] : null;
+      if (heroPath) {
+        compressions.push(
+          compressImage(`${origin}${heroPath}`, 360).then(data => [`${origin}${heroPath}`, data] as const)
+        );
+      }
+      const imageMap = Object.fromEntries(await Promise.all(compressions));
 
       const instance = pdf(
         <BookDocument
           title={bookTitle}
           child={child}
           stories={selectedStories}
-          baseUrl={window.location.origin}
+          baseUrl={origin}
+          imageMap={imageMap}
         />
       );
 

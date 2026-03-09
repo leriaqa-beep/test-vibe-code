@@ -10,21 +10,21 @@ Font.register({
 });
 
 // Literata — книжная антиква, кириллица — для основного текста
+// Bold не используется в PDF (удалён для уменьшения веса файла)
 Font.register({
   family: 'Literata',
   fonts: [
     { src: '/assets/fonts/Literata-Regular.ttf', fontWeight: 'normal'                      },
-    { src: '/assets/fonts/Literata-Bold.ttf',    fontWeight: 'bold'                        },
     { src: '/assets/fonts/Literata-Italic.ttf',  fontWeight: 'normal', fontStyle: 'italic' },
   ],
 });
 
 // PT Sans — запасной вариант с полной кириллицей
+// Bold не используется в PDF (удалён для уменьшения веса файла)
 Font.register({
   family: 'PTSans',
   fonts: [
     { src: '/assets/fonts/PTSans-Regular.ttf', fontWeight: 'normal'                      },
-    { src: '/assets/fonts/PTSans-Bold.ttf',    fontWeight: 'bold'                        },
     { src: '/assets/fonts/PTSans-Italic.ttf',  fontWeight: 'normal', fontStyle: 'italic' },
   ],
 });

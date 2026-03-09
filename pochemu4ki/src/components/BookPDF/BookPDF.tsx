@@ -15,12 +15,18 @@ interface BookDocumentProps {
   child: ChildProfile;
   stories: Story[];
   baseUrl: string;
+  /** Pre-compressed image data URLs keyed by full URL string (optional, falls back to baseUrl) */
+  imageMap?: Record<string, string>;
 }
 
-export function BookDocument({ title, child, stories, baseUrl }: BookDocumentProps) {
-  const m = (name: string) => `${baseUrl}/assets/mascot/${name}`;
-  const heroUrl = child.hero?.emoji && HERO[child.hero.emoji]
+export function BookDocument({ title, child, stories, baseUrl, imageMap }: BookDocumentProps) {
+  const m = (name: string) => {
+    const url = `${baseUrl}/assets/mascot/${name}`;
+    return imageMap?.[url] ?? url;
+  };
+  const rawHeroUrl = child.hero?.emoji && HERO[child.hero.emoji]
     ? `${baseUrl}${HERO[child.hero.emoji]}` : null;
+  const heroUrl = rawHeroUrl ? (imageMap?.[rawHeroUrl] ?? rawHeroUrl) : null;
 
   const tocOffset = stories.length > 1 ? 1 : 0;
   // First story text page: cover(1) + endpaper(1) + toc(0|1) + per-story divider
