@@ -114,31 +114,30 @@ async function generateStoryImage(storyId: string, category: string): Promise<st
   const prompt = `Children's picture book illustration, soft watercolor style, ${scene}, warm pastel tones, cozy and dreamy atmosphere, gentle golden light, cute and friendly, no text, no letters`;
 
   try {
+    // Imagen 3 — correct model for image generation via Google AI API
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
+          instances: [{ prompt }],
+          parameters: { sampleCount: 1, aspectRatio: '4:3' },
         }),
       }
     );
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Gemini generateContent ${response.status}: ${errText.slice(0, 300)}`);
+      throw new Error(`Imagen predict ${response.status}: ${errText.slice(0, 300)}`);
     }
 
-    type GeminiPart = { inlineData?: { mimeType: string; data: string }; text?: string };
-    type GeminiResp = { candidates?: { content?: { parts?: GeminiPart[] } }[] };
-    const data = await response.json() as GeminiResp;
-    const parts = data.candidates?.[0]?.content?.parts ?? [];
-    const imagePart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
-    const b64 = imagePart?.inlineData?.data;
-    const mimeType = imagePart?.inlineData?.mimeType ?? 'image/png';
-    if (!b64) throw new Error('No image part in Gemini response');
+    type ImagenResp = { predictions?: { bytesBase64Encoded?: string; mimeType?: string }[] };
+    const data = await response.json() as ImagenResp;
+    const prediction = data.predictions?.[0];
+    const b64 = prediction?.bytesBase64Encoded;
+    const mimeType = prediction?.mimeType ?? 'image/png';
+    if (!b64) throw new Error('No image in Imagen response');
 
     // Try uploading to Supabase storage; fall back to data URL if upload fails
     try {
