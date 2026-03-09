@@ -37,9 +37,11 @@ export function BookToC({ stories, mascotThinkUrl, mascotCalmUrl, tocPageOffset 
               <Text style={{ fontFamily: 'Literata', fontSize: 14, color: C.dark, flexShrink: 1 }}>
                 {story.title}
               </Text>
-              <Text style={{ fontFamily: 'PTSans', fontSize: 9, color: C.muted, flexGrow: 1, letterSpacing: 4, marginLeft: 6, marginRight: 6, overflow: 'hidden', opacity: 0.5 }}>
-                {' ·····················································································'}
-              </Text>
+              <View style={{ flexGrow: 1, overflow: 'hidden', marginLeft: 6, marginRight: 6 }}>
+                <Text style={{ fontFamily: 'PTSans', fontSize: 9, color: C.muted, letterSpacing: 4, opacity: 0.5 }}>
+                  {' ·····················································································'}
+                </Text>
+              </View>
               <Text style={{ fontFamily: 'Literata', fontSize: 14, color: C.muted, flexShrink: 0 }}>
                 {pageNum}
               </Text>
