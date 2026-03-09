@@ -1,5 +1,5 @@
 import { Page, View, Text, Image, Svg, Path } from '@react-pdf/renderer';
-import { getHeroBg, splitParas } from '../constants';
+import { getHeroBg, splitParas, declineNameGenitive } from '../constants';
 import { OrnamentalDivider, ParaSeparator, Diamond } from '../decorations/Ornaments';
 import { HeroFrame } from '../decorations/PageFrames';
 import { DropCap } from '../decorations/DropCap';
@@ -94,7 +94,7 @@ export function BookStoryPage({
         <View style={{ alignItems: 'center' }}>
           <Image src={mascotJoyUrl} style={{ width: 113, height: 113, marginBottom: 10 }} />
           <Text style={{ fontFamily: 'Comfortaa', fontStyle: 'italic', fontSize: 12, color: '#8B7355', textAlign: 'center' }}>
-            Сказка создана специально для {child.name}
+            Сказка создана специально для {declineNameGenitive(child.name)}
           </Text>
         </View>
       </View>
