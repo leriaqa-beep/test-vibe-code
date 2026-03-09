@@ -156,19 +156,38 @@ export default function BookCover({ story, child, onOpen }: BookCoverProps) {
           ✦ Почему-Ка! ✦
         </p>
 
-        {/* Mascot */}
-        <img
-          ref={mascotRef}
-          src="/assets/mascot/mascot-joy.png"
-          alt="Маскот"
-          style={{
-            width: 120,
-            height: 120,
-            objectFit: 'contain',
+        {/* Story illustration */}
+        {story.imageUrl ? (
+          <div style={{
+            width: 180,
+            height: 180,
+            borderRadius: 20,
+            overflow: 'hidden',
             marginBottom: 20,
-            filter: `drop-shadow(0 8px 24px ${theme.glow})`,
-          }}
-        />
+            boxShadow: `0 8px 32px ${theme.glow}, 0 0 0 3px rgba(255,255,255,0.15)`,
+            flexShrink: 0,
+          }}>
+            <img
+              src={story.imageUrl}
+              alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              onError={e => { (e.currentTarget.parentElement as HTMLDivElement).style.display = 'none'; }}
+            />
+          </div>
+        ) : (
+          <img
+            ref={mascotRef}
+            src="/assets/mascot/mascot-joy.png"
+            alt="Маскот"
+            style={{
+              width: 120,
+              height: 120,
+              objectFit: 'contain',
+              marginBottom: 20,
+              filter: `drop-shadow(0 8px 24px ${theme.glow})`,
+            }}
+          />
+        )}
 
         {/* Title */}
         <h1 style={{
