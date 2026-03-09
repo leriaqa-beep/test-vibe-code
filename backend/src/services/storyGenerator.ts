@@ -84,12 +84,6 @@ function categorize(question: string): string {
   return 'general';
 }
 
-// Returns empty string when Gemini is not configured — no image is better than a random one
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getImageUrl(_category: string): string {
-  return '';
-}
-
 const CATEGORY_SCENE: Record<string, string> = {
   nature:     'magical forest with rain and rainbow, lush green trees, colorful flowers',
   space:      'night sky full of stars, crescent moon, glowing galaxy, a small planet',
@@ -102,70 +96,20 @@ const CATEGORY_SCENE: Record<string, string> = {
   kindness:   'child helping another child, glowing aura of warmth around them',
   diversity:  'circle of joyful children of different backgrounds holding hands',
   whatif:     'whimsical portal to fantasy world, floating islands, magical creatures',
-  tidiness:   'neat and cozy child\'s room with sunshine streaming in, toy shelves',
+  tidiness:   "neat and cozy child's room with sunshine streaming in, toy shelves",
   general:    'magical fairytale landscape, glowing forest path, warm golden light',
 };
 
-async function generateStoryImage(storyId: string, category: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return getImageUrl(category);
-
+// Pollinations.AI — free, no API key, returns image URL directly
+function generateStoryImage(_storyId: string, category: string): string {
   const scene = CATEGORY_SCENE[category] || CATEGORY_SCENE.general;
-  const prompt = `Children's picture book illustration, soft watercolor style, ${scene}, warm pastel tones, cozy and dreamy atmosphere, gentle golden light, cute and friendly, no text, no letters`;
-
-  try {
-    // Imagen 3 — correct model for image generation via Google AI API
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          instances: [{ prompt }],
-          parameters: { sampleCount: 1, aspectRatio: '4:3' },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Imagen predict ${response.status}: ${errText.slice(0, 300)}`);
-    }
-
-    type ImagenResp = { predictions?: { bytesBase64Encoded?: string; mimeType?: string }[] };
-    const data = await response.json() as ImagenResp;
-    const prediction = data.predictions?.[0];
-    const b64 = prediction?.bytesBase64Encoded;
-    const mimeType = prediction?.mimeType ?? 'image/png';
-    if (!b64) throw new Error('No image in Imagen response');
-
-    // Try uploading to Supabase storage; fall back to data URL if upload fails
-    try {
-      const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
-      const buffer = Buffer.from(b64, 'base64');
-      const fileName = `${storyId}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('story-images')
-        .upload(fileName, buffer, { contentType: mimeType, upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('story-images')
-        .getPublicUrl(fileName);
-
-      logger.ai(`[Gemini Image] Generated and uploaded: ${fileName}`);
-      return publicUrl;
-    } catch (uploadErr) {
-      logger.ai('[Gemini Image] Upload to Supabase failed, using data URL', uploadErr instanceof Error ? uploadErr : new Error(String(uploadErr)));
-      return `data:${mimeType};base64,${b64}`;
-    }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    logger.ai(`[Gemini Image] FAILED: ${msg}`);
-    return getImageUrl(category);
-  }
+  const prompt = encodeURIComponent(
+    `Children's picture book illustration, soft watercolor style, ${scene}, warm pastel tones, cozy and dreamy atmosphere, gentle golden light, no text, no letters`
+  );
+  const seed = Math.floor(Math.random() * 999999);
+  const url = `https://image.pollinations.ai/prompt/${prompt}?width=800&height=600&nologo=true&seed=${seed}`;
+  logger.ai(`[Image] Pollinations URL generated for category: ${category}`);
+  return url;
 }
 
 // Fallback when Groq is unavailable
@@ -191,7 +135,7 @@ async function generateFallback(input: StoryInput): Promise<GeneratedStory> {
     ? `${childName} ${g.smiled} и прижал${g.suffix === 'а' ? 'ась' : 'ся'} к ${toy.nickname}. За окном мигнула звезда — будто тоже услышала.`
     : `${childName} ${g.smiled} и посмотрел${g.suffix} на небо. Казалось, оно стало чуть ближе.`;
 
-  const imageUrl = await generateStoryImage(storyId, category);
+  const imageUrl = generateStoryImage(storyId, category);
   return {
     title: `Ответ для ${declineName(childName, child.gender, 'родительный')}`,
     content: `${opening}
@@ -320,19 +264,17 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
   logger.info(`[Groq] Sending prompt:\n--- SYSTEM ---\n${systemPrompt}\n--- USER ---\n${userMessage}`);
 
   try {
-    const [completion, imageUrl] = await Promise.all([
-      groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage },
-        ],
-        temperature: 0.9,
-        max_tokens: 4096,
-        response_format: { type: 'json_object' },
-      }),
-      generateStoryImage(storyId, category),
-    ]);
+    const imageUrl = generateStoryImage(storyId, category);
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      temperature: 0.9,
+      max_tokens: 4096,
+      response_format: { type: 'json_object' },
+    });
 
     const responseText = completion.choices[0]?.message?.content || '';
     logger.info(`[Groq] Raw response:\n${responseText}`);
