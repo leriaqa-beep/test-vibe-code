@@ -505,12 +505,24 @@ export function BookDocument({ title, child, stories, baseUrl }: BookDocumentPro
                       </View>
                     ))}
 
-                    {/* Ending */}
-                    <Diamond color={C.gold} mt={14} mb={12} />
+                    {/* Ending: ── ✦ КОНЕЦ ✦ ── */}
+                    <View style={{ marginTop: 18, marginBottom: 14, flexDirection: 'row', alignItems: 'center' }}>
+                      <Svg width={100} height={14}>
+                        <Path d="M 4,7 L 86,7"  stroke="#C9A96E" strokeWidth={0.5} fill="none" />
+                        <Path d="M 96,3 L 100,7 L 96,11 L 92,7 Z" fill="#C9A96E" opacity={0.7} />
+                      </Svg>
+                      <Text style={{ fontFamily: 'Comfortaa', fontSize: 10, color: '#8B7355', marginLeft: 8, marginRight: 8 }}>
+                        КОНЕЦ
+                      </Text>
+                      <Svg width={100} height={14}>
+                        <Path d="M 4,3 L 8,7 L 4,11 L 0,7 Z"  fill="#C9A96E" opacity={0.7} />
+                        <Path d="M 14,7 L 96,7" stroke="#C9A96E" strokeWidth={0.5} fill="none" />
+                      </Svg>
+                    </View>
                     <View style={{ alignItems: 'center' }}>
-                      <Image src={m('mascot-joy.png')} style={{ width: 52, height: 52, marginBottom: 6 }} />
-                      <Text style={{ fontFamily: 'Comfortaa', fontWeight: 'bold', fontSize: 14, color: '#5B2C8B' }}>
-                        Конец
+                      <Image src={m('mascot-joy.png')} style={{ width: 113, height: 113, marginBottom: 10 }} />
+                      <Text style={{ fontFamily: 'Comfortaa', fontStyle: 'italic', fontSize: 12, color: '#8B7355', textAlign: 'center' }}>
+                        Сказка создана специально для {child.name}
                       </Text>
                     </View>
                   </View>
