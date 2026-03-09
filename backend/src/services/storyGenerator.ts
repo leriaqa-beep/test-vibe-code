@@ -115,7 +115,7 @@ async function generateStoryImage(storyId: string, category: string): Promise<st
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -163,7 +163,8 @@ async function generateStoryImage(storyId: string, category: string): Promise<st
       return `data:${mimeType};base64,${b64}`;
     }
   } catch (err) {
-    logger.ai('Image generation failed, using fallback', err instanceof Error ? err : new Error(String(err)));
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.ai(`[Gemini Image] FAILED: ${msg}`);
     return getImageUrl(category);
   }
 }
