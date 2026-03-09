@@ -1,4 +1,5 @@
-import { Document, View } from '@react-pdf/renderer';
+import { Fragment } from 'react';
+import { Document } from '@react-pdf/renderer';
 import './fonts';
 import type { Story, ChildProfile } from '../../types';
 import { HERO } from './constants';
@@ -47,7 +48,7 @@ export function BookDocument({ title, child, stories, baseUrl }: BookDocumentPro
 
       {/* 4. Story pages: divider + text */}
       {stories.map((story, idx) => (
-        <View key={story.id}>
+        <Fragment key={story.id}>
           <BookChapterDivider
             title={story.title}
             chapterIndex={idx + 1}
@@ -64,7 +65,7 @@ export function BookDocument({ title, child, stories, baseUrl }: BookDocumentPro
             mascotJoyUrl={m('mascot-joy.png')}
             mascotCalmUrl={m('mascot-calm.png')}
           />
-        </View>
+        </Fragment>
       ))}
 
       {/* 5. Back cover */}
