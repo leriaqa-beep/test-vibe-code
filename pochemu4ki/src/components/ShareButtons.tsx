@@ -1,6 +1,25 @@
 import { useState } from 'react';
 import { Share2, X, Copy, Check, Mail } from 'lucide-react';
 
+function InstagramIcon() {
+  return (
+    <svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <defs>
+        <linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#f09433" />
+          <stop offset="25%" stopColor="#e6683c" />
+          <stop offset="50%" stopColor="#dc2743" />
+          <stop offset="75%" stopColor="#cc2366" />
+          <stop offset="100%" stopColor="#bc1888" />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="url(#ig-grad)" />
+      <circle cx="12" cy="12" r="4.5" stroke="#fff" strokeWidth="1.8" fill="none" />
+      <circle cx="17.5" cy="6.5" r="1.2" fill="#fff" />
+    </svg>
+  );
+}
+
 interface ShareButtonsProps {
   storyId: string;
   storyTitle: string;
@@ -28,6 +47,7 @@ function TelegramIcon() {
 export default function ShareButtons({ storyId, storyTitle, childName }: ShareButtonsProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [igCopied, setIgCopied] = useState(false);
 
   const shareUrl = `${window.location.origin}/share/${storyId}`;
   const shareText = childName
@@ -52,6 +72,23 @@ export default function ShareButtons({ storyId, storyTitle, childName }: ShareBu
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleInstagram = async () => {
+    // Instagram has no web share URL — copy link first, then open Instagram
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {
+      const el = document.createElement('textarea');
+      el.value = shareUrl;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
+    setIgCopied(true);
+    setTimeout(() => setIgCopied(false), 3000);
+    setTimeout(() => window.open('https://www.instagram.com', '_blank'), 400);
   };
 
   const handleNativeShare = async () => {
@@ -147,7 +184,7 @@ export default function ShareButtons({ storyId, storyTitle, childName }: ShareBu
             </div>
 
             {/* Share icons grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: igCopied ? 8 : 16 }}>
               {/* WhatsApp */}
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={iconLinkStyle}>
                 <div style={{ ...iconCircle, background: '#25D366' }}>
@@ -163,6 +200,14 @@ export default function ShareButtons({ storyId, storyTitle, childName }: ShareBu
                 </div>
                 <span style={iconLabelStyle}>Telegram</span>
               </a>
+
+              {/* Instagram */}
+              <button onClick={handleInstagram} style={{ ...iconLinkStyle, background: 'none', border: 'none', cursor: 'pointer' }}>
+                <div style={{ ...iconCircle, background: igCopied ? '#4ADE80' : 'transparent', transition: 'background 0.25s' }}>
+                  {igCopied ? <Check size={22} color="#fff" /> : <InstagramIcon />}
+                </div>
+                <span style={iconLabelStyle}>Instagram</span>
+              </button>
 
               {/* Email */}
               <a href={emailUrl} style={iconLinkStyle}>
@@ -180,6 +225,25 @@ export default function ShareButtons({ storyId, storyTitle, childName }: ShareBu
                 <span style={iconLabelStyle}>{copied ? 'Скопировано' : 'Ссылка'}</span>
               </button>
             </div>
+
+            {/* Instagram hint */}
+            {igCopied && (
+              <div style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 10,
+                padding: '8px 12px',
+                marginBottom: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}>
+                <span style={{ fontSize: 16 }}>📋</span>
+                <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: 'Comfortaa, sans-serif', margin: 0, lineHeight: 1.4 }}>
+                  Ссылка скопирована! Вставь её в Instagram Stories или описание профиля
+                </p>
+              </div>
+            )}
 
             {/* Web Share API — "More" button (mobile) */}
             {typeof navigator !== 'undefined' && 'share' in navigator && (

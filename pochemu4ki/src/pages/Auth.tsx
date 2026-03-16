@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import DecorationLayer from '../components/Decorations';
@@ -33,9 +33,11 @@ export default function Auth() {
   const [agreed, setAgreed] = useState(false);
   const { loginWithEmail, registerWithEmail, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string })?.from || '/app';
 
   useEffect(() => {
-    if (user) navigate('/app', { replace: true });
+    if (user) navigate(from, { replace: true });
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,7 +50,7 @@ export default function Auth() {
         navigate('/app/onboarding');
       } else {
         await loginWithEmail(email, password);
-        navigate('/app');
+        navigate(from);
       }
     } catch (err: unknown) {
       const e = err as { message?: string };
