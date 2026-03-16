@@ -18,6 +18,7 @@ import Privacy from './pages/Privacy';
 import BookCreate from './pages/BookCreate';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import ShareStoryPage from './pages/ShareStoryPage';
 import Onboarding from './pages/Onboarding';
 import AdminDashboard from './pages/AdminDashboard';
 import FeedbackButton from './components/FeedbackButton';
@@ -54,6 +55,9 @@ export default function App() {
             <Route path="/app/book/create" element={<ProtectedRoute><BookCreate /></ProtectedRoute>} />
             <Route path="/app/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/app/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+
+            {/* Public story share */}
+            <Route path="/share/:id" element={<ShareStoryPage />} />
 
             {/* Public static */}
             <Route path="/privacy" element={<Privacy />} />

@@ -138,10 +138,14 @@ export default function BookPage({
         zIndex: 0,
       }} />
 
-      {/* Page border */}
+      {/* Page border — centered, follows reader width */}
       <div style={{
         position: 'absolute',
-        inset: '12px',
+        top: 12,
+        bottom: 12,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: 'min(680px, calc(100% - 24px))',
         border: `1.5px solid ${theme.border}`,
         borderRadius: 16,
         opacity: 0.5,
@@ -150,7 +154,7 @@ export default function BookPage({
       }} />
 
       {/* Main content */}
-      <div style={{ position: 'relative', zIndex: 2, padding: '36px 28px 28px', flex: 1 }}>
+      <div style={{ position: 'relative', zIndex: 2, padding: '36px 28px 28px', flex: 1, maxWidth: 680, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
 
         {/* First page: title block */}
         {isFirst && (
@@ -308,6 +312,10 @@ export default function BookPage({
         padding: '12px 28px 20px',
         borderTop: `1px solid ${theme.border}`,
         opacity: 0.6,
+        maxWidth: 680,
+        width: '100%',
+        marginLeft: 'auto',
+        marginRight: 'auto',
       }}>
         <img
           src="/assets/mascot/mascot-calm.png"
