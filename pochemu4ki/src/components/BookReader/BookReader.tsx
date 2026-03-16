@@ -120,6 +120,11 @@ export default function BookReader({ story, child }: BookReaderProps) {
     setAnimKey(k => k + 1);
   }, []);
 
+  // Scroll to top whenever page changes or cover opens/closes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }, [pageIdx, showCover]);
+
   // Touch swipe
   const onTouchStart = (e: TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
