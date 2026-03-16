@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Heart, BookOpen, Library } from 'lucide-react';
+import ShareButtons from '../components/ShareButtons';
 import { useApp } from '../context/AppContext';
 import type { Story } from '../types';
 import { api } from '../api/client';
@@ -104,6 +105,11 @@ export default function StoryView() {
       >
         <ArrowLeft size={18} />
       </button>
+
+      {/* Share button */}
+      <div style={{ position: 'fixed', top: 16, right: 64, zIndex: 200 }}>
+        <ShareButtons storyId={story.id} storyTitle={story.title} childName={child?.name} />
+      </div>
 
       {/* Actions toggle (top-right) */}
       <button

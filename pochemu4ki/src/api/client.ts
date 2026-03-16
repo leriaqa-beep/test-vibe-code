@@ -37,6 +37,10 @@ export const api = {
     list: (childId?: string) =>
       request<import('../types').Story[]>(`/stories${childId ? `?childId=${childId}` : ''}`),
     get: (id: string) => request<import('../types').Story>(`/stories/${id}`),
+    getPublic: (id: string): Promise<{
+      story: Pick<import('../types').Story, 'id' | 'title' | 'question' | 'content' | 'imageUrl' | 'createdAt'>;
+      child: { name: string; age: number; gender: 'boy' | 'girl'; hero: { name: string; emoji: string } } | null;
+    }> => fetch(`${BASE_URL}/stories/public/${id}`).then(r => r.json()),
     generate: (childId: string, question: string, context: string) =>
       request<import('../types').Story>('/stories/generate', {
         method: 'POST',

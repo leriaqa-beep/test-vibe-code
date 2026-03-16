@@ -6,6 +6,7 @@ import passport from 'passport';
 import authRouter from './routes/auth';
 import childrenRouter from './routes/children';
 import storiesRouter from './routes/stories';
+import storiesPublicRouter from './routes/storiesPublic';
 import usersRouter from './routes/users';
 import adminRouter from './routes/admin';
 import { logger } from './utils/logger';
@@ -48,6 +49,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use('/api/auth', authRouter);
 app.use('/api/children', childrenRouter);
+app.use('/api/stories/public', storiesPublicRouter); // must be before /api/stories (no auth)
 app.use('/api/stories', storiesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/admin', adminRouter);
