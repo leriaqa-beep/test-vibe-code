@@ -337,25 +337,29 @@ export default function NewStory() {
                         <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/>
                       </path>
                     </svg>
-                  ) : customMode && customImageUrl ? (
-                    <img
-                      src={customImageUrl}
-                      alt=""
-                      style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: '50%' }}
-                      onError={e => {
-                        const img = e.currentTarget as HTMLImageElement;
-                        if (!img.dataset.fallback) {
-                          img.dataset.fallback = '1';
-                          img.src = '/assets/mascot/mascot-hero.png';
-                          img.style.width = '40px';
-                          img.style.height = '40px';
-                          img.style.borderRadius = '0';
-                          img.style.objectFit = 'contain';
-                        }
-                      }}
-                    />
                   ) : customMode ? (
-                    <img src="/assets/mascot/mascot-hero.png" alt="" style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                    // Always show mascot base; hero image fades in on top when loaded
+                    <div style={{ position: 'relative', width: 44, height: 44 }}>
+                      <img
+                        src="/assets/mascot/mascot-hero.png"
+                        alt=""
+                        style={{ position: 'absolute', width: 36, height: 36, objectFit: 'contain', top: 4, left: 4 }}
+                      />
+                      {customImageUrl && (
+                        <img
+                          src={customImageUrl}
+                          alt=""
+                          style={{
+                            position: 'absolute', inset: 0,
+                            width: 44, height: 44,
+                            objectFit: 'cover', borderRadius: '50%',
+                            opacity: 0, transition: 'opacity 0.4s',
+                          }}
+                          onLoad={e => { (e.currentTarget as HTMLImageElement).style.opacity = '1'; }}
+                          onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      )}
+                    </div>
                   ) : (
                     <Pencil size={20} color="#C4B5FD" />
                   )}

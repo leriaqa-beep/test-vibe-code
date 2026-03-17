@@ -6,7 +6,10 @@ function pollinationsUrl(name: string): string {
   const prompt = encodeURIComponent(
     `${name} cute cartoon character children book illustration friendly colorful simple white background`
   );
-  return `https://image.pollinations.ai/prompt/${prompt}?width=256&height=256&nologo=true`;
+  // Deterministic seed → same name always generates same image (cached after first generation)
+  // model=turbo (FLUX Schnell) generates in ~2-3s vs 10-30s for default model
+  const seed = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 99999;
+  return `https://image.pollinations.ai/prompt/${prompt}?width=256&height=256&nologo=true&nofeed=true&model=turbo&seed=${seed}`;
 }
 
 /**
