@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Pencil, Check } from 'lucide-react';
+import { ArrowLeft, Pencil, Check, ChevronRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import VoiceInput from '../components/VoiceInput';
 import DecorationLayer from '../components/Decorations';
@@ -51,6 +51,7 @@ export default function NewStory() {
   const [customName, setCustomName] = useState('');
   const [customImageUrl, setCustomImageUrl] = useState('');
   const customInputRef = useRef<HTMLInputElement>(null);
+  const heroRowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (children.length === 0) loadChildren();
@@ -173,7 +174,7 @@ export default function NewStory() {
         <div className="bg-white rounded-3xl shadow-sm p-5 mb-4">
           <p className="text-sm font-semibold text-text-primary mb-3">Кто будет героем сказки?</p>
           <div style={{ position: 'relative' }}>
-          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
+          <div ref={heroRowRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
             {BASE_HEROES.map(h => {
               const active = !customMode && selectedHero?.name === h.name;
               return (
@@ -244,8 +245,21 @@ export default function NewStory() {
               </span>
             </button>
           </div>
-          {/* Right fade — hint that row scrolls */}
-          <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 32, background: 'linear-gradient(to right, transparent, #fff)', pointerEvents: 'none', borderRadius: '0 50% 50% 0' }} />
+          {/* Scroll arrow */}
+          <button
+            onClick={() => heroRowRef.current?.scrollBy({ left: 160, behavior: 'smooth' })}
+            style={{
+              position: 'absolute', right: -8, top: '50%', transform: 'translateY(-60%)',
+              width: 28, height: 28, borderRadius: '50%',
+              background: '#7C3AED', border: '2px solid #fff',
+              boxShadow: '0 2px 8px rgba(124,58,237,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', zIndex: 2,
+            }}
+            aria-label="Показать больше героев"
+          >
+            <ChevronRight size={14} color="#fff" strokeWidth={3} />
+          </button>
           </div>
 
           {/* Custom hero name input */}
