@@ -234,17 +234,30 @@ export default function BookPage({
                 />
                 {showHero && (
                   <div style={{ textAlign: 'center', margin: '16px 0 20px' }}>
-                    <img
-                      src={heroImage}
-                      alt=""
-                      style={{
-                        width: 100,
-                        height: 100,
-                        objectFit: 'contain',
-                        opacity: 0.85,
-                        filter: `drop-shadow(0 4px 12px ${theme.accent}40)`,
-                      }}
-                    />
+                    {/* Emoji placeholder visible until image loads */}
+                    <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto' }}>
+                      <div style={{
+                        position: 'absolute', inset: 0, borderRadius: '50%',
+                        background: theme.light, border: `2px solid ${theme.border}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 42,
+                      }}>
+                        {heroEmoji ?? '✨'}
+                      </div>
+                      <img
+                        src={heroImage}
+                        alt=""
+                        style={{
+                          position: 'absolute', inset: 0,
+                          width: 100, height: 100,
+                          objectFit: 'cover', borderRadius: '50%',
+                          opacity: 0, transition: 'opacity 0.4s',
+                          filter: `drop-shadow(0 4px 12px ${theme.accent}40)`,
+                        }}
+                        onLoad={e => { (e.currentTarget as HTMLImageElement).style.opacity = '1'; }}
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -261,19 +274,30 @@ export default function BookPage({
               <div style={{ flex: 1, height: 1, background: `linear-gradient(to left, transparent, ${theme.border})` }} />
             </div>
             {storyImageUrl && (
-              <div style={{ marginBottom: 24, display: 'inline-block' }}>
+              <div style={{ marginBottom: 24, display: 'inline-block', position: 'relative', width: 220, height: 160 }}>
+                {/* Shimmer placeholder */}
+                <div style={{
+                  position: 'absolute', inset: 0, borderRadius: 16,
+                  background: `linear-gradient(135deg, ${theme.light} 0%, ${theme.border}40 100%)`,
+                  border: `1.5px solid ${theme.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 36, opacity: 0.7,
+                }}>
+                  🌟
+                </div>
                 <img
                   src={storyImageUrl}
                   alt=""
                   style={{
-                    width: 220,
-                    height: 160,
-                    objectFit: 'cover',
-                    borderRadius: 16,
+                    position: 'absolute', inset: 0,
+                    width: 220, height: 160,
+                    objectFit: 'cover', borderRadius: 16,
                     boxShadow: `0 4px 20px ${theme.accent}30`,
                     border: `1.5px solid ${theme.border}`,
+                    opacity: 0, transition: 'opacity 0.4s',
                   }}
-                  onError={e => { (e.currentTarget.parentElement as HTMLDivElement).style.display = 'none'; }}
+                  onLoad={e => { (e.currentTarget as HTMLImageElement).style.opacity = '1'; }}
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
               </div>
             )}
