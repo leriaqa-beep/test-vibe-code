@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Pencil, Check, ChevronRight, ChevronLeft } from 'lucide-react';
+import { ArrowLeft, Pencil, Check, ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { api } from '../api/client';
 import VoiceInput from '../components/VoiceInput';
@@ -138,6 +138,14 @@ export default function NewStory() {
     const updated = [hero, ...savedCustomHeroes.filter(h => h.name !== hero.name)].slice(0, 5);
     setSavedCustomHeroes(updated);
     localStorage.setItem(`pochemu4ki_custom_heroes_${childId}`, JSON.stringify(updated));
+  };
+
+  const handleDeleteSavedHero = (heroName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = savedCustomHeroes.filter(h => h.name !== heroName);
+    setSavedCustomHeroes(updated);
+    if (childId) localStorage.setItem(`pochemu4ki_custom_heroes_${childId}`, JSON.stringify(updated));
+    if (selectedHero?.name === heroName) setSelectedHero(null);
   };
 
   const handleGenerate = async () => {
@@ -281,12 +289,28 @@ export default function NewStory() {
               {savedCustomHeroes.map(h => {
                 const active = !customMode && selectedHero?.name === h.name;
                 return (
-                  <button
+                  <div
                     key={`saved-${h.name}`}
+                    className="flex-shrink-0 flex flex-col items-center gap-1"
+                    style={{ minWidth: 64, cursor: 'pointer', position: 'relative' }}
                     onClick={() => { setCustomMode(false); setCustomName(''); setCustomImageUrl(''); setSelectedHero(h); }}
-                    className="flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
-                    style={{ minWidth: 64 }}
                   >
+                    {/* Delete button */}
+                    <button
+                      onClick={e => handleDeleteSavedHero(h.name, e)}
+                      style={{
+                        position: 'absolute', top: -2, right: 2,
+                        width: 16, height: 16, borderRadius: '50%',
+                        background: '#EF4444', border: '1.5px solid #fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', zIndex: 3,
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                      }}
+                      aria-label={`Удалить ${h.name}`}
+                    >
+                      <X size={8} color="#fff" strokeWidth={3} />
+                    </button>
+
                     <div style={{
                       width: 56, height: 56, borderRadius: '50%',
                       border: active ? '2.5px solid #7C3AED' : '2px solid #E9D5FF',
@@ -297,14 +321,29 @@ export default function NewStory() {
                       position: 'relative',
                       overflow: 'hidden',
                     }}>
-                      {h.imageUrl ? (
-                        <img src={h.imageUrl} alt={h.name} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: '50%' }}
-                          onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-                      ) : (
-                        <span style={{ fontSize: 28 }}>{h.emoji}</span>
+                      {/* Mascot base — always visible */}
+                      <img
+                        src="/assets/mascot/mascot-hero.png"
+                        alt=""
+                        style={{ position: 'absolute', width: 34, height: 34, objectFit: 'contain' }}
+                      />
+                      {/* Hero image overlay — fades in on load */}
+                      {h.imageUrl && (
+                        <img
+                          src={h.imageUrl}
+                          alt={h.name}
+                          style={{
+                            position: 'absolute', inset: 0,
+                            width: 56, height: 56,
+                            objectFit: 'cover', borderRadius: '50%',
+                            opacity: 0, transition: 'opacity 0.4s',
+                          }}
+                          onLoad={e => { (e.currentTarget as HTMLImageElement).style.opacity = '1'; }}
+                          onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        />
                       )}
                       {active && (
-                        <div style={{ position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, background: '#7C3AED', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>
+                        <div style={{ position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, background: '#7C3AED', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff', zIndex: 2 }}>
                           <Check size={10} color="#fff" />
                         </div>
                       )}
@@ -312,7 +351,7 @@ export default function NewStory() {
                     <span style={{ fontSize: 10, color: active ? '#7C3AED' : '#7A7890', fontFamily: 'Comfortaa, sans-serif', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.2, maxWidth: 60 }}>
                       {h.name.split(' ')[0]}
                     </span>
-                  </button>
+                  </div>
                 );
               })}
 
