@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Pencil, Check, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { api } from '../api/client';
 import VoiceInput from '../components/VoiceInput';
 import DecorationLayer from '../components/Decorations';
 import Mascot from '../components/Mascot/Mascot';
@@ -15,11 +16,6 @@ const BASE_HEROES = [
   { name: 'Храбрый Лев',     emoji: '🦁', image: '/heroes/lion.png'    },
   { name: 'Волшебный Кот',   emoji: '🐱', image: '/heroes/cat.png'     },
 ];
-
-function getPollinationsUrl(heroName: string): string {
-  const prompt = encodeURIComponent(`${heroName} cute cartoon character children book illustration friendly colorful simple white background`);
-  return `https://image.pollinations.ai/prompt/${prompt}?width=256&height=256&nologo=true`;
-}
 
 interface SelectedHero {
   name: string;
@@ -50,11 +46,13 @@ export default function NewStory() {
   const [customMode, setCustomMode] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customImageUrl, setCustomImageUrl] = useState('');
+  const [imageLoading, setImageLoading] = useState(false);
   const [savedCustomHeroes, setSavedCustomHeroes] = useState<SelectedHero[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const customInputRef = useRef<HTMLInputElement>(null);
   const heroRowRef = useRef<HTMLDivElement>(null);
+  const imageDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (children.length === 0) loadChildren();
@@ -107,11 +105,29 @@ export default function NewStory() {
 
   const handleCustomNameChange = (name: string) => {
     setCustomName(name);
+    if (imageDebounceRef.current) clearTimeout(imageDebounceRef.current);
+
     if (name.trim().length >= 2) {
-      const url = getPollinationsUrl(name.trim());
-      setCustomImageUrl(url);
-      setSelectedHero({ name: name.trim(), emoji: '✨', imageUrl: url });
+      // Optimistically set hero name immediately (no image yet)
+      setImageLoading(true);
+      setCustomImageUrl('');
+      setSelectedHero({ name: name.trim(), emoji: '✨' });
+
+      // Debounce: wait 700ms after user stops typing before fetching
+      imageDebounceRef.current = setTimeout(async () => {
+        try {
+          const result = await api.heroes.getImage(name.trim());
+          setCustomImageUrl(result.imageUrl);
+          setSelectedHero({ name: name.trim(), emoji: '✨', imageUrl: result.imageUrl });
+        } catch {
+          // If API fails entirely, leave hero selected without image
+          setSelectedHero({ name: name.trim(), emoji: '✨' });
+        } finally {
+          setImageLoading(false);
+        }
+      }, 700);
     } else {
+      setImageLoading(false);
       setCustomImageUrl('');
       setSelectedHero(null);
     }
@@ -314,7 +330,14 @@ export default function NewStory() {
                   transition: 'all 0.15s',
                   boxShadow: customMode ? '0 0 0 3px rgba(124,58,237,0.2)' : 'none',
                 }}>
-                  {customMode && customImageUrl ? (
+                  {customMode && imageLoading ? (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="#C4B5FD" strokeWidth="3"/>
+                      <path d="M12 2a10 10 0 0 1 10 10" stroke="#7C3AED" strokeWidth="3" strokeLinecap="round">
+                        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/>
+                      </path>
+                    </svg>
+                  ) : customMode && customImageUrl ? (
                     <img src={customImageUrl} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: '50%' }}
                       onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                   ) : (
@@ -359,7 +382,12 @@ export default function NewStory() {
               />
               {customName.trim().length >= 2 && (
                 <p className="text-xs text-purple-500 mt-1.5 flex items-center gap-1">
-                  <span>✨</span> Картинка героя загрузится из Pollinations AI
+                  {imageLoading
+                    ? <><span>🔍</span> Ищем картинку персонажа...</>
+                    : customImageUrl
+                      ? <><span>✨</span> Картинка найдена</>
+                      : <><span>⏳</span> Подбираем изображение...</>
+                  }
                 </p>
               )}
             </div>

@@ -52,6 +52,13 @@ export const api = {
       request<{ success: boolean }>(`/stories/${id}`, { method: 'DELETE' }),
   },
 
+  heroes: {
+    getImage: (name: string) =>
+      request<{ imageUrl: string; source: 'duckduckgo' | 'pollinations' }>(
+        `/hero-image?name=${encodeURIComponent(name)}`
+      ),
+  },
+
   admin: {
     stats: () => request<import('../types').AdminStats>('/admin/stats'),
   },
