@@ -240,9 +240,12 @@ export default function BookPage({
                         position: 'absolute', inset: 0, borderRadius: '50%',
                         background: theme.light, border: `2px solid ${theme.border}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 42,
                       }}>
-                        {heroEmoji ?? '✨'}
+                        <img
+                          src="/assets/mascot/mascot-calm.png"
+                          alt=""
+                          style={{ width: 56, height: 64, objectFit: 'contain', filter: `drop-shadow(0 2px 6px ${theme.accent}30)` }}
+                        />
                       </div>
                       <img
                         src={heroImage}
@@ -281,9 +284,12 @@ export default function BookPage({
                   background: `linear-gradient(135deg, ${theme.light} 0%, ${theme.border}40 100%)`,
                   border: `1.5px solid ${theme.border}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 36, opacity: 0.7,
                 }}>
-                  🌟
+                  <img
+                    src="/assets/mascot/mascot-think.png"
+                    alt=""
+                    style={{ width: 72, height: 72, objectFit: 'contain', opacity: 0.6, animation: 'bookMascotFloat 3s ease-in-out infinite' }}
+                  />
                 </div>
                 <img
                   src={storyImageUrl}

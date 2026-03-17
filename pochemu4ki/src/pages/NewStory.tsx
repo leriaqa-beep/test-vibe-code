@@ -338,14 +338,30 @@ export default function NewStory() {
                       </path>
                     </svg>
                   ) : customMode && customImageUrl ? (
-                    <img src={customImageUrl} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: '50%' }}
-                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                    <img
+                      src={customImageUrl}
+                      alt=""
+                      style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: '50%' }}
+                      onError={e => {
+                        const img = e.currentTarget as HTMLImageElement;
+                        if (!img.dataset.fallback) {
+                          img.dataset.fallback = '1';
+                          img.src = '/assets/mascot/mascot-hero.png';
+                          img.style.width = '40px';
+                          img.style.height = '40px';
+                          img.style.borderRadius = '0';
+                          img.style.objectFit = 'contain';
+                        }
+                      }}
+                    />
+                  ) : customMode ? (
+                    <img src="/assets/mascot/mascot-hero.png" alt="" style={{ width: 40, height: 40, objectFit: 'contain' }} />
                   ) : (
-                    <Pencil size={20} color={customMode ? '#7C3AED' : '#C4B5FD'} />
+                    <Pencil size={20} color="#C4B5FD" />
                   )}
                 </div>
-                <span style={{ fontSize: 10, color: customMode ? '#7C3AED' : '#ABA9C0', fontFamily: 'Comfortaa, sans-serif', fontWeight: customMode ? 700 : 400, textAlign: 'center', lineHeight: 1.2 }}>
-                  Свой
+                <span style={{ fontSize: 10, color: customMode ? '#7C3AED' : '#ABA9C0', fontFamily: 'Comfortaa, sans-serif', fontWeight: customMode ? 700 : 400, textAlign: 'center', lineHeight: 1.2, maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {customMode && customName.trim() ? customName.trim().split(' ')[0] : 'Свой'}
                 </span>
               </button>
             </div>

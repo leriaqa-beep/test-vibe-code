@@ -12,17 +12,23 @@ function pollinationsUrl(name: string): string {
 /**
  * GET /api/hero-image?name=...
  *
- * 1. Tries DuckDuckGo Instant Answer API — returns official art for well-known characters
- *    (Elsa Frozen, Spider-Man, etc.)
- * 2. Falls back to Pollinations.AI URL generation for original / unknown characters
+ * Strategy:
+ * 1. Query DuckDuckGo Instant Answer API to:
+ *    a) get the English heading of the character (for better Pollinations prompt)
+ *    b) get a direct Wikipedia image URL if available (upload.wikimedia.org — no hotlink issues)
+ * 2. If DDG returns a Wikipedia image URL → use it directly (real character art, loads fine)
+ * 3. Otherwise → Pollinations with English name (much better than Russian query)
  *
- * No auth required — called before story generation, in real-time while user types.
+ * NOTE: duckduckgo.com/i/... proxy URLs are NOT used — they require duckduckgo.com referer
+ * and will fail when loaded directly in a browser <img> tag.
  */
 router.get('/', async (req: Request, res: Response) => {
   const name = ((req.query.name as string) || '').trim();
   if (!name || name.length < 2) {
     return res.status(400).json({ error: 'name required' });
   }
+
+  let bestName = name; // will be replaced with English heading if DDG finds it
 
   try {
     const ddgUrl =
@@ -35,16 +41,28 @@ router.get('/', async (req: Request, res: Response) => {
     });
 
     if (ddgRes.ok) {
-      const data = (await ddgRes.json()) as { Image?: string };
-      if (data.Image && data.Image.length > 10) {
-        return res.json({ imageUrl: data.Image, source: 'duckduckgo' });
+      const data = (await ddgRes.json()) as { Image?: string; Heading?: string };
+
+      // Use English heading for a much better Pollinations prompt
+      if (data.Heading && data.Heading.trim().length > 1) {
+        bestName = data.Heading.trim();
+      }
+
+      // Only use DDG image if it's a direct Wikipedia URL — these load reliably in browsers
+      // duckduckgo.com/i/... proxy URLs require Referer: duckduckgo.com and fail in <img> tags
+      if (
+        data.Image &&
+        data.Image.includes('upload.wikimedia.org') &&
+        data.Image.length > 20
+      ) {
+        return res.json({ imageUrl: data.Image, source: 'wikipedia', name: bestName });
       }
     }
   } catch {
     // DDG timed out or failed — fall through to Pollinations
   }
 
-  return res.json({ imageUrl: pollinationsUrl(name), source: 'pollinations' });
+  return res.json({ imageUrl: pollinationsUrl(bestName), source: 'pollinations', name: bestName });
 });
 
 export default router;
