@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Pencil, Check, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Pencil, Check, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import VoiceInput from '../components/VoiceInput';
 import DecorationLayer from '../components/Decorations';
@@ -50,6 +50,9 @@ export default function NewStory() {
   const [customMode, setCustomMode] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customImageUrl, setCustomImageUrl] = useState('');
+  const [savedCustomHeroes, setSavedCustomHeroes] = useState<SelectedHero[]>([]);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const customInputRef = useRef<HTMLInputElement>(null);
   const heroRowRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +61,28 @@ export default function NewStory() {
   }, []);
 
   const child = children.find(c => c.id === childId);
+
+  // Load saved custom heroes from localStorage
+  useEffect(() => {
+    if (!childId) return;
+    try {
+      const stored = localStorage.getItem(`pochemu4ki_custom_heroes_${childId}`);
+      if (stored) setSavedCustomHeroes(JSON.parse(stored));
+    } catch {}
+  }, [childId]);
+
+  // Track scroll position to show/hide arrows
+  useEffect(() => {
+    const el = heroRowRef.current;
+    if (!el) return;
+    const check = () => {
+      setCanScrollLeft(el.scrollLeft > 4);
+      setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+    };
+    check();
+    el.addEventListener('scroll', check);
+    return () => el.removeEventListener('scroll', check);
+  }, [savedCustomHeroes]);
 
   // Pre-select the child's default hero once child is loaded
   useEffect(() => {
@@ -92,9 +117,20 @@ export default function NewStory() {
     }
   };
 
+  const saveCustomHero = (hero: SelectedHero) => {
+    if (!childId) return;
+    const updated = [hero, ...savedCustomHeroes.filter(h => h.name !== hero.name)].slice(0, 5);
+    setSavedCustomHeroes(updated);
+    localStorage.setItem(`pochemu4ki_custom_heroes_${childId}`, JSON.stringify(updated));
+  };
+
   const handleGenerate = async () => {
     if (!question.trim() || !childId) return;
     setError('');
+    // Auto-save custom hero when generating a story
+    if (customMode && selectedHero && customName.trim().length >= 2) {
+      saveCustomHero(selectedHero);
+    }
     const heroOverride = selectedHero
       ? { name: selectedHero.name, emoji: selectedHero.emoji, imageUrl: selectedHero.imageUrl }
       : undefined;
@@ -174,92 +210,140 @@ export default function NewStory() {
         <div className="bg-white rounded-3xl shadow-sm p-5 mb-4">
           <p className="text-sm font-semibold text-text-primary mb-3">Кто будет героем сказки?</p>
           <div style={{ position: 'relative' }}>
-          <div ref={heroRowRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
-            {BASE_HEROES.map(h => {
-              const active = !customMode && selectedHero?.name === h.name;
-              return (
-                <button
-                  key={h.name}
-                  onClick={() => handleSelectPreset(h)}
-                  className="flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
-                  style={{ minWidth: 64 }}
-                >
-                  <div style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: '50%',
-                    border: active ? '2.5px solid #7C3AED' : '2px solid transparent',
-                    background: active ? '#F3EEFF' : '#F5F3FF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.15s',
-                    boxShadow: active ? '0 0 0 3px rgba(124,58,237,0.2)' : 'none',
-                    position: 'relative',
-                  }}>
-                    <img src={h.image} alt={h.name} style={{ width: 40, height: 40, objectFit: 'contain' }} />
-                    {active && (
-                      <div style={{ position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, background: '#7C3AED', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>
-                        <Check size={10} color="#fff" />
-                      </div>
-                    )}
-                  </div>
-                  <span style={{ fontSize: 10, color: active ? '#7C3AED' : '#7A7890', fontFamily: 'Comfortaa, sans-serif', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.2, maxWidth: 60 }}>
-                    {h.name.split(' ')[0]}
-                  </span>
-                </button>
-              );
-            })}
+            {/* Left scroll arrow */}
+            {canScrollLeft && (
+              <button
+                onClick={() => heroRowRef.current?.scrollBy({ left: -160, behavior: 'smooth' })}
+                style={{
+                  position: 'absolute', left: -8, top: '50%', transform: 'translateY(-60%)',
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: '#7C3AED', border: '2px solid #fff',
+                  boxShadow: '0 2px 8px rgba(124,58,237,0.4)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', zIndex: 2,
+                }}
+                aria-label="Назад"
+              >
+                <ChevronLeft size={14} color="#fff" strokeWidth={3} />
+              </button>
+            )}
 
-            {/* Custom hero button */}
-            <button
-              onClick={handleEnableCustom}
-              className="flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
-              style={{ minWidth: 64 }}
-            >
-              <div style={{
-                width: 56,
-                height: 56,
-                borderRadius: '50%',
-                border: customMode ? '2.5px solid #7C3AED' : '2px dashed #C4B5FD',
-                background: customMode ? '#F3EEFF' : '#FAF8FF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.15s',
-                boxShadow: customMode ? '0 0 0 3px rgba(124,58,237,0.2)' : 'none',
-              }}>
-                {customMode && customImageUrl ? (
-                  <img
-                    src={customImageUrl}
-                    alt=""
-                    style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: '50%' }}
-                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                  />
-                ) : (
-                  <Pencil size={20} color={customMode ? '#7C3AED' : '#C4B5FD'} />
-                )}
-              </div>
-              <span style={{ fontSize: 10, color: customMode ? '#7C3AED' : '#ABA9C0', fontFamily: 'Comfortaa, sans-serif', fontWeight: customMode ? 700 : 400, textAlign: 'center', lineHeight: 1.2 }}>
-                Свой
-              </span>
-            </button>
-          </div>
-          {/* Scroll arrow */}
-          <button
-            onClick={() => heroRowRef.current?.scrollBy({ left: 160, behavior: 'smooth' })}
-            style={{
-              position: 'absolute', right: -8, top: '50%', transform: 'translateY(-60%)',
-              width: 28, height: 28, borderRadius: '50%',
-              background: '#7C3AED', border: '2px solid #fff',
-              boxShadow: '0 2px 8px rgba(124,58,237,0.4)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', zIndex: 2,
-            }}
-            aria-label="Показать больше героев"
-          >
-            <ChevronRight size={14} color="#fff" strokeWidth={3} />
-          </button>
+            <div ref={heroRowRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
+              {BASE_HEROES.map(h => {
+                const active = !customMode && selectedHero?.name === h.name;
+                return (
+                  <button
+                    key={h.name}
+                    onClick={() => handleSelectPreset(h)}
+                    className="flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
+                    style={{ minWidth: 64 }}
+                  >
+                    <div style={{
+                      width: 56, height: 56, borderRadius: '50%',
+                      border: active ? '2.5px solid #7C3AED' : '2px solid transparent',
+                      background: active ? '#F3EEFF' : '#F5F3FF',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.15s',
+                      boxShadow: active ? '0 0 0 3px rgba(124,58,237,0.2)' : 'none',
+                      position: 'relative',
+                    }}>
+                      <img src={h.image} alt={h.name} style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                      {active && (
+                        <div style={{ position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, background: '#7C3AED', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>
+                          <Check size={10} color="#fff" />
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: 10, color: active ? '#7C3AED' : '#7A7890', fontFamily: 'Comfortaa, sans-serif', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.2, maxWidth: 60 }}>
+                      {h.name.split(' ')[0]}
+                    </span>
+                  </button>
+                );
+              })}
+
+              {/* Saved custom heroes */}
+              {savedCustomHeroes.map(h => {
+                const active = !customMode && selectedHero?.name === h.name;
+                return (
+                  <button
+                    key={`saved-${h.name}`}
+                    onClick={() => { setCustomMode(false); setCustomName(''); setCustomImageUrl(''); setSelectedHero(h); }}
+                    className="flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
+                    style={{ minWidth: 64 }}
+                  >
+                    <div style={{
+                      width: 56, height: 56, borderRadius: '50%',
+                      border: active ? '2.5px solid #7C3AED' : '2px solid #E9D5FF',
+                      background: active ? '#F3EEFF' : '#FAF5FF',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.15s',
+                      boxShadow: active ? '0 0 0 3px rgba(124,58,237,0.2)' : 'none',
+                      position: 'relative',
+                      overflow: 'hidden',
+                    }}>
+                      {h.imageUrl ? (
+                        <img src={h.imageUrl} alt={h.name} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: '50%' }}
+                          onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                      ) : (
+                        <span style={{ fontSize: 28 }}>{h.emoji}</span>
+                      )}
+                      {active && (
+                        <div style={{ position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, background: '#7C3AED', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>
+                          <Check size={10} color="#fff" />
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: 10, color: active ? '#7C3AED' : '#7A7890', fontFamily: 'Comfortaa, sans-serif', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.2, maxWidth: 60 }}>
+                      {h.name.split(' ')[0]}
+                    </span>
+                  </button>
+                );
+              })}
+
+              {/* Add new custom hero button */}
+              <button
+                onClick={handleEnableCustom}
+                className="flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
+                style={{ minWidth: 64 }}
+              >
+                <div style={{
+                  width: 56, height: 56, borderRadius: '50%',
+                  border: customMode ? '2.5px solid #7C3AED' : '2px dashed #C4B5FD',
+                  background: customMode ? '#F3EEFF' : '#FAF8FF',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.15s',
+                  boxShadow: customMode ? '0 0 0 3px rgba(124,58,237,0.2)' : 'none',
+                }}>
+                  {customMode && customImageUrl ? (
+                    <img src={customImageUrl} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: '50%' }}
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                  ) : (
+                    <Pencil size={20} color={customMode ? '#7C3AED' : '#C4B5FD'} />
+                  )}
+                </div>
+                <span style={{ fontSize: 10, color: customMode ? '#7C3AED' : '#ABA9C0', fontFamily: 'Comfortaa, sans-serif', fontWeight: customMode ? 700 : 400, textAlign: 'center', lineHeight: 1.2 }}>
+                  Свой
+                </span>
+              </button>
+            </div>
+
+            {/* Right scroll arrow */}
+            {canScrollRight && (
+              <button
+                onClick={() => heroRowRef.current?.scrollBy({ left: 160, behavior: 'smooth' })}
+                style={{
+                  position: 'absolute', right: -8, top: '50%', transform: 'translateY(-60%)',
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: '#7C3AED', border: '2px solid #fff',
+                  boxShadow: '0 2px 8px rgba(124,58,237,0.4)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', zIndex: 2,
+                }}
+                aria-label="Показать больше героев"
+              >
+                <ChevronRight size={14} color="#fff" strokeWidth={3} />
+              </button>
+            )}
           </div>
 
           {/* Custom hero name input */}
