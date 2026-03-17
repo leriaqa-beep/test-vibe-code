@@ -243,9 +243,23 @@ ${closing}`,
   };
 }
 
+function detectHeroGender(heroName: string): 'masculine' | 'feminine' {
+  const n = heroName.toLowerCase();
+  const feminineWords = ['леди', 'принцесса', 'фея', 'ведьма', 'волшебница', 'девочка', 'девушка', 'кошка', 'лиса', 'белка', 'сова', 'бабочка'];
+  if (feminineWords.some(w => n.includes(w))) return 'feminine';
+  // Russian name ending: -а/-я → feminine
+  const last = n[n.length - 1];
+  if (last === 'а' || last === 'я') return 'feminine';
+  return 'masculine';
+}
+
 function buildSystemPrompt(heroName: string, childName: string, childAge: number, childGender: string): string {
   const ageProfile = getAgeProfile(childAge);
   const declinedForms = declineNameFull(childName, childGender);
+  const heroGender = detectHeroGender(heroName);
+  const heroGenderLine = heroGender === 'feminine'
+    ? `РОД ГЕРОЯ ${heroName.toUpperCase()}: ЖЕНСКИЙ — используй только: она, её, пришла, сказала, рассказала, улыбнулась, ответила, посмотрела`
+    : `РОД ГЕРОЯ ${heroName.toUpperCase()}: МУЖСКОЙ — используй только: он, его, пришёл, сказал, рассказал, улыбнулся, ответил, посмотрел`;
 
   return `Ты пишешь детскую сказку. Герой этой сказки — ${heroName}.
 
@@ -254,9 +268,7 @@ function buildSystemPrompt(heroName: string, childName: string, childAge: number
 НЕ кот. НЕ сова. НЕ фея. НЕ волшебник. Только ${heroName}.
 Если ты напишешь другого персонажа вместо ${heroName} — ты нарушишь задание.
 
-РОД ГЕРОЯ ${heroName.toUpperCase()} определяй по имени:
-- Дракон, Кот, Лев, Единорог — мужской род (он, его, рассказал, сказал, пришёл)
-- Сова, Фея — женский род (она, её, рассказала, сказала, пришла)
+${heroGenderLine}
 
 ВОЗРАСТ РЕБЁНКА: ${childAge} ${childAge === 1 ? 'год' : childAge < 5 ? 'года' : 'лет'} — АДАПТИРУЙ СКАЗКУ ПОД ЭТОТ ВОЗРАСТ:
 - Длина: РОВНО ${ageProfile.wordRange} (не короче и не длиннее!)
@@ -372,10 +384,12 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
   const genderLabel = normalizeGender(child.gender) === 'girl' ? 'девочка' : 'мальчик';
   const shouldUseToys = child.useToys !== false && child.toys?.length > 0;
 
+  const ageProfile = getAgeProfile(child.age);
   const userMessage = `Напиши тёплую сказку для ${child.name} (${genderLabel}, ${child.age} лет).
 Вопрос ребёнка: «${question}»${context ? `\nСитуация (от родителя): ${context}` : ''}
 ОБЯЗАТЕЛЬНЫЙ герой сказки (используй ТОЧНО это имя): ${hero.name}${shouldUseToys && child.toys?.length > 0 ? `\nОБЯЗАТЕЛЬНО включи в сказку любимую игрушку ребёнка (выбери одну): ${child.toys.map(t => `${t.nickname} — ${t.type}${t.description ? ', ' + t.description : ''}`).join('; ')}. Игрушка должна быть живым участником сцены (рядом лежала, слушала, ждала дома), НЕ просто упоминанием. ЗАПРЕЩЕНО придумывать другие игрушки.` : ''}
-ВАЖНО: единственный герой-помощник в этой сказке — ${hero.name}. Никаких котов, сов, фей и других персонажей вместо него.`;
+ВАЖНО: единственный герой-помощник в этой сказке — ${hero.name}. Никаких котов, сов, фей и других персонажей вместо него.
+ОБЯЗАТЕЛЬНАЯ ДЛИНА: ровно ${ageProfile.wordRange}. Не заканчивай сказку раньше — раскрой ответ на вопрос полностью, через диалоги и образы.`;
 
   const systemPrompt = buildSystemPrompt(hero.name, child.name, child.age, child.gender);
   logger.info(`[Groq] Sending prompt:\n--- SYSTEM ---\n${systemPrompt}\n--- USER ---\n${userMessage}`);
@@ -388,7 +402,7 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      temperature: 0.7,
+      temperature: 0.5,
       max_tokens: 4096,
       response_format: { type: 'json_object' },
     });
