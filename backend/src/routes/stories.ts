@@ -11,7 +11,7 @@ const FREE_STORY_LIMIT = 3;
 
 // POST /api/stories/generate
 router.post('/generate', async (req: AuthRequest, res: Response) => {
-  const { childId, question, context } = req.body;
+  const { childId, question, context, heroOverride } = req.body;
   if (!childId || !question) {
     res.status(400).json({ error: 'childId и вопрос обязательны' });
     return;
@@ -31,8 +31,19 @@ router.post('/generate', async (req: AuthRequest, res: Response) => {
     return;
   }
 
+  // Validate heroOverride if provided
+  const validatedHero = heroOverride && typeof heroOverride.name === 'string' && heroOverride.name.trim()
+    ? { name: heroOverride.name.trim(), emoji: heroOverride.emoji || '✨', imageUrl: heroOverride.imageUrl || undefined }
+    : undefined;
+
   const storyId = uuidv4();
-  const generated = await generateStory({ storyId, question: question.trim(), context: context?.trim() || '', child });
+  const generated = await generateStory({
+    storyId,
+    question: question.trim(),
+    context: context?.trim() || '',
+    child,
+    heroOverride: validatedHero,
+  });
 
   const story: Story = {
     id: storyId,
@@ -47,6 +58,7 @@ router.post('/generate', async (req: AuthRequest, res: Response) => {
     rating: 0,
     readCount: 0,
     createdAt: new Date().toISOString(),
+    heroUsed: validatedHero ?? { name: child.hero.name, emoji: child.hero.emoji },
   };
 
   await store.saveStory(story);

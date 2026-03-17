@@ -1,12 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Pencil, Check } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import VoiceInput from '../components/VoiceInput';
 import DecorationLayer from '../components/Decorations';
 import Mascot from '../components/Mascot/Mascot';
 import { declineName } from '../utils/declineName';
-import HeroImage from '../components/HeroImage';
+
+const BASE_HEROES = [
+  { name: 'Единорог Радуга', emoji: '🦄', image: '/heroes/unicorn.png' },
+  { name: 'Мудрая Сова',     emoji: '🦉', image: '/heroes/owl.png'     },
+  { name: 'Добрый Дракон',   emoji: '🐉', image: '/heroes/dragon.png'  },
+  { name: 'Фея Звёздочка',   emoji: '🧚', image: '/heroes/fairy.png'   },
+  { name: 'Храбрый Лев',     emoji: '🦁', image: '/heroes/lion.png'    },
+  { name: 'Волшебный Кот',   emoji: '🐱', image: '/heroes/cat.png'     },
+];
+
+function getPollinationsUrl(heroName: string): string {
+  const prompt = encodeURIComponent(`${heroName} cute cartoon character children book illustration friendly colorful simple white background`);
+  return `https://image.pollinations.ai/prompt/${prompt}?width=256&height=256&nologo=true`;
+}
+
+interface SelectedHero {
+  name: string;
+  emoji: string;
+  image?: string;   // local /heroes/*.png for presets
+  imageUrl?: string; // Pollinations URL for custom
+}
 
 const QUICK_QUESTIONS = [
   { emoji: '🌧️', text: 'Почему идёт дождь?' },
@@ -26,6 +46,11 @@ export default function NewStory() {
   const [question, setQuestion] = useState('');
   const [context, setContext] = useState('');
   const [error, setError] = useState('');
+  const [selectedHero, setSelectedHero] = useState<SelectedHero | null>(null);
+  const [customMode, setCustomMode] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [customImageUrl, setCustomImageUrl] = useState('');
+  const customInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (children.length === 0) loadChildren();
@@ -33,11 +58,47 @@ export default function NewStory() {
 
   const child = children.find(c => c.id === childId);
 
+  // Pre-select the child's default hero once child is loaded
+  useEffect(() => {
+    if (child && !selectedHero) {
+      const preset = BASE_HEROES.find(h => h.emoji === child.hero.emoji);
+      setSelectedHero(preset ?? { name: child.hero.name, emoji: child.hero.emoji });
+    }
+  }, [child]);
+
+  const handleSelectPreset = (h: typeof BASE_HEROES[0]) => {
+    setCustomMode(false);
+    setCustomName('');
+    setCustomImageUrl('');
+    setSelectedHero(h);
+  };
+
+  const handleEnableCustom = () => {
+    setCustomMode(true);
+    setSelectedHero(null);
+    setTimeout(() => customInputRef.current?.focus(), 80);
+  };
+
+  const handleCustomNameChange = (name: string) => {
+    setCustomName(name);
+    if (name.trim().length >= 2) {
+      const url = getPollinationsUrl(name.trim());
+      setCustomImageUrl(url);
+      setSelectedHero({ name: name.trim(), emoji: '✨', imageUrl: url });
+    } else {
+      setCustomImageUrl('');
+      setSelectedHero(null);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!question.trim() || !childId) return;
     setError('');
+    const heroOverride = selectedHero
+      ? { name: selectedHero.name, emoji: selectedHero.emoji, imageUrl: selectedHero.imageUrl }
+      : undefined;
     try {
-      const story = await generateStory(childId, question, context);
+      const story = await generateStory(childId, question, context, heroOverride);
       if (story) navigate(`/app/story/${story.id}`);
     } catch (err: unknown) {
       const e = err as { code?: string; message?: string };
@@ -95,7 +156,7 @@ export default function NewStory() {
           </button>
           <div>
             <h1 className="text-lg font-bold text-text-primary">Новая сказка</h1>
-            {child && <p className="text-sm text-purple-600 flex items-center gap-1">для {declineName(child.name, child.gender, 'родительный')} <HeroImage emoji={child.hero.emoji} size="xs" /></p>}
+            {child && <p className="text-sm text-purple-600">для {declineName(child.name, child.gender, 'родительный')}</p>}
           </div>
         </div>
 
@@ -106,6 +167,101 @@ export default function NewStory() {
             size="sm"
             style={{ filter: 'drop-shadow(0 8px 28px rgba(124,107,196,0.22))' }}
           />
+        </div>
+
+        {/* Hero picker */}
+        <div className="bg-white rounded-3xl shadow-sm p-5 mb-4">
+          <p className="text-sm font-semibold text-text-primary mb-3">Кто будет героем сказки?</p>
+          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            {BASE_HEROES.map(h => {
+              const active = !customMode && selectedHero?.name === h.name;
+              return (
+                <button
+                  key={h.name}
+                  onClick={() => handleSelectPreset(h)}
+                  className="flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
+                  style={{ minWidth: 64 }}
+                >
+                  <div style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: '50%',
+                    border: active ? '2.5px solid #7C3AED' : '2px solid transparent',
+                    background: active ? '#F3EEFF' : '#F5F3FF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.15s',
+                    boxShadow: active ? '0 0 0 3px rgba(124,58,237,0.2)' : 'none',
+                    position: 'relative',
+                  }}>
+                    <img src={h.image} alt={h.name} style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                    {active && (
+                      <div style={{ position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, background: '#7C3AED', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>
+                        <Check size={10} color="#fff" />
+                      </div>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 10, color: active ? '#7C3AED' : '#7A7890', fontFamily: 'Comfortaa, sans-serif', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.2, maxWidth: 60 }}>
+                    {h.name.split(' ')[0]}
+                  </span>
+                </button>
+              );
+            })}
+
+            {/* Custom hero button */}
+            <button
+              onClick={handleEnableCustom}
+              className="flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
+              style={{ minWidth: 64 }}
+            >
+              <div style={{
+                width: 56,
+                height: 56,
+                borderRadius: '50%',
+                border: customMode ? '2.5px solid #7C3AED' : '2px dashed #C4B5FD',
+                background: customMode ? '#F3EEFF' : '#FAF8FF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s',
+                boxShadow: customMode ? '0 0 0 3px rgba(124,58,237,0.2)' : 'none',
+              }}>
+                {customMode && customImageUrl ? (
+                  <img
+                    src={customImageUrl}
+                    alt=""
+                    style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: '50%' }}
+                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <Pencil size={20} color={customMode ? '#7C3AED' : '#C4B5FD'} />
+                )}
+              </div>
+              <span style={{ fontSize: 10, color: customMode ? '#7C3AED' : '#ABA9C0', fontFamily: 'Comfortaa, sans-serif', fontWeight: customMode ? 700 : 400, textAlign: 'center', lineHeight: 1.2 }}>
+                Свой
+              </span>
+            </button>
+          </div>
+
+          {/* Custom hero name input */}
+          {customMode && (
+            <div className="mt-3">
+              <input
+                ref={customInputRef}
+                type="text"
+                value={customName}
+                onChange={e => handleCustomNameChange(e.target.value)}
+                placeholder="Введите имя героя, например: Леди Баг"
+                className="w-full border border-purple-200 rounded-2xl px-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
+              />
+              {customName.trim().length >= 2 && (
+                <p className="text-xs text-purple-500 mt-1.5 flex items-center gap-1">
+                  <span>✨</span> Картинка героя загрузится из Pollinations AI
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Question input */}
@@ -177,11 +333,11 @@ export default function NewStory() {
         {/* Generate button */}
         <button
           onClick={handleGenerate}
-          disabled={!question.trim() || isGenerating}
+          disabled={!question.trim() || isGenerating || (customMode && !customName.trim())}
           className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90 transition shadow-lg"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z"/></svg>
-          Создать сказку
+          {selectedHero ? `Создать сказку с ${selectedHero.name.split(' ')[0]}` : 'Создать сказку'}
         </button>
 
         {child && child.toys.length > 0 && (

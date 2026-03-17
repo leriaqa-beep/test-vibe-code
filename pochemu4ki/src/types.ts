@@ -62,6 +62,7 @@ export interface Story {
   rating: number;
   readCount: number;
   createdAt: string;
+  heroUsed?: { name: string; emoji: string; imageUrl?: string };
 }
 
 export interface PricingPlan {

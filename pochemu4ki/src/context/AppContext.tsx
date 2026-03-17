@@ -8,7 +8,7 @@ interface AppContextValue {
   isGenerating: boolean;
   loadChildren: () => Promise<void>;
   loadStories: (childId?: string) => Promise<void>;
-  generateStory: (childId: string, question: string, context: string) => Promise<Story | null>;
+  generateStory: (childId: string, question: string, context: string, heroOverride?: { name: string; emoji: string; imageUrl?: string }) => Promise<Story | null>;
   updateStory: (id: string, data: { isSaved?: boolean; rating?: number }) => Promise<void>;
   deleteStory: (id: string) => Promise<void>;
   addChild: (data: Partial<ChildProfile>) => Promise<ChildProfile>;
@@ -33,10 +33,10 @@ export function AppProvider({ children: childrenProp }: { children: ReactNode })
     setStories(data);
   }, []);
 
-  const generateStory = useCallback(async (childId: string, question: string, context: string): Promise<Story | null> => {
+  const generateStory = useCallback(async (childId: string, question: string, context: string, heroOverride?: { name: string; emoji: string; imageUrl?: string }): Promise<Story | null> => {
     setIsGenerating(true);
     try {
-      const story = await api.stories.generate(childId, question, context);
+      const story = await api.stories.generate(childId, question, context, heroOverride);
       setStories(prev => [story, ...prev]);
       return story;
     } catch (err) {

@@ -76,7 +76,10 @@ export default function BookReader({ story, child }: BookReaderProps) {
   const touchStartX = useRef<number | null>(null);
   const pages = parseStory(story.content);
   const totalPages = pages.length;
-  const heroImage = child ? (HERO_IMAGE_MAP[child.hero.emoji] ?? undefined) : undefined;
+  // Per-story hero image: custom Pollinations URL → preset map → child default
+  const heroImage = story.heroUsed?.imageUrl
+    ?? (story.heroUsed?.emoji ? (HERO_IMAGE_MAP[story.heroUsed.emoji] ?? undefined) : undefined)
+    ?? (child ? (HERO_IMAGE_MAP[child.hero.emoji] ?? undefined) : undefined);
 
   useEffect(() => { injectStyles(); }, []);
 

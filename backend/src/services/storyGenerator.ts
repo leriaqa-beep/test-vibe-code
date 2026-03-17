@@ -7,6 +7,7 @@ interface StoryInput {
   question: string;
   context: string;
   child: ChildProfile;
+  heroOverride?: { name: string; emoji: string; imageUrl?: string };
 }
 
 interface GeneratedStory {
@@ -359,7 +360,7 @@ const groq = process.env.GROQ_API_KEY
   : null;
 
 export async function generateStory(input: StoryInput): Promise<GeneratedStory> {
-  const { storyId, question, context, child } = input;
+  const { storyId, question, context, child, heroOverride } = input;
   const category = categorize(question);
 
   if (!groq) {
@@ -367,7 +368,7 @@ export async function generateStory(input: StoryInput): Promise<GeneratedStory> 
     return generateFallback(input);
   }
 
-  const hero = getHero(child);
+  const hero = heroOverride ?? getHero(child);
   const genderLabel = normalizeGender(child.gender) === 'girl' ? 'девочка' : 'мальчик';
   const shouldUseToys = child.useToys !== false && child.toys?.length > 0;
 

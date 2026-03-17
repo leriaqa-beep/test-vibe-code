@@ -41,10 +41,10 @@ export const api = {
       story: Pick<import('../types').Story, 'id' | 'title' | 'question' | 'content' | 'imageUrl' | 'createdAt'>;
       child: { name: string; age: number; gender: 'boy' | 'girl'; hero: { name: string; emoji: string } } | null;
     }> => fetch(`${BASE_URL}/stories/public/${id}`).then(r => r.json()),
-    generate: (childId: string, question: string, context: string) =>
+    generate: (childId: string, question: string, context: string, heroOverride?: { name: string; emoji: string; imageUrl?: string }) =>
       request<import('../types').Story>('/stories/generate', {
         method: 'POST',
-        body: JSON.stringify({ childId, question, context }),
+        body: JSON.stringify({ childId, question, context, heroOverride }),
       }),
     update: (id: string, data: { isSaved?: boolean; rating?: number }) =>
       request<import('../types').Story>(`/stories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),

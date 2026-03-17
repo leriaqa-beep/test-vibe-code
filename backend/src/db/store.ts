@@ -45,6 +45,7 @@ export interface Story {
   rating: number;
   readCount: number;
   createdAt: string;
+  heroUsed?: { name: string; emoji: string; imageUrl?: string };
 }
 
 // --- Mappers: snake_case (DB) → camelCase (TypeScript) ---
@@ -93,6 +94,7 @@ function mapStory(row: any): Story {
     rating: row.rating || 0,
     readCount: row.read_count || 0,
     createdAt: row.created_at,
+    heroUsed: row.hero_used || undefined,
   };
 }
 
@@ -226,6 +228,7 @@ export const store = {
         rating: story.rating,
         read_count: story.readCount,
         created_at: story.createdAt,
+        hero_used: story.heroUsed || null,
       },
       { onConflict: 'id' }
     );
