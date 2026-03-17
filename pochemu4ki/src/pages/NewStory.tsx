@@ -172,7 +172,8 @@ export default function NewStory() {
         {/* Hero picker */}
         <div className="bg-white rounded-3xl shadow-sm p-5 mb-4">
           <p className="text-sm font-semibold text-text-primary mb-3">Кто будет героем сказки?</p>
-          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+          <div style={{ position: 'relative' }}>
+          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
             {BASE_HEROES.map(h => {
               const active = !customMode && selectedHero?.name === h.name;
               return (
@@ -242,6 +243,9 @@ export default function NewStory() {
                 Свой
               </span>
             </button>
+          </div>
+          {/* Right fade — hint that row scrolls */}
+          <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 32, background: 'linear-gradient(to right, transparent, #fff)', pointerEvents: 'none', borderRadius: '0 50% 50% 0' }} />
           </div>
 
           {/* Custom hero name input */}
