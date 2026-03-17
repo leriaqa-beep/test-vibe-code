@@ -85,6 +85,7 @@ export interface BookPageProps {
   storyTitle: string;
   question: string;
   heroImage?: string;
+  heroEmoji?: string;
   storyImageUrl?: string;
   child?: ChildProfile;
   isFirst?: boolean;   // first content page — shows title + question + mascot
@@ -98,12 +99,13 @@ export default function BookPage({
   storyTitle,
   question,
   heroImage,
+  heroEmoji,
   storyImageUrl,
   child,
   isFirst = false,
   isLast = false,
 }: BookPageProps) {
-  const theme = child ? getHeroTheme(child.hero.emoji) : getHeroTheme('🦄');
+  const theme = getHeroTheme(heroEmoji ?? (child ? child.hero.emoji : '🦄'));
 
   return (
     <div
@@ -221,8 +223,8 @@ export default function BookPage({
         {/* Paragraphs */}
         <div style={{ position: 'relative' }}>
           {paragraphs.map((para, i) => {
-            // Insert hero image after 2nd paragraph on middle pages
-            const showHero = !isFirst && heroImage && i === 2 && paragraphs.length > 3;
+            // Insert hero image after 2nd paragraph (or middle of short pages)
+            const showHero = !!heroImage && i === Math.min(2, Math.floor(paragraphs.length / 2));
             return (
               <div key={i}>
                 <Paragraph

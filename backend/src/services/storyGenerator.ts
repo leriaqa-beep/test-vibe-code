@@ -202,9 +202,9 @@ function generateStoryImage(_storyId: string, category: string): string {
 
 // Fallback when Groq is unavailable
 async function generateFallback(input: StoryInput): Promise<GeneratedStory> {
-  const { storyId, question, context, child } = input;
+  const { storyId, question, context, child, heroOverride } = input;
   const childName = child.name;
-  const hero = getHero(child);
+  const hero = heroOverride ?? getHero(child);
   const category = categorize(question);
   const g = genderForm(child);
 

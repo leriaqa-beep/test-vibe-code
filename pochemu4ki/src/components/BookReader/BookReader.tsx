@@ -77,6 +77,7 @@ export default function BookReader({ story, child }: BookReaderProps) {
   const pages = parseStory(story.content);
   const totalPages = pages.length;
   // Per-story hero image: custom Pollinations URL → preset map → child default
+  const heroEmoji = story.heroUsed?.emoji ?? child?.hero.emoji;
   const heroImage = story.heroUsed?.imageUrl
     ?? (story.heroUsed?.emoji ? (HERO_IMAGE_MAP[story.heroUsed.emoji] ?? undefined) : undefined)
     ?? (child ? (HERO_IMAGE_MAP[child.hero.emoji] ?? undefined) : undefined);
@@ -166,6 +167,7 @@ export default function BookReader({ story, child }: BookReaderProps) {
           storyTitle={story.title}
           question={story.question}
           heroImage={heroImage}
+          heroEmoji={heroEmoji}
           storyImageUrl={story.imageUrl || undefined}
           child={child}
           isFirst={isFirst}

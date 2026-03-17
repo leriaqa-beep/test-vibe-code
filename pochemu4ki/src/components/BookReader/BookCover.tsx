@@ -76,7 +76,8 @@ interface BookCoverProps {
 }
 
 export default function BookCover({ story, child, onOpen }: BookCoverProps) {
-  const theme = child ? getHeroTheme(child.hero.emoji) : { accent: '#F9D56E', glow: 'rgba(249,213,110,0.5)' };
+  const heroEmoji = story.heroUsed?.emoji ?? child?.hero.emoji ?? '🦄';
+  const theme = getHeroTheme(heroEmoji);
   const mascotRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
