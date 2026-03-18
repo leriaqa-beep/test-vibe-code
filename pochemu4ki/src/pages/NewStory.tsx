@@ -103,7 +103,6 @@ export default function NewStory() {
   const [savedCustomHeroes, setSavedCustomHeroes] = useState<SelectedHero[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const [heroToDelete, setHeroToDelete] = useState<string | null>(null);
   const customInputRef = useRef<HTMLInputElement>(null);
   const heroRowRef = useRef<HTMLDivElement>(null);
   const imageDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -183,24 +182,14 @@ export default function NewStory() {
           // Try backend first — it translates Russian name to English for better results
           const result = await api.heroes.getImage(trimmed);
           imageUrl = result.imageUrl; // may be Wikipedia URL or Pollinations URL
-          console.log('[hero] API returned URL:', imageUrl);
-        } catch (e) {
+        } catch {
           // Backend unavailable — use direct Pollinations URL built on client
-          console.warn('[hero] Backend unavailable, using direct Pollinations:', imageUrl, e);
         }
 
-        // Preload the image — spinner stays until it's actually in cache
-        console.log('[hero] Starting preload:', imageUrl);
-        const loadedUrl = await new Promise<string>((resolve) => {
-          const img = new window.Image();
-          img.onload = () => { console.log('[hero] Preload SUCCESS:', imageUrl); resolve(imageUrl); };
-          img.onerror = (e) => { console.error('[hero] Preload FAILED:', imageUrl, e); resolve(''); };
-          img.src = imageUrl;
-          setTimeout(() => { console.warn('[hero] Preload TIMEOUT after 25s'); resolve(''); }, 25000);
-        });
-
-        setCustomImageUrl(loadedUrl);
-        setSelectedHero({ name: trimmed, emoji: '✨', imageUrl: loadedUrl || undefined });
+        // Set URL immediately — HeroCircle handles mascot→image transition on its own.
+        // No preload: Pollinations can take 30-60s and preloading just blocks the UI.
+        setCustomImageUrl(imageUrl);
+        setSelectedHero({ name: trimmed, emoji: '✨', imageUrl });
         setImageLoading(false);
       }, 700);
     } else {
@@ -219,16 +208,11 @@ export default function NewStory() {
 
   const handleDeleteSavedHero = (heroName: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setHeroToDelete(heroName);
-  };
-
-  const confirmDeleteHero = () => {
-    if (!heroToDelete) return;
-    const updated = savedCustomHeroes.filter(h => h.name !== heroToDelete);
+    e.preventDefault();
+    const updated = savedCustomHeroes.filter(h => h.name !== heroName);
     setSavedCustomHeroes(updated);
     if (childId) localStorage.setItem(`pochemu4ki_custom_heroes_${childId}`, JSON.stringify(updated));
-    if (selectedHero?.name === heroToDelete) setSelectedHero(null);
-    setHeroToDelete(null);
+    if (selectedHero?.name === heroName) setSelectedHero(null);
   };
 
   const handleGenerate = async () => {
@@ -484,10 +468,8 @@ export default function NewStory() {
               {customName.trim().length >= 2 && (
                 <p className="text-xs text-purple-500 mt-1.5 flex items-center gap-1">
                   {imageLoading
-                    ? <><span>🔍</span> Загружаем картинку персонажа...</>
-                    : customImageUrl
-                      ? <><span>✨</span> Картинка найдена</>
-                      : <><span>🎨</span> Картинка не найдена — герой будет без фото</>
+                    ? <><span>🔍</span> Ищем картинку персонажа...</>
+                    : <><span>✨</span> Картинка загружается в кружочке</>
                   }
                 </p>
               )}
@@ -578,64 +560,6 @@ export default function NewStory() {
         )}
       </div>
 
-      {/* Delete confirmation notification */}
-      {heroToDelete && (
-        <div
-          style={{
-            position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-            background: '#fff', borderRadius: 20,
-            boxShadow: '0 8px 32px rgba(124,58,237,0.18), 0 2px 8px rgba(0,0,0,0.08)',
-            padding: '16px 20px',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-            minWidth: 280, maxWidth: 'calc(100vw - 32px)',
-            zIndex: 100,
-            animation: 'slideUp 0.2s ease-out',
-            border: '1.5px solid #EDE9FE',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <img
-              src="/assets/mascot/mascot-think.png"
-              alt=""
-              style={{ width: 36, height: 36, objectFit: 'contain' }}
-            />
-            <div>
-              <p style={{ fontFamily: 'Comfortaa, sans-serif', fontWeight: 700, fontSize: 14, color: '#2D2B3D', margin: 0, lineHeight: 1.3 }}>
-                Удалить «{heroToDelete.split(' ')[0]}»?
-              </p>
-              <p style={{ fontFamily: 'Comfortaa, sans-serif', fontSize: 12, color: '#7A7890', margin: 0, lineHeight: 1.4 }}>
-                Герой исчезнет из сохранённых
-              </p>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-            <button
-              onClick={() => setHeroToDelete(null)}
-              style={{
-                flex: 1, padding: '10px 0', borderRadius: 14,
-                background: '#F5F3FF', border: '1.5px solid #C4B5FD',
-                color: '#7C3AED', fontFamily: 'Comfortaa, sans-serif',
-                fontWeight: 700, fontSize: 13, cursor: 'pointer',
-              }}
-            >
-              Отмена
-            </button>
-            <button
-              onClick={confirmDeleteHero}
-              style={{
-                flex: 1, padding: '10px 0', borderRadius: 14,
-                background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-                border: 'none',
-                color: '#fff', fontFamily: 'Comfortaa, sans-serif',
-                fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(239,68,68,0.3)',
-              }}
-            >
-              Удалить
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
