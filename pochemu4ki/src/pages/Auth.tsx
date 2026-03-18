@@ -164,16 +164,24 @@ export default function Auth() {
                   style={{ marginTop: 2, accentColor: 'var(--accent-primary)', flexShrink: 0, width: 16, height: 16 }}
                 />
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Я ознакомился(-ась) с{' '}
+                  Я принимаю{' '}
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'var(--accent-primary)', textDecoration: 'underline' }}
+                  >
+                    Пользовательское соглашение
+                  </a>{' '}
+                  и{' '}
                   <a
                     href="/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: 'var(--accent-primary)', textDecoration: 'underline' }}
                   >
-                    Политикой конфиденциальности
-                  </a>{' '}
-                  и согласен(-на) на обработку персональных данных
+                    Политику конфиденциальности
+                  </a>
                 </span>
               </label>
             )}

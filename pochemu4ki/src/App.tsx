@@ -15,6 +15,7 @@ import Library from './pages/Library';
 import Settings from './pages/Settings';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 import BookCreate from './pages/BookCreate';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -61,6 +62,7 @@ export default function App() {
 
             {/* Public static */}
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 

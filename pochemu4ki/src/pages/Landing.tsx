@@ -704,6 +704,12 @@ export default function Landing() {
           >
             Политика конфиденциальности
           </button>
+          <button
+            onClick={() => navigate('/terms')}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 'var(--text-xs)', cursor: 'pointer', textDecoration: 'underline' }}
+          >
+            Пользовательское соглашение
+          </button>
         </div>
       </footer>
 
