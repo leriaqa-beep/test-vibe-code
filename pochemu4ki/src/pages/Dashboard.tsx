@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, BookOpen, Settings, UserPlus, Crown } from 'lucide-react';
+import { Plus, BookOpen, UserPlus, Crown } from 'lucide-react';
 import HeroImage from '../components/HeroImage';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
@@ -27,7 +27,7 @@ export default function Dashboard() {
       style={{ background: 'var(--bg-primary)' }}
     >
       <DecorationLayer preset="dashboard" />
-      <div className="max-w-lg mx-auto px-4 py-6 relative">
+      <div className="max-w-lg mx-auto px-4 py-6 pb-24 relative">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -35,19 +35,11 @@ export default function Dashboard() {
             <img src="/assets/mascot/mascot-logo.png" alt="Почему-Ка!" className="w-8 h-8 object-contain" />
             <span className="text-xl font-bold text-purple-700">Почему-Ка!</span>
           </div>
-          <div className="flex items-center gap-2">
-            {user?.isPremium && (
-              <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                <Crown className="w-3 h-3" /> Премиум
-              </span>
-            )}
-            <button
-              onClick={() => navigate('/app/settings')}
-              className="w-9 h-9 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-purple-600 transition"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
-          </div>
+          {user?.isPremium && (
+            <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+              <Crown className="w-3 h-3" /> Премиум
+            </span>
+          )}
         </div>
 
         {/* Beta banner */}

@@ -67,7 +67,7 @@ export default function Library() {
       style={{ background: 'var(--bg-primary)' }}
     >
       <DecorationLayer preset="dashboard" />
-      <div className="max-w-lg mx-auto px-4 py-6 relative">
+      <div className="max-w-lg mx-auto px-4 py-6 pb-24 relative">
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-5">
