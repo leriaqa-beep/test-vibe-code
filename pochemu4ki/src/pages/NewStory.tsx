@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Pencil, Check, ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -7,6 +7,40 @@ import VoiceInput from '../components/VoiceInput';
 import DecorationLayer from '../components/Decorations';
 import Mascot from '../components/Mascot/Mascot';
 import { declineName } from '../utils/declineName';
+
+/** Small circle that shows a mascot until hero image loads, then swaps to it */
+const HeroCircle = memo(function HeroCircle({ imageUrl, size }: { imageUrl?: string; size: number }) {
+  // Track which URL has actually loaded — derived `loaded` has no useEffect race condition
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
+  const loaded = !!imageUrl && loadedUrl === imageUrl;
+  return (
+    <div style={{ position: 'relative', width: size, height: size }}>
+      <img
+        src="/assets/mascot/mascot-hero.png"
+        alt=""
+        style={{
+          position: 'absolute', width: Math.round(size * 0.62), height: Math.round(size * 0.62),
+          objectFit: 'contain',
+          top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          opacity: loaded ? 0 : 1, transition: 'opacity 0.3s',
+        }}
+      />
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt=""
+          style={{
+            position: 'absolute', inset: 0, width: size, height: size,
+            objectFit: 'cover', borderRadius: '50%',
+            opacity: loaded ? 1 : 0, transition: 'opacity 0.4s',
+          }}
+          onLoad={() => setLoadedUrl(imageUrl)}
+          onError={() => setLoadedUrl(null)}
+        />
+      )}
+    </div>
+  );
+});
 
 const BASE_HEROES = [
   { name: 'Единорог Радуга', emoji: '🦄', image: '/heroes/unicorn.png' },
@@ -22,6 +56,25 @@ interface SelectedHero {
   emoji: string;
   image?: string;   // local /heroes/*.png for presets
   imageUrl?: string; // Pollinations URL for custom
+}
+
+/** Build Pollinations URL directly — fallback if backend is down */
+function buildPollinationsUrl(name: string): string {
+  const prompt = encodeURIComponent(
+    `${name} cute cartoon character children book illustration friendly colorful simple white background`
+  );
+  const seed = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 99999;
+  return `https://image.pollinations.ai/prompt/${prompt}?width=256&height=256&nologo=true&nofeed=true&model=turbo&seed=${seed}`;
+}
+
+/** Replace old backend proxy URLs with direct Pollinations URLs */
+function sanitizeHeroImageUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  const proxyMatch = url.match(/[?&]name=([^&]+)/);
+  if (url.includes('/api/hero-image/img') && proxyMatch) {
+    return buildPollinationsUrl(decodeURIComponent(proxyMatch[1]));
+  }
+  return url;
 }
 
 const QUICK_QUESTIONS = [
@@ -50,6 +103,7 @@ export default function NewStory() {
   const [savedCustomHeroes, setSavedCustomHeroes] = useState<SelectedHero[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [heroToDelete, setHeroToDelete] = useState<string | null>(null);
   const customInputRef = useRef<HTMLInputElement>(null);
   const heroRowRef = useRef<HTMLDivElement>(null);
   const imageDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -65,7 +119,14 @@ export default function NewStory() {
     if (!childId) return;
     try {
       const stored = localStorage.getItem(`pochemu4ki_custom_heroes_${childId}`);
-      if (stored) setSavedCustomHeroes(JSON.parse(stored));
+      if (stored) {
+        const heroes = JSON.parse(stored) as SelectedHero[];
+        // Migrate stale proxy URLs → direct Pollinations URLs
+        const migrated = heroes.map(h => ({ ...h, imageUrl: sanitizeHeroImageUrl(h.imageUrl) }));
+        setSavedCustomHeroes(migrated);
+        // Persist the migrated version back
+        localStorage.setItem(`pochemu4ki_custom_heroes_${childId}`, JSON.stringify(migrated));
+      }
     } catch {}
   }, [childId]);
 
@@ -115,16 +176,32 @@ export default function NewStory() {
 
       // Debounce: wait 700ms after user stops typing before fetching
       imageDebounceRef.current = setTimeout(async () => {
+        const trimmed = name.trim();
+        let imageUrl = buildPollinationsUrl(trimmed); // fallback: direct Pollinations
+
         try {
-          const result = await api.heroes.getImage(name.trim());
-          setCustomImageUrl(result.imageUrl);
-          setSelectedHero({ name: name.trim(), emoji: '✨', imageUrl: result.imageUrl });
-        } catch {
-          // If API fails entirely, leave hero selected without image
-          setSelectedHero({ name: name.trim(), emoji: '✨' });
-        } finally {
-          setImageLoading(false);
+          // Try backend first — it translates Russian name to English for better results
+          const result = await api.heroes.getImage(trimmed);
+          imageUrl = result.imageUrl; // may be Wikipedia URL or Pollinations URL
+          console.log('[hero] API returned URL:', imageUrl);
+        } catch (e) {
+          // Backend unavailable — use direct Pollinations URL built on client
+          console.warn('[hero] Backend unavailable, using direct Pollinations:', imageUrl, e);
         }
+
+        // Preload the image — spinner stays until it's actually in cache
+        console.log('[hero] Starting preload:', imageUrl);
+        const loadedUrl = await new Promise<string>((resolve) => {
+          const img = new window.Image();
+          img.onload = () => { console.log('[hero] Preload SUCCESS:', imageUrl); resolve(imageUrl); };
+          img.onerror = (e) => { console.error('[hero] Preload FAILED:', imageUrl, e); resolve(''); };
+          img.src = imageUrl;
+          setTimeout(() => { console.warn('[hero] Preload TIMEOUT after 25s'); resolve(''); }, 25000);
+        });
+
+        setCustomImageUrl(loadedUrl);
+        setSelectedHero({ name: trimmed, emoji: '✨', imageUrl: loadedUrl || undefined });
+        setImageLoading(false);
       }, 700);
     } else {
       setImageLoading(false);
@@ -142,10 +219,16 @@ export default function NewStory() {
 
   const handleDeleteSavedHero = (heroName: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const updated = savedCustomHeroes.filter(h => h.name !== heroName);
+    setHeroToDelete(heroName);
+  };
+
+  const confirmDeleteHero = () => {
+    if (!heroToDelete) return;
+    const updated = savedCustomHeroes.filter(h => h.name !== heroToDelete);
     setSavedCustomHeroes(updated);
     if (childId) localStorage.setItem(`pochemu4ki_custom_heroes_${childId}`, JSON.stringify(updated));
-    if (selectedHero?.name === heroName) setSelectedHero(null);
+    if (selectedHero?.name === heroToDelete) setSelectedHero(null);
+    setHeroToDelete(null);
   };
 
   const handleGenerate = async () => {
@@ -321,27 +404,7 @@ export default function NewStory() {
                       position: 'relative',
                       overflow: 'hidden',
                     }}>
-                      {/* Mascot base — always visible */}
-                      <img
-                        src="/assets/mascot/mascot-hero.png"
-                        alt=""
-                        style={{ position: 'absolute', width: 34, height: 34, objectFit: 'contain' }}
-                      />
-                      {/* Hero image overlay — fades in on load */}
-                      {h.imageUrl && (
-                        <img
-                          src={h.imageUrl}
-                          alt={h.name}
-                          style={{
-                            position: 'absolute', inset: 0,
-                            width: 56, height: 56,
-                            objectFit: 'cover', borderRadius: '50%',
-                            opacity: 0, transition: 'opacity 0.4s',
-                          }}
-                          onLoad={e => { (e.currentTarget as HTMLImageElement).style.opacity = '1'; }}
-                          onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                        />
-                      )}
+                        <HeroCircle imageUrl={h.imageUrl} size={56} />
                       {active && (
                         <div style={{ position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, background: '#7C3AED', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff', zIndex: 2 }}>
                           <Check size={10} color="#fff" />
@@ -377,28 +440,7 @@ export default function NewStory() {
                       </path>
                     </svg>
                   ) : customMode ? (
-                    // Always show mascot base; hero image fades in on top when loaded
-                    <div style={{ position: 'relative', width: 44, height: 44 }}>
-                      <img
-                        src="/assets/mascot/mascot-hero.png"
-                        alt=""
-                        style={{ position: 'absolute', width: 36, height: 36, objectFit: 'contain', top: 4, left: 4 }}
-                      />
-                      {customImageUrl && (
-                        <img
-                          src={customImageUrl}
-                          alt=""
-                          style={{
-                            position: 'absolute', inset: 0,
-                            width: 44, height: 44,
-                            objectFit: 'cover', borderRadius: '50%',
-                            opacity: 0, transition: 'opacity 0.4s',
-                          }}
-                          onLoad={e => { (e.currentTarget as HTMLImageElement).style.opacity = '1'; }}
-                          onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                        />
-                      )}
-                    </div>
+                    <HeroCircle imageUrl={customImageUrl || undefined} size={44} />
                   ) : (
                     <Pencil size={20} color="#C4B5FD" />
                   )}
@@ -442,10 +484,10 @@ export default function NewStory() {
               {customName.trim().length >= 2 && (
                 <p className="text-xs text-purple-500 mt-1.5 flex items-center gap-1">
                   {imageLoading
-                    ? <><span>🔍</span> Ищем картинку персонажа...</>
+                    ? <><span>🔍</span> Загружаем картинку персонажа...</>
                     : customImageUrl
                       ? <><span>✨</span> Картинка найдена</>
-                      : <><span>⏳</span> Подбираем изображение...</>
+                      : <><span>🎨</span> Картинка не найдена — герой будет без фото</>
                   }
                 </p>
               )}
@@ -535,6 +577,65 @@ export default function NewStory() {
           </p>
         )}
       </div>
+
+      {/* Delete confirmation notification */}
+      {heroToDelete && (
+        <div
+          style={{
+            position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+            background: '#fff', borderRadius: 20,
+            boxShadow: '0 8px 32px rgba(124,58,237,0.18), 0 2px 8px rgba(0,0,0,0.08)',
+            padding: '16px 20px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+            minWidth: 280, maxWidth: 'calc(100vw - 32px)',
+            zIndex: 100,
+            animation: 'slideUp 0.2s ease-out',
+            border: '1.5px solid #EDE9FE',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img
+              src="/assets/mascot/mascot-think.png"
+              alt=""
+              style={{ width: 36, height: 36, objectFit: 'contain' }}
+            />
+            <div>
+              <p style={{ fontFamily: 'Comfortaa, sans-serif', fontWeight: 700, fontSize: 14, color: '#2D2B3D', margin: 0, lineHeight: 1.3 }}>
+                Удалить «{heroToDelete.split(' ')[0]}»?
+              </p>
+              <p style={{ fontFamily: 'Comfortaa, sans-serif', fontSize: 12, color: '#7A7890', margin: 0, lineHeight: 1.4 }}>
+                Герой исчезнет из сохранённых
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+            <button
+              onClick={() => setHeroToDelete(null)}
+              style={{
+                flex: 1, padding: '10px 0', borderRadius: 14,
+                background: '#F5F3FF', border: '1.5px solid #C4B5FD',
+                color: '#7C3AED', fontFamily: 'Comfortaa, sans-serif',
+                fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              }}
+            >
+              Отмена
+            </button>
+            <button
+              onClick={confirmDeleteHero}
+              style={{
+                flex: 1, padding: '10px 0', borderRadius: 14,
+                background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                border: 'none',
+                color: '#fff', fontFamily: 'Comfortaa, sans-serif',
+                fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(239,68,68,0.3)',
+              }}
+            >
+              Удалить
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

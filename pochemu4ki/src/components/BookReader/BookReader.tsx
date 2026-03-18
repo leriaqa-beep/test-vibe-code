@@ -20,6 +20,20 @@ function parseStory(content: string): string[][] {
   return pages.length ? pages : [['']];
 }
 
+/* ── Sanitize stale proxy URLs → direct Pollinations URL ─────── */
+function sanitizeHeroImageUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  // Old proxy URLs: http(s)://host/api/hero-image/img?name=...
+  const proxyMatch = url.match(/[?&]name=([^&]+)/);
+  if (url.includes('/api/hero-image/img') && proxyMatch) {
+    const name = decodeURIComponent(proxyMatch[1]);
+    const prompt = encodeURIComponent(`${name} cute cartoon character children book illustration friendly colorful simple white background`);
+    const seed = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 99999;
+    return `https://image.pollinations.ai/prompt/${prompt}?width=256&height=256&nologo=true&nofeed=true&model=turbo&seed=${seed}`;
+  }
+  return url;
+}
+
 /* ── Hero image path lookup ───────────────────────────────────── */
 const HERO_IMAGE_MAP: Record<string, string> = {
   '🦄': '/heroes/unicorn.png',
@@ -78,7 +92,7 @@ export default function BookReader({ story, child }: BookReaderProps) {
   const totalPages = pages.length;
   // Per-story hero image: custom Pollinations URL → preset map → child default
   const heroEmoji = story.heroUsed?.emoji ?? child?.hero.emoji;
-  const heroImage = story.heroUsed?.imageUrl
+  const heroImage = sanitizeHeroImageUrl(story.heroUsed?.imageUrl)
     ?? (story.heroUsed?.emoji ? (HERO_IMAGE_MAP[story.heroUsed.emoji] ?? undefined) : undefined)
     ?? (child ? (HERO_IMAGE_MAP[child.hero.emoji] ?? undefined) : undefined);
 

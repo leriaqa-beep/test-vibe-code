@@ -1,4 +1,47 @@
+import { useState } from 'react';
 import type { ChildProfile } from '../../types';
+
+/* ── Hero image circle with proper load-state ─────────────────── */
+function HeroImageCircle({ src, accent, light, border }: { src?: string; accent: string; light: string; border: string }) {
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  const loaded = !!src && loadedSrc === src;
+  return (
+    <div style={{ textAlign: 'center', margin: '16px 0 20px' }}>
+      <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto' }}>
+        <div style={{
+          position: 'absolute', inset: 0, borderRadius: '50%',
+          background: light, border: `2px solid ${border}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <img
+            src="/assets/mascot/mascot-calm.png"
+            alt=""
+            style={{
+              width: 56, height: 64, objectFit: 'contain',
+              filter: `drop-shadow(0 2px 6px ${accent}30)`,
+              opacity: loaded ? 0 : 1, transition: 'opacity 0.3s',
+            }}
+          />
+        </div>
+        {src && (
+          <img
+            src={src}
+            alt=""
+            style={{
+              position: 'absolute', inset: 0,
+              width: 100, height: 100,
+              objectFit: 'cover', borderRadius: '50%',
+              opacity: loaded ? 1 : 0, transition: 'opacity 0.4s',
+              filter: `drop-shadow(0 4px 12px ${accent}40)`,
+            }}
+            onLoad={() => setLoadedSrc(src)}
+            onError={() => setLoadedSrc(null)}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
 
 /* ── Hero colour theming ──────────────────────────────────────── */
 const HERO_THEMES: Record<string, { accent: string; light: string; border: string }> = {
@@ -233,35 +276,7 @@ export default function BookPage({
                   accentColor={theme.accent}
                 />
                 {showHero && (
-                  <div style={{ textAlign: 'center', margin: '16px 0 20px' }}>
-                    {/* Emoji placeholder visible until image loads */}
-                    <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto' }}>
-                      <div style={{
-                        position: 'absolute', inset: 0, borderRadius: '50%',
-                        background: theme.light, border: `2px solid ${theme.border}`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <img
-                          src="/assets/mascot/mascot-calm.png"
-                          alt=""
-                          style={{ width: 56, height: 64, objectFit: 'contain', filter: `drop-shadow(0 2px 6px ${theme.accent}30)` }}
-                        />
-                      </div>
-                      <img
-                        src={heroImage}
-                        alt=""
-                        style={{
-                          position: 'absolute', inset: 0,
-                          width: 100, height: 100,
-                          objectFit: 'cover', borderRadius: '50%',
-                          opacity: 0, transition: 'opacity 0.4s',
-                          filter: `drop-shadow(0 4px 12px ${theme.accent}40)`,
-                        }}
-                        onLoad={e => { (e.currentTarget as HTMLImageElement).style.opacity = '1'; }}
-                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                      />
-                    </div>
-                  </div>
+                  <HeroImageCircle src={heroImage} accent={theme.accent} light={theme.light} border={theme.border} />
                 )}
               </div>
             );

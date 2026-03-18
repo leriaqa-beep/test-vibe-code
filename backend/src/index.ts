@@ -13,6 +13,7 @@ import heroImageRouter from './routes/heroImage';
 import { logger } from './utils/logger';
 
 const app = express();
+app.set('trust proxy', 1); // Fix req.protocol behind Render/nginx reverse proxy
 const PORT = process.env.PORT || 3001;
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';

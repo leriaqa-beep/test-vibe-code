@@ -86,10 +86,9 @@ router.get('/', async (req: Request, res: Response) => {
     // DDG failed — proceed with original name
   }
 
-  // Return proxy URL: browser loads from our server, server fetches from Pollinations
-  const host = `${req.protocol}://${req.get('host')}`;
-  const proxyUrl = `${host}/api/hero-image/img?name=${encodeURIComponent(bestName)}`;
-  return res.json({ imageUrl: proxyUrl, source: 'pollinations', name: bestName });
+  // Return direct Pollinations URL — browser loads it directly, no backend dependency
+  const directUrl = pollinationsUrl(bestName);
+  return res.json({ imageUrl: directUrl, source: 'pollinations', name: bestName });
 });
 
 export default router;
