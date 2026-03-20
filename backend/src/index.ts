@@ -29,7 +29,7 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'pochemu-ka-secret-key-2024',
