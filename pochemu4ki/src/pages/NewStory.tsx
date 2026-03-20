@@ -69,7 +69,8 @@ function buildPollinationsUrl(name: string): string {
 /** Small avatar circle for the selected hero — shown in the "selected" banner */
 function SelectedHeroAvatar({ hero }: { hero: SelectedHero }) {
   const src = hero.imageUrl ?? hero.image;
-  const [failed, setFailed] = useState(false);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const failed = !!failedSrc && failedSrc === src;
 
   if (!src || failed) {
     return (
@@ -95,7 +96,7 @@ function SelectedHeroAvatar({ hero }: { hero: SelectedHero }) {
         src={src}
         alt={hero.name}
         style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
-        onError={() => setFailed(true)}
+        onError={() => setFailedSrc(src)}
       />
     </div>
   );

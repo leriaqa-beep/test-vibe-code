@@ -52,8 +52,8 @@ function HeroImageLarge({ src, accent, light, border }: { src?: string; accent: 
       display: 'block',
       position: 'relative',
       width: '100%',
-      maxWidth: 320,
-      height: 280,
+      maxWidth: 300,
+      aspectRatio: '3 / 4',
       margin: '0 auto 24px',
       borderRadius: 20,
       overflow: 'hidden',
@@ -70,7 +70,7 @@ function HeroImageLarge({ src, accent, light, border }: { src?: string; accent: 
         <img src="/assets/mascot/mascot-surprise.png" alt=""
           style={{ width: 80, height: 80, objectFit: 'contain' }} />
       </div>
-      {/* hero image — fills container completely */}
+      {/* hero image */}
       {src && (
         <img
           src={src}
@@ -78,7 +78,7 @@ function HeroImageLarge({ src, accent, light, border }: { src?: string; accent: 
           style={{
             position: 'absolute', inset: 0,
             width: '100%', height: '100%',
-            objectFit: 'cover', objectPosition: 'center',
+            objectFit: 'cover', objectPosition: 'top center',
             opacity: loaded ? 1 : 0, transition: 'opacity 0.45s',
           }}
           onLoad={() => setLoadedSrc(src)}
