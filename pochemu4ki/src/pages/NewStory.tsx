@@ -206,18 +206,22 @@ export default function NewStory() {
     }
   };
 
-  // Upload image file from device → backend → Supabase CDN
+  // Upload image file from device → base64 → backend → Supabase CDN
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !customName.trim()) return;
     setImageLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('name', customName.trim());
+      const imageData = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
       const res = await fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/hero-image/upload`, {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: customName.trim(), imageData, mimeType: file.type }),
       });
       if (res.ok) {
         const data = await res.json() as { imageUrl: string };

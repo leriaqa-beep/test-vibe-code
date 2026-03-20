@@ -1,20 +1,10 @@
 import { Router, Request, Response } from 'express';
-import multer from 'multer';
 import { supabase } from '../db/supabase';
 
 const router = Router();
 
 const BUCKET = 'hero-images';
 
-// Multer: memory storage, max 5 MB, images only
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Only image files are allowed'));
-  },
-});
 
 function pollinationsUrl(name: string): string {
   const prompt = encodeURIComponent(
@@ -318,22 +308,41 @@ router.get('/', async (req: Request, res: Response) => {
  *   file  — image file (jpeg/png/webp, max 5 MB)
  *   name  — hero name (used as storage key prefix)
  */
-router.post('/upload', upload.single('file'), async (req: Request, res: Response) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+router.post('/upload', async (req: Request, res: Response) => {
+  // Accepts JSON: { name: string, imageData: string (base64), mimeType: string }
+  const { name, imageData, mimeType } = req.body as {
+    name?: string; imageData?: string; mimeType?: string;
+  };
+
+  if (!imageData || !mimeType) {
+    return res.status(400).json({ error: 'imageData and mimeType required' });
+  }
+  if (!mimeType.startsWith('image/')) {
+    return res.status(400).json({ error: 'Only image files are allowed' });
   }
 
-  const name = ((req.body.name as string) || 'hero').trim().slice(0, 60);
-  const ext = req.file.mimetype.includes('png') ? 'png'
-    : req.file.mimetype.includes('webp') ? 'webp'
+  const heroName = (name || 'hero').trim().slice(0, 60);
+  const ext = mimeType.includes('png') ? 'png'
+    : mimeType.includes('webp') ? 'webp'
     : 'jpg';
+  const key = `user-upload/${toStorageKey(heroName).replace(/\.jpg$/, `.${ext}`)}`;
 
-  // Use name-based key so same hero always overwrites its own slot
-  const key = `user-upload/${toStorageKey(name).replace(/\.jpg$/, `.${ext}`)}`;
+  let buffer: Buffer;
+  try {
+    // Strip optional data URL prefix: "data:image/png;base64,..."
+    const base64 = imageData.replace(/^data:image\/\w+;base64,/, '');
+    buffer = Buffer.from(base64, 'base64');
+  } catch {
+    return res.status(400).json({ error: 'Invalid base64 data' });
+  }
+
+  if (buffer.length > 5 * 1024 * 1024) {
+    return res.status(400).json({ error: 'File too large (max 5 MB)' });
+  }
 
   const { error } = await supabase.storage
     .from(BUCKET)
-    .upload(key, req.file.buffer, { contentType: req.file.mimetype, upsert: true });
+    .upload(key, buffer, { contentType: mimeType, upsert: true });
 
   if (error) {
     console.error('[HeroImage] Upload error:', error.message);
@@ -380,23 +389,29 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
 // ─────────────────────────────────────────────────────────────────────────────
 
 /*
-router.post('/transform', upload.single('photo'), async (req: Request, res: Response) => {
+router.post('/transform', async (req: Request, res: Response) => {
+  // Body: { name, imageData (base64), mimeType, style? }
   const REPLICATE_API_KEY = process.env.REPLICATE_API_KEY;
   if (!REPLICATE_API_KEY) {
     return res.status(501).json({ error: 'AI transform not configured' });
   }
-  if (!req.file) {
-    return res.status(400).json({ error: 'No photo uploaded' });
+  const { name, imageData, mimeType, style } = req.body as {
+    name?: string; imageData?: string; mimeType?: string; style?: string;
+  };
+  if (!imageData || !mimeType) {
+    return res.status(400).json({ error: 'imageData and mimeType required' });
   }
 
-  const heroStyle = ((req.body.style as string) || 'watercolor children book').slice(0, 100);
-  const name     = ((req.body.name  as string) || 'hero').trim().slice(0, 60);
+  const heroStyle = (style || 'watercolor children book').slice(0, 100);
+  const heroName  = (name || 'hero').trim().slice(0, 60);
+  const base64    = imageData.replace(/^data:image\/\w+;base64,/, '');
+  const buffer    = Buffer.from(base64, 'base64');
 
   // 1. Upload original to temp slot in Supabase
   const tempKey = `tmp/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
   const { error: uploadErr } = await supabase.storage
     .from(BUCKET)
-    .upload(tempKey, req.file.buffer, { contentType: req.file.mimetype, upsert: false });
+    .upload(tempKey, buffer, { contentType: mimeType, upsert: false });
   if (uploadErr) return res.status(500).json({ error: 'Temp upload failed' });
 
   const { data: tempData } = supabase.storage.from(BUCKET).getPublicUrl(tempKey);
@@ -438,7 +453,7 @@ router.post('/transform', upload.single('photo'), async (req: Request, res: Resp
     if (!result) throw new Error('Transform timed out or failed');
 
     // 4. Download result → upload to Supabase
-    const cached = await fetchAndCache(result, `ai-transform/${toStorageKey(name)}`);
+    const cached = await fetchAndCache(result, `ai-transform/${toStorageKey(heroName)}`);
 
     // 5. DELETE original (privacy — never keep child photos)
     await supabase.storage.from(BUCKET).remove([tempKey]);
