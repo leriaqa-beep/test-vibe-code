@@ -65,38 +65,54 @@ async function translateToEnglish(name: string): Promise<string> {
  * Search Wikipedia for the query string, return the best matching article thumbnail.
  * Uses: search API → summary API → thumbnail.source
  */
-async function wikipediaImage(query: string): Promise<string | null> {
+/** Fetch Wikipedia thumbnail for a given article title */
+async function wikipediaThumbnail(title: string): Promise<string | null> {
   try {
-    // Step 1: find the article title
-    const searchUrl =
-      `https://en.wikipedia.org/w/api.php?action=query&list=search` +
-      `&srsearch=${encodeURIComponent(query)}&format=json&srlimit=1&origin=*`;
-    const searchRes = await fetch(searchUrl, {
-      headers: { 'User-Agent': 'pochemu4ki/1.0 hero-image-lookup' },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!searchRes.ok) return null;
-    const searchData = await searchRes.json() as {
-      query: { search: { title: string }[] };
-    };
-    const title = searchData.query?.search?.[0]?.title;
-    if (!title) return null;
-
-    // Step 2: get page summary with thumbnail
     const summaryUrl =
       `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
-    const summaryRes = await fetch(summaryUrl, {
+    const res = await fetch(summaryUrl, {
       headers: { 'User-Agent': 'pochemu4ki/1.0 hero-image-lookup' },
       signal: AbortSignal.timeout(5000),
     });
-    if (!summaryRes.ok) return null;
-    const summaryData = await summaryRes.json() as {
-      thumbnail?: { source: string };
-    };
-    return summaryData.thumbnail?.source ?? null;
+    if (!res.ok) return null;
+    const data = await res.json() as { thumbnail?: { source: string } };
+    return data.thumbnail?.source ?? null;
   } catch {
     return null;
   }
+}
+
+/** Search Wikipedia and return thumbnail. Tries multiple queries in priority order. */
+async function wikipediaImage(name: string): Promise<string | null> {
+  // Priority: fictional character → cartoon character → plain name
+  const queries = [
+    `${name} fictional character`,
+    `${name} cartoon character`,
+    `${name} animated character`,
+    name,
+  ];
+
+  for (const q of queries) {
+    try {
+      const searchUrl =
+        `https://en.wikipedia.org/w/api.php?action=query&list=search` +
+        `&srsearch=${encodeURIComponent(q)}&format=json&srlimit=1&origin=*`;
+      const searchRes = await fetch(searchUrl, {
+        headers: { 'User-Agent': 'pochemu4ki/1.0 hero-image-lookup' },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!searchRes.ok) continue;
+      const searchData = await searchRes.json() as {
+        query: { search: { title: string }[] };
+      };
+      const title = searchData.query?.search?.[0]?.title;
+      if (!title) continue;
+
+      const thumb = await wikipediaThumbnail(title);
+      if (thumb) return thumb;
+    } catch { /* try next query */ }
+  }
+  return null;
 }
 
 /**

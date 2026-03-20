@@ -266,8 +266,9 @@ export default function BookPage({
         {/* Paragraphs */}
         <div style={{ position: 'relative' }}>
           {paragraphs.map((para, i) => {
-            // Insert hero image after 2nd paragraph (or middle of short pages)
-            const showHero = !!heroImage && i === Math.min(2, Math.floor(paragraphs.length / 2));
+            // Insert hero image after 2nd paragraph, but not on the last page
+            // (last page shows hero in the illustration slot instead)
+            const showHero = !!heroImage && !isLast && i === Math.min(2, Math.floor(paragraphs.length / 2));
             return (
               <div key={i}>
                 <Paragraph
@@ -291,9 +292,21 @@ export default function BookPage({
               <span style={{ fontSize: 14, color: theme.accent }}>✦</span>
               <div style={{ flex: 1, height: 1, background: `linear-gradient(to left, transparent, ${theme.border})` }} />
             </div>
-            {storyImageUrl && (
+            {/* Hero image circle — shown on last page in illustration slot */}
+            {heroImage && (
+              <div style={{ marginBottom: 24 }}>
+                <HeroImageCircle
+                  src={heroImage}
+                  accent={theme.accent}
+                  light={theme.light}
+                  border={theme.border}
+                />
+              </div>
+            )}
+
+            {/* Story illustration — only shown if no hero image */}
+            {!heroImage && storyImageUrl && (
               <div style={{ marginBottom: 24, display: 'inline-block', position: 'relative', width: 220, height: 160 }}>
-                {/* Shimmer placeholder */}
                 <div style={{
                   position: 'absolute', inset: 0, borderRadius: 16,
                   background: `linear-gradient(135deg, ${theme.light} 0%, ${theme.border}40 100%)`,
