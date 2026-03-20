@@ -168,9 +168,10 @@ router.get('/img', async (req: Request, res: Response) => {
  * GET /api/hero-image?name=...
  *
  * 1. Translate RU → EN (MyMemory)
- * 2. Wikipedia Search + Summary → reliable thumbnail for known characters
- * 3. Supabase Storage cache (previously generated images)
- * 4. Pollinations server-side → upload to Supabase Storage
+ * 2. Supabase Storage cache — instant if already generated before
+ * 3. Pollinations AI generation → clean character illustration, no logos/text
+ *    → uploaded to Supabase Storage for future cache hits
+ * 4. Wikipedia fallback — only if Pollinations fails
  * 5. null — frontend shows mascot-surprise fallback
  */
 router.get('/', async (req: Request, res: Response) => {
@@ -182,13 +183,7 @@ router.get('/', async (req: Request, res: Response) => {
   // ── 1. Translate RU → EN ─────────────────────────────────────────────────
   const englishName = await translateToEnglish(name);
 
-  // ── 2. Wikipedia image ───────────────────────────────────────────────────
-  const wikiImage = await wikipediaImage(name, englishName);
-  if (wikiImage) {
-    return res.json({ imageUrl: wikiImage, source: 'wikipedia', name: englishName });
-  }
-
-  // ── 3. Supabase Storage cache ────────────────────────────────────────────
+  // ── 2. Supabase Storage cache ────────────────────────────────────────────
   const key = toStorageKey(englishName);
   const { data: cachedUrlData } = supabase.storage.from(BUCKET).getPublicUrl(key);
   try {
@@ -201,10 +196,11 @@ router.get('/', async (req: Request, res: Response) => {
     }
   } catch { /* not cached */ }
 
-  // ── 4. Pollinations server-side → Supabase Storage ──────────────────────
+  // ── 3. Pollinations AI generation → Supabase Storage ────────────────────
+  // Generates a clean character illustration without logos, titles, or text
   try {
     const polUrl = pollinationsUrl(englishName);
-    const imgRes = await fetch(polUrl, { signal: AbortSignal.timeout(20000) });
+    const imgRes = await fetch(polUrl, { signal: AbortSignal.timeout(25000) });
     if (imgRes.ok) {
       const buffer = await imgRes.arrayBuffer();
       const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
@@ -219,8 +215,16 @@ router.get('/', async (req: Request, res: Response) => {
         const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(finalKey);
         return res.json({ imageUrl: urlData.publicUrl, source: 'generated', name: englishName });
       }
+      // Upload failed but image fetched — return direct Pollinations URL as last resort
+      return res.json({ imageUrl: polUrl, source: 'generated', name: englishName });
     }
-  } catch { /* Pollinations down */ }
+  } catch { /* Pollinations down — fall through to Wikipedia */ }
+
+  // ── 4. Wikipedia fallback (may return show logos — only used if AI fails) ─
+  const wikiImage = await wikipediaImage(name, englishName);
+  if (wikiImage) {
+    return res.json({ imageUrl: wikiImage, source: 'wikipedia', name: englishName });
+  }
 
   // ── 5. No image — frontend shows mascot-surprise ─────────────────────────
   return res.json({ imageUrl: null, source: 'none', name: englishName });
