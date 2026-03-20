@@ -65,12 +65,11 @@ async function translateToEnglish(name: string): Promise<string> {
  * Search Wikipedia for the query string, return the best matching article thumbnail.
  * Uses: search API → summary API → thumbnail.source
  */
-/** Fetch Wikipedia thumbnail for a given article title */
-async function wikipediaThumbnail(title: string): Promise<string | null> {
+/** Fetch Wikipedia thumbnail by article title from a given language wiki */
+async function wikipediaThumbnail(title: string, lang = 'en'): Promise<string | null> {
   try {
-    const summaryUrl =
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
-    const res = await fetch(summaryUrl, {
+    const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+    const res = await fetch(url, {
       headers: { 'User-Agent': 'pochemu4ki/1.0 hero-image-lookup' },
       signal: AbortSignal.timeout(5000),
     });
@@ -82,35 +81,49 @@ async function wikipediaThumbnail(title: string): Promise<string | null> {
   }
 }
 
-/** Search Wikipedia and return thumbnail. Tries multiple queries in priority order. */
-async function wikipediaImage(name: string): Promise<string | null> {
-  // Priority: fictional character → cartoon character → plain name
-  const queries = [
-    `${name} fictional character`,
-    `${name} cartoon character`,
-    `${name} animated character`,
-    name,
+/** Search Wikipedia (given lang) and return the first article's thumbnail */
+async function wikiSearch(query: string, lang = 'en'): Promise<string | null> {
+  try {
+    const searchUrl =
+      `https://${lang}.wikipedia.org/w/api.php?action=query&list=search` +
+      `&srsearch=${encodeURIComponent(query)}&format=json&srlimit=1&origin=*`;
+    const res = await fetch(searchUrl, {
+      headers: { 'User-Agent': 'pochemu4ki/1.0 hero-image-lookup' },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { query: { search: { title: string }[] } };
+    const title = data.query?.search?.[0]?.title;
+    if (!title) return null;
+    return await wikipediaThumbnail(title, lang);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Find a character image via Wikipedia.
+ * 1. Russian Wikipedia with original name (most accurate for RU characters).
+ * 2. English Wikipedia with translated name + "fictional character" suffix.
+ * 3. English Wikipedia with translated name + "cartoon character" suffix.
+ * 4. English Wikipedia with translated name plain.
+ */
+async function wikipediaImage(originalName: string, englishName: string): Promise<string | null> {
+  // Russian Wikipedia first — exact match for Russian character names
+  if (hasCyrillic(originalName)) {
+    const ruResult = await wikiSearch(originalName, 'ru');
+    if (ruResult) return ruResult;
+  }
+
+  // English Wikipedia with character-biased queries
+  const enQueries = [
+    `${englishName} fictional character`,
+    `${englishName} cartoon character`,
+    englishName,
   ];
-
-  for (const q of queries) {
-    try {
-      const searchUrl =
-        `https://en.wikipedia.org/w/api.php?action=query&list=search` +
-        `&srsearch=${encodeURIComponent(q)}&format=json&srlimit=1&origin=*`;
-      const searchRes = await fetch(searchUrl, {
-        headers: { 'User-Agent': 'pochemu4ki/1.0 hero-image-lookup' },
-        signal: AbortSignal.timeout(4000),
-      });
-      if (!searchRes.ok) continue;
-      const searchData = await searchRes.json() as {
-        query: { search: { title: string }[] };
-      };
-      const title = searchData.query?.search?.[0]?.title;
-      if (!title) continue;
-
-      const thumb = await wikipediaThumbnail(title);
-      if (thumb) return thumb;
-    } catch { /* try next query */ }
+  for (const q of enQueries) {
+    const result = await wikiSearch(q, 'en');
+    if (result) return result;
   }
   return null;
 }
@@ -156,7 +169,7 @@ router.get('/', async (req: Request, res: Response) => {
   const englishName = await translateToEnglish(name);
 
   // ── 2. Wikipedia image ───────────────────────────────────────────────────
-  const wikiImage = await wikipediaImage(englishName);
+  const wikiImage = await wikipediaImage(name, englishName);
   if (wikiImage) {
     return res.json({ imageUrl: wikiImage, source: 'wikipedia', name: englishName });
   }

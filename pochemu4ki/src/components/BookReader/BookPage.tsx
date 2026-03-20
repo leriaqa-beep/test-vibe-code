@@ -30,7 +30,7 @@ function HeroImageCircle({ src, accent, light, border }: { src?: string; accent:
             style={{
               position: 'absolute', inset: 0,
               width: 100, height: 100,
-              objectFit: 'cover', borderRadius: '50%',
+              objectFit: 'contain', borderRadius: '50%',
               opacity: loaded ? 1 : 0, transition: 'opacity 0.4s',
               filter: `drop-shadow(0 4px 12px ${accent}40)`,
             }}
