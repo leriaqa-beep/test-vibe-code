@@ -135,6 +135,7 @@ export default function NewStory() {
   const [customName, setCustomName] = useState('');
   const [customImageUrl, setCustomImageUrl] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
+  const [customUrlInput, setCustomUrlInput] = useState('');
   const [savedCustomHeroes, setSavedCustomHeroes] = useState<SelectedHero[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -200,37 +201,43 @@ export default function NewStory() {
 
   const handleCustomNameChange = (name: string) => {
     setCustomName(name);
-    if (imageDebounceRef.current) clearTimeout(imageDebounceRef.current);
-
     if (name.trim().length >= 2) {
-      // Optimistically set hero name immediately (no image yet)
-      setImageLoading(true);
-      setCustomImageUrl('');
-      setSelectedHero({ name: name.trim(), emoji: '✨' });
-
-      // Debounce: wait 700ms after user stops typing before fetching
-      imageDebounceRef.current = setTimeout(async () => {
-        const trimmed = name.trim();
-        let imageUrl: string | undefined;
-
-        try {
-          // Backend: Wikipedia → translate → Pollinations → Supabase cache
-          const result = await api.heroes.getImage(trimmed);
-          // result.imageUrl may be null when all sources failed — treat as no image
-          imageUrl = result.imageUrl ?? undefined;
-        } catch {
-          // Backend unavailable — no image (emoji fallback will show)
-        }
-
-        setCustomImageUrl(imageUrl ?? '');
-        setSelectedHero({ name: trimmed, emoji: '✨', imageUrl });
-        setImageLoading(false);
-      }, 700);
+      setSelectedHero({ name: name.trim(), emoji: '✨', imageUrl: customImageUrl || undefined });
     } else {
-      setImageLoading(false);
-      setCustomImageUrl('');
       setSelectedHero(null);
     }
+  };
+
+  // Upload image file from device → backend → Supabase CDN
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !customName.trim()) return;
+    setImageLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('name', customName.trim());
+      const res = await fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/hero-image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json() as { imageUrl: string };
+        setCustomImageUrl(data.imageUrl);
+        setSelectedHero({ name: customName.trim(), emoji: '✨', imageUrl: data.imageUrl });
+      }
+    } catch { /* ignore */ }
+    setImageLoading(false);
+    e.target.value = '';
+  };
+
+  // Apply manually pasted URL
+  const handleUrlApply = () => {
+    const url = customUrlInput.trim();
+    if (!url || !customName.trim()) return;
+    setCustomImageUrl(url);
+    setSelectedHero({ name: customName.trim(), emoji: '✨', imageUrl: url });
+    setCustomUrlInput('');
   };
 
   const saveCustomHero = (hero: SelectedHero) => {
@@ -488,24 +495,96 @@ export default function NewStory() {
             )}
           </div>
 
-          {/* Custom hero name input */}
+          {/* Custom hero input — name + image upload/URL */}
           {customMode && (
-            <div className="mt-3">
+            <div className="mt-3 flex flex-col gap-2">
+
+              {/* Hero name */}
               <input
                 ref={customInputRef}
                 type="text"
                 value={customName}
                 onChange={e => handleCustomNameChange(e.target.value)}
-                placeholder="Введите имя героя, например: Леди Баг"
+                placeholder="Имя героя, например: Леди Баг"
                 className="w-full border border-purple-200 rounded-2xl px-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
               />
+
               {customName.trim().length >= 2 && (
-                <p className="text-xs text-purple-500 mt-1.5 flex items-center gap-1">
-                  {imageLoading
-                    ? <><span>🔍</span> Ищем картинку персонажа...</>
-                    : <><span>✨</span> Картинка загружается в кружочке</>
-                  }
-                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+                  {/* Upload from device */}
+                  <label style={{
+                    display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+                    padding: '9px 14px', borderRadius: 14,
+                    border: '1.5px dashed #C4B5FD', background: '#FAF8FF',
+                    fontSize: 13, color: '#7C3AED', fontWeight: 600,
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    {imageLoading ? 'Загружаем...' : 'Загрузить картинку с устройства'}
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={imageLoading} />
+                  </label>
+
+                  {/* Paste URL */}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      type="url"
+                      value={customUrlInput}
+                      onChange={e => setCustomUrlInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleUrlApply()}
+                      placeholder="Или вставьте ссылку на картинку"
+                      style={{
+                        flex: 1, border: '1.5px solid #E9D5FF', borderRadius: 14,
+                        padding: '8px 12px', fontSize: 12, color: '#4C1D95',
+                        outline: 'none', background: '#fff',
+                      }}
+                    />
+                    <button
+                      onClick={handleUrlApply}
+                      disabled={!customUrlInput.trim()}
+                      style={{
+                        padding: '8px 14px', borderRadius: 14, fontSize: 12, fontWeight: 700,
+                        background: customUrlInput.trim() ? '#7C3AED' : '#E9D5FF',
+                        color: '#fff', border: 'none', cursor: customUrlInput.trim() ? 'pointer' : 'default',
+                      }}
+                    >
+                      ОК
+                    </button>
+                  </div>
+
+                  {/* Hint: where to find images */}
+                  <p style={{ fontSize: 11, color: '#9CA3AF', margin: 0, lineHeight: 1.5 }}>
+                    Найти картинку:{' '}
+                    <a href="https://yandex.ru/images" target="_blank" rel="noopener noreferrer" style={{ color: '#7C3AED', textDecoration: 'underline' }}>Яндекс Картинки</a>
+                    {' · '}
+                    <a href="https://images.google.com" target="_blank" rel="noopener noreferrer" style={{ color: '#7C3AED', textDecoration: 'underline' }}>Google Картинки</a>
+                    {' · '}
+                    <a href="https://www.pinterest.com" target="_blank" rel="noopener noreferrer" style={{ color: '#7C3AED', textDecoration: 'underline' }}>Pinterest</a>
+                  </p>
+
+                  {/* AI Photo Transform — FUTURE FEATURE placeholder */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px',
+                    borderRadius: 14, border: '1.5px solid #E5E7EB', background: '#F9FAFB',
+                    opacity: 0.6, cursor: 'not-allowed',
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <span style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600 }}>
+                      Превратить фото ребёнка в мультяшного героя
+                    </span>
+                    <span style={{
+                      marginLeft: 'auto', fontSize: 10, fontWeight: 700,
+                      background: '#E9D5FF', color: '#7C3AED',
+                      padding: '2px 8px', borderRadius: 20,
+                    }}>
+                      Скоро
+                    </span>
+                  </div>
+
+                </div>
               )}
             </div>
           )}

@@ -1,9 +1,20 @@
 import { Router, Request, Response } from 'express';
+import multer from 'multer';
 import { supabase } from '../db/supabase';
 
 const router = Router();
 
 const BUCKET = 'hero-images';
+
+// Multer: memory storage, max 5 MB, images only
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files are allowed'));
+  },
+});
 
 function pollinationsUrl(name: string): string {
   const prompt = encodeURIComponent(
@@ -295,5 +306,152 @@ router.get('/', async (req: Request, res: Response) => {
   // ── 6. No image ──────────────────────────────────────────────────────────
   return res.json({ imageUrl: null, source: 'none', name: englishName });
 });
+
+/**
+ * POST /api/hero-image/upload
+ *
+ * Accepts a multipart image file from the user.
+ * Uploads it to Supabase Storage hero-images bucket.
+ * Returns the public CDN URL.
+ *
+ * Body: multipart/form-data
+ *   file  — image file (jpeg/png/webp, max 5 MB)
+ *   name  — hero name (used as storage key prefix)
+ */
+router.post('/upload', upload.single('file'), async (req: Request, res: Response) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const name = ((req.body.name as string) || 'hero').trim().slice(0, 60);
+  const ext = req.file.mimetype.includes('png') ? 'png'
+    : req.file.mimetype.includes('webp') ? 'webp'
+    : 'jpg';
+
+  // Use name-based key so same hero always overwrites its own slot
+  const key = `user-upload/${toStorageKey(name).replace(/\.jpg$/, `.${ext}`)}`;
+
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(key, req.file.buffer, { contentType: req.file.mimetype, upsert: true });
+
+  if (error) {
+    console.error('[HeroImage] Upload error:', error.message);
+    return res.status(500).json({ error: 'Upload failed' });
+  }
+
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(key);
+  return res.json({ imageUrl: data.publicUrl });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI PHOTO TRANSFORM — SCAFFOLD (not active yet)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// FUTURE FEATURE: Convert a real child photo → cartoon illustration.
+//
+// Recommended service: Replicate.com
+//   Model: "tencentarc/photomaker" or "fofr/style-transfer"
+//   Cost:  ~$0.003–0.05 per image
+//   Docs:  https://replicate.com/docs
+//
+// Required env var (add when ready):
+//   REPLICATE_API_KEY=r8_...
+//
+// Process:
+//   1. Receive photo via multipart/form-data
+//   2. Upload original to Supabase as temp file (tmp/ prefix)
+//   3. Send temp URL + style prompt to Replicate
+//   4. Poll Replicate prediction until done (~10–30s)
+//   5. Download result → upload to hero-images/ai-transform/ in Supabase
+//   6. DELETE original temp file (privacy — never store child photos)
+//   7. Return CDN URL of cartoon result
+//
+// Privacy & consent:
+//   - Frontend must show consent dialog before calling this endpoint
+//   - Text: "Фото будет обработано AI и удалено. Сохраняется только результат"
+//   - Log deletion of original so it's auditable
+//
+// Style prompt to use with Replicate:
+//   "cute cartoon character, {heroStyle} style, children book illustration,
+//    friendly expression, colorful, simple clean background, no text, no logos"
+//
+// To activate: uncomment the route below and set REPLICATE_API_KEY in env.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/*
+router.post('/transform', upload.single('photo'), async (req: Request, res: Response) => {
+  const REPLICATE_API_KEY = process.env.REPLICATE_API_KEY;
+  if (!REPLICATE_API_KEY) {
+    return res.status(501).json({ error: 'AI transform not configured' });
+  }
+  if (!req.file) {
+    return res.status(400).json({ error: 'No photo uploaded' });
+  }
+
+  const heroStyle = ((req.body.style as string) || 'watercolor children book').slice(0, 100);
+  const name     = ((req.body.name  as string) || 'hero').trim().slice(0, 60);
+
+  // 1. Upload original to temp slot in Supabase
+  const tempKey = `tmp/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+  const { error: uploadErr } = await supabase.storage
+    .from(BUCKET)
+    .upload(tempKey, req.file.buffer, { contentType: req.file.mimetype, upsert: false });
+  if (uploadErr) return res.status(500).json({ error: 'Temp upload failed' });
+
+  const { data: tempData } = supabase.storage.from(BUCKET).getPublicUrl(tempKey);
+  const tempUrl = tempData.publicUrl;
+
+  try {
+    // 2. Call Replicate img2img
+    // TODO: replace model ID with chosen Replicate model
+    const prediction = await fetch('https://api.replicate.com/v1/predictions', {
+      method: 'POST',
+      headers: { Authorization: `Token ${REPLICATE_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        version: 'REPLICATE_MODEL_VERSION_ID', // TODO: fill in
+        input: {
+          image: tempUrl,
+          prompt: `cute cartoon character, ${heroStyle} style, children book illustration, friendly, colorful, no text, no logos`,
+          negative_prompt: 'realistic, photo, text, logo, watermark, adult',
+          num_inference_steps: 30,
+        },
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!prediction.ok) throw new Error('Replicate call failed');
+    const pred = await prediction.json() as { id: string; status: string; output?: string[] };
+
+    // 3. Poll until done (max 60s)
+    let result: string | null = null;
+    for (let i = 0; i < 20; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      const poll = await fetch(`https://api.replicate.com/v1/predictions/${pred.id}`, {
+        headers: { Authorization: `Token ${REPLICATE_API_KEY}` },
+        signal: AbortSignal.timeout(5000),
+      });
+      const p = await poll.json() as { status: string; output?: string[] };
+      if (p.status === 'succeeded' && p.output?.[0]) { result = p.output[0]; break; }
+      if (p.status === 'failed') break;
+    }
+
+    if (!result) throw new Error('Transform timed out or failed');
+
+    // 4. Download result → upload to Supabase
+    const cached = await fetchAndCache(result, `ai-transform/${toStorageKey(name)}`);
+
+    // 5. DELETE original (privacy — never keep child photos)
+    await supabase.storage.from(BUCKET).remove([tempKey]);
+    console.log(`[HeroImage] Deleted temp photo: ${tempKey}`);
+
+    return res.json({ imageUrl: cached ?? result, source: 'ai-transform' });
+  } catch (err) {
+    // Always clean up temp file even on error
+    await supabase.storage.from(BUCKET).remove([tempKey]);
+    console.error('[HeroImage] Transform error:', err);
+    return res.status(500).json({ error: 'AI transform failed' });
+  }
+});
+*/
 
 export default router;
