@@ -71,20 +71,22 @@ async function googleImageSearch(originalName: string, englishName: string): Pro
   const cx = process.env.GOOGLE_SEARCH_CX;
   if (!apiKey || !cx) return null;
 
-  // Queries ordered from most specific to broadest
-  // "арт" (art) + "clipart" type → favours character illustrations over show posters
+  // PNG files = character art on transparent background (not show logos/title cards)
+  // Two passes: first PNG only, then any format as fallback
   const queries = hasCyrillic(originalName)
     ? [
-        `${originalName} персонаж арт`,       // "Карамелька персонаж арт"
-        `${originalName} мультфильм герой`,    // "Карамелька мультфильм герой"
-        `${englishName} cartoon character art`,
+        { q: `${originalName} персонаж`, png: true },
+        { q: `${originalName} герой мультфильм`, png: true },
+        { q: `${englishName} cartoon character`, png: true },
+        { q: `${originalName} персонаж`, png: false },
       ]
     : [
-        `${englishName} cartoon character art`,
-        `${englishName} cartoon character`,
+        { q: `${englishName} cartoon character`, png: true },
+        { q: `${englishName} character`, png: true },
+        { q: `${englishName} cartoon character`, png: false },
       ];
 
-  for (const q of queries) {
+  for (const { q, png } of queries) {
     try {
       const url = new URL('https://www.googleapis.com/customsearch/v1');
       url.searchParams.set('key', apiKey);
@@ -94,7 +96,7 @@ async function googleImageSearch(originalName: string, englishName: string): Pro
       url.searchParams.set('num', '5');
       url.searchParams.set('safe', 'active');
       url.searchParams.set('imgSize', 'medium');
-      url.searchParams.set('imgType', 'clipart'); // character art, not show posters
+      if (png) url.searchParams.set('fileType', 'png'); // PNG = character on transparent bg
 
       const res = await fetch(url.toString(), { signal: AbortSignal.timeout(6000) });
       if (!res.ok) {
@@ -104,7 +106,7 @@ async function googleImageSearch(originalName: string, englishName: string): Pro
       const data = await res.json() as { items?: { link: string }[] };
       const link = data.items?.[0]?.link;
       if (link) {
-        console.log(`[HeroImage] Google found image for "${q}": ${link}`);
+        console.log(`[HeroImage] Google found image for "${q}" png=${png}: ${link}`);
         return link;
       }
     } catch (e) {
