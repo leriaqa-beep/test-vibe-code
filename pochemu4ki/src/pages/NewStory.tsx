@@ -76,10 +76,14 @@ function SelectedHeroAvatar({ hero }: { hero: SelectedHero }) {
     return (
       <div style={{
         width: 40, height: 40, borderRadius: '50%',
-        background: '#EDE9FE', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', flexShrink: 0, fontSize: 22,
+        background: '#EDE9FE', flexShrink: 0, overflow: 'hidden',
+        border: '2px solid #C4B5FD',
       }}>
-        {hero.emoji}
+        <img
+          src="/assets/mascot/mascot-surprise.png"
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        />
       </div>
     );
   }
