@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, memo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Pencil, Check, ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { api } from '../api/client';
 import VoiceInput from '../components/VoiceInput';
 import DecorationLayer from '../components/Decorations';
 import Mascot from '../components/Mascot/Mascot';
@@ -141,7 +140,6 @@ export default function NewStory() {
   const [canScrollRight, setCanScrollRight] = useState(false);
   const customInputRef = useRef<HTMLInputElement>(null);
   const heroRowRef = useRef<HTMLDivElement>(null);
-  const imageDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (children.length === 0) loadChildren();
