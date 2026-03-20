@@ -31,7 +31,7 @@ const HeroCircle = memo(function HeroCircle({ imageUrl, size }: { imageUrl?: str
           alt=""
           style={{
             position: 'absolute', inset: 0, width: size, height: size,
-            objectFit: 'cover', borderRadius: '50%',
+            objectFit: 'cover', objectPosition: 'top center', borderRadius: '50%',
             opacity: loaded ? 1 : 0, transition: 'opacity 0.4s',
           }}
           onLoad={() => setLoadedUrl(imageUrl)}
@@ -95,7 +95,7 @@ function SelectedHeroAvatar({ hero }: { hero: SelectedHero }) {
       <img
         src={src}
         alt={hero.name}
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
         onError={() => setFailed(true)}
       />
     </div>

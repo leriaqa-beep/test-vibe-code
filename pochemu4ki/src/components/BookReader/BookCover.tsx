@@ -106,7 +106,7 @@ function HeroCoverImage({ src, glow }: { src: string; glow: string }) {
         style={{
           position: 'absolute', inset: 0,
           width: '100%', height: '100%',
-          objectFit: 'contain',
+          objectFit: 'cover', objectPosition: 'top center',
           opacity: loaded ? 1 : 0,
           transition: 'opacity 0.4s',
         }}
