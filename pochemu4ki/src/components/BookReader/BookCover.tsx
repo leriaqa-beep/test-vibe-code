@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Story, ChildProfile } from '../../types';
 
 /* ── Hero colour theming ──────────────────────────────────────── */
@@ -68,14 +68,64 @@ function Star({ x, y, size, delay, color }: { x: number; y: number; size: number
   );
 }
 
+/* ── Hero image for the book cover (with load / error fallback) ── */
+function HeroCoverImage({ src, glow }: { src: string; glow: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <img
+        src="/assets/mascot/mascot-joy.png"
+        alt=""
+        style={{ width: 120, height: 120, objectFit: 'contain', animation: 'bookMascotFloat 3s ease-in-out infinite' }}
+      />
+    );
+  }
+
+  return (
+    <div style={{
+      width: 120, height: 120, borderRadius: '50%',
+      overflow: 'hidden', flexShrink: 0,
+      border: '3px solid rgba(255,255,255,0.35)',
+      boxShadow: `0 0 36px ${glow}, 0 8px 24px rgba(0,0,0,0.25)`,
+      animation: 'bookMascotFloat 3s ease-in-out infinite',
+      position: 'relative', background: 'rgba(255,255,255,0.08)',
+    }}>
+      {/* placeholder while loading */}
+      {!loaded && (
+        <img
+          src="/assets/mascot/mascot-joy.png"
+          alt=""
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: 12 }}
+        />
+      )}
+      <img
+        src={src}
+        alt=""
+        style={{
+          position: 'absolute', inset: 0,
+          width: '100%', height: '100%',
+          objectFit: 'cover',
+          opacity: loaded ? 1 : 0,
+          transition: 'opacity 0.4s',
+        }}
+        onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
+
 /* ── BookCover ────────────────────────────────────────────────── */
 interface BookCoverProps {
   story: Story;
   child: ChildProfile | undefined;
   onOpen: () => void;
+  heroImage?: string;
 }
 
-export default function BookCover({ story, child, onOpen }: BookCoverProps) {
+export default function BookCover({ story, child, onOpen, heroImage }: BookCoverProps) {
   const heroEmoji = story.heroUsed?.emoji ?? child?.hero.emoji ?? '🦄';
   const theme = getHeroTheme(heroEmoji);
   const mascotRef = useRef<HTMLImageElement>(null);
@@ -157,19 +207,19 @@ export default function BookCover({ story, child, onOpen }: BookCoverProps) {
           ✦ Почему-Ка! ✦
         </p>
 
-        {/* Mascot */}
-        <img
-          ref={mascotRef}
-          src="/assets/mascot/mascot-joy.png"
-          alt="Маскот"
-          style={{
-            width: 120,
-            height: 120,
-            objectFit: 'contain',
-            marginBottom: 20,
-            filter: `drop-shadow(0 8px 24px ${theme.glow})`,
-          }}
-        />
+        {/* Hero image (or mascot fallback) */}
+        <div ref={mascotRef} style={{ marginBottom: 20 }}>
+          {heroImage
+            ? <HeroCoverImage src={heroImage} glow={theme.glow} />
+            : (
+              <img
+                src="/assets/mascot/mascot-joy.png"
+                alt="Маскот"
+                style={{ width: 120, height: 120, objectFit: 'contain', filter: `drop-shadow(0 8px 24px ${theme.glow})` }}
+              />
+            )
+          }
+        </div>
 
         {/* Title */}
         <h1 style={{

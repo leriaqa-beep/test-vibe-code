@@ -24,6 +24,7 @@ import Onboarding from './pages/Onboarding';
 import AdminDashboard from './pages/AdminDashboard';
 import FeedbackButton from './components/FeedbackButton';
 import InstallPrompt from './components/InstallPrompt';
+import BottomNav from './components/BottomNav';
 import { useAuth } from './context/AuthContext';
 
 function AuthFeedbackButton() {
@@ -38,6 +39,7 @@ export default function App() {
         <AppProvider>
           <AuthFeedbackButton />
           <InstallPrompt />
+          <BottomNav />
           <Routes>
             {/* Public */}
             <Route path="/" element={<Landing />} />
