@@ -47,36 +47,38 @@ function HeroImageCircle({ src, accent, light, border }: { src?: string; accent:
 function HeroImageLarge({ src, accent, light, border }: { src?: string; accent: string; light: string; border: string }) {
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const loaded = !!src && loadedSrc === src;
-  const W = 200, H = 260;
   return (
-    <div style={{ display: 'inline-block', position: 'relative', width: W, height: H, margin: '0 auto 24px' }}>
-      {/* background + placeholder */}
+    <div style={{
+      display: 'block',
+      position: 'relative',
+      width: '100%',
+      maxWidth: 320,
+      height: 280,
+      margin: '0 auto 24px',
+      borderRadius: 20,
+      overflow: 'hidden',
+      border: `2px solid ${border}`,
+      boxShadow: `0 8px 32px ${accent}28`,
+      background: `linear-gradient(160deg, ${light} 0%, ${border}60 100%)`,
+    }}>
+      {/* placeholder while loading */}
       <div style={{
-        position: 'absolute', inset: 0, borderRadius: 24,
-        background: `linear-gradient(160deg, ${light} 0%, ${border}60 100%)`,
-        border: `2px solid ${border}`,
-        boxShadow: `0 8px 32px ${accent}28`,
+        position: 'absolute', inset: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden',
+        opacity: loaded ? 0 : 1, transition: 'opacity 0.3s',
       }}>
-        <img
-          src="/assets/mascot/mascot-surprise.png"
-          alt=""
-          style={{
-            width: 80, height: 80, objectFit: 'contain',
-            opacity: loaded ? 0 : 0.7, transition: 'opacity 0.3s',
-          }}
-        />
+        <img src="/assets/mascot/mascot-surprise.png" alt=""
+          style={{ width: 80, height: 80, objectFit: 'contain' }} />
       </div>
-      {/* hero image */}
+      {/* hero image — fills container completely */}
       {src && (
         <img
           src={src}
           alt=""
           style={{
             position: 'absolute', inset: 0,
-            width: W, height: H,
-            objectFit: 'contain', borderRadius: 24,
+            width: '100%', height: '100%',
+            objectFit: 'cover', objectPosition: 'center',
             opacity: loaded ? 1 : 0, transition: 'opacity 0.45s',
           }}
           onLoad={() => setLoadedSrc(src)}
