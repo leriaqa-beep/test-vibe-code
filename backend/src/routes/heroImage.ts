@@ -325,7 +325,12 @@ router.post('/upload', async (req: Request, res: Response) => {
   const ext = mimeType.includes('png') ? 'png'
     : mimeType.includes('webp') ? 'webp'
     : 'jpg';
-  const key = `user-upload/${toStorageKey(heroName).replace(/\.jpg$/, `.${ext}`)}`;
+  // Use hash-only key — avoids Cyrillic chars which Supabase Storage rejects
+  let h = 0;
+  for (let i = 0; i < heroName.length; i++) {
+    h = Math.imul(31, h) + heroName.charCodeAt(i) | 0;
+  }
+  const key = `user-upload/${Math.abs(h).toString(36)}.${ext}`;
 
   let buffer: Buffer;
   try {
