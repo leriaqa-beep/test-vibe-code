@@ -71,10 +71,18 @@ async function googleImageSearch(originalName: string, englishName: string): Pro
   const cx = process.env.GOOGLE_SEARCH_CX;
   if (!apiKey || !cx) return null;
 
-  // Try two queries: Russian first (more specific for RU cartoons), then English
+  // Queries ordered from most specific to broadest
+  // "арт" (art) + "clipart" type → favours character illustrations over show posters
   const queries = hasCyrillic(originalName)
-    ? [`${originalName} персонаж`, `${englishName} cartoon character`]
-    : [`${englishName} cartoon character`, `${englishName} character`];
+    ? [
+        `${originalName} персонаж арт`,       // "Карамелька персонаж арт"
+        `${originalName} мультфильм герой`,    // "Карамелька мультфильм герой"
+        `${englishName} cartoon character art`,
+      ]
+    : [
+        `${englishName} cartoon character art`,
+        `${englishName} cartoon character`,
+      ];
 
   for (const q of queries) {
     try {
@@ -83,14 +91,15 @@ async function googleImageSearch(originalName: string, englishName: string): Pro
       url.searchParams.set('cx', cx);
       url.searchParams.set('q', q);
       url.searchParams.set('searchType', 'image');
-      url.searchParams.set('num', '3');
+      url.searchParams.set('num', '5');
       url.searchParams.set('safe', 'active');
       url.searchParams.set('imgSize', 'medium');
+      url.searchParams.set('imgType', 'clipart'); // character art, not show posters
 
       const res = await fetch(url.toString(), { signal: AbortSignal.timeout(6000) });
       if (!res.ok) {
         console.error('[HeroImage] Google search HTTP error:', res.status);
-        return null; // API key / quota error — stop trying
+        return null;
       }
       const data = await res.json() as { items?: { link: string }[] };
       const link = data.items?.[0]?.link;
@@ -226,18 +235,21 @@ router.get('/', async (req: Request, res: Response) => {
   // ── 1. Translate RU → EN ─────────────────────────────────────────────────
   const englishName = await translateToEnglish(name);
   const key = toStorageKey(englishName);
+  const forceRefresh = req.query.refresh === 'true';
 
   // ── 2. Supabase Storage cache ────────────────────────────────────────────
-  const { data: cachedUrlData } = supabase.storage.from(BUCKET).getPublicUrl(key);
-  try {
-    const headRes = await fetch(cachedUrlData.publicUrl, {
-      method: 'HEAD',
-      signal: AbortSignal.timeout(3000),
-    });
-    if (headRes.ok) {
-      return res.json({ imageUrl: cachedUrlData.publicUrl, source: 'cache', name: englishName });
-    }
-  } catch { /* not cached */ }
+  if (!forceRefresh) {
+    const { data: cachedUrlData } = supabase.storage.from(BUCKET).getPublicUrl(key);
+    try {
+      const headRes = await fetch(cachedUrlData.publicUrl, {
+        method: 'HEAD',
+        signal: AbortSignal.timeout(3000),
+      });
+      if (headRes.ok) {
+        return res.json({ imageUrl: cachedUrlData.publicUrl, source: 'cache', name: englishName });
+      }
+    } catch { /* not cached */ }
+  }
 
   // ── 3. Google Custom Search → cache in Supabase ──────────────────────────
   const googleUrl = await googleImageSearch(name, englishName);
