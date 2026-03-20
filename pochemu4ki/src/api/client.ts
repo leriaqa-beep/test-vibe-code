@@ -54,9 +54,14 @@ export const api = {
 
   heroes: {
     getImage: (name: string) =>
-      request<{ imageUrl: string; source: 'duckduckgo' | 'pollinations' }>(
+      request<{ imageUrl: string; source: string }>(
         `/hero-image?name=${encodeURIComponent(name)}`
       ),
+    uploadImage: (name: string, imageData: string, mimeType: string) =>
+      request<{ imageUrl: string }>('/hero-image/upload', {
+        method: 'POST',
+        body: JSON.stringify({ name, imageData, mimeType }),
+      }),
   },
 
   admin: {

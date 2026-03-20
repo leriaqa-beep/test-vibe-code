@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, memo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Pencil, Check, ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { api } from '../api/client';
 import VoiceInput from '../components/VoiceInput';
 import DecorationLayer from '../components/Decorations';
 import Mascot from '../components/Mascot/Mascot';
@@ -219,16 +220,9 @@ export default function NewStory() {
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-      const res = await fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/hero-image/upload`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: customName.trim(), imageData, mimeType: file.type }),
-      });
-      if (res.ok) {
-        const data = await res.json() as { imageUrl: string };
-        setCustomImageUrl(data.imageUrl);
-        setSelectedHero({ name: customName.trim(), emoji: '✨', imageUrl: data.imageUrl });
-      }
+      const data = await api.heroes.uploadImage(customName.trim(), imageData, file.type);
+      setCustomImageUrl(data.imageUrl);
+      setSelectedHero({ name: customName.trim(), emoji: '✨', imageUrl: data.imageUrl });
     } catch { /* ignore */ }
     setImageLoading(false);
     e.target.value = '';
