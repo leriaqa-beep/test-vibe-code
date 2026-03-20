@@ -158,7 +158,7 @@ export default function BookReader({ story, child }: BookReaderProps) {
 
   /* ── Cover ── */
   if (showCover) {
-    return <BookCover story={story} child={child} onOpen={openBook} />;
+    return <BookCover story={story} child={child} onOpen={openBook} heroImage={heroImage} />;
   }
 
   /* ── Content pages ── */

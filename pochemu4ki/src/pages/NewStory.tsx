@@ -67,6 +67,37 @@ function buildPollinationsUrl(name: string): string {
   return `https://image.pollinations.ai/prompt/${prompt}?width=256&height=256&nologo=true&nofeed=true&model=turbo&seed=${seed}`;
 }
 
+/** Small avatar circle for the selected hero — shown in the "selected" banner */
+function SelectedHeroAvatar({ hero }: { hero: SelectedHero }) {
+  const src = hero.imageUrl ?? hero.image;
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
+    return (
+      <div style={{
+        width: 40, height: 40, borderRadius: '50%',
+        background: '#EDE9FE', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', flexShrink: 0, fontSize: 22,
+      }}>
+        {hero.emoji}
+      </div>
+    );
+  }
+  return (
+    <div style={{
+      width: 40, height: 40, borderRadius: '50%', overflow: 'hidden',
+      flexShrink: 0, border: '2px solid #C4B5FD', background: '#F5F3FF',
+    }}>
+      <img
+        src={src}
+        alt={hero.name}
+        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
+
 /** Replace old backend proxy URLs with direct Pollinations URLs */
 function sanitizeHeroImageUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
@@ -473,6 +504,30 @@ export default function NewStory() {
                   }
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Selected hero indicator */}
+          {selectedHero && (
+            <div style={{
+              marginTop: 12,
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 12px',
+              background: 'rgba(124,58,237,0.07)',
+              borderRadius: 12,
+              border: '1px solid rgba(124,58,237,0.15)',
+            }}>
+              <SelectedHeroAvatar hero={selectedHero} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#7A7890' }}>Выбранный герой</p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#4C1D95', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {selectedHero.name}
+                </p>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 20 20" style={{ flexShrink: 0 }}>
+                <circle cx="10" cy="10" r="10" fill="#7C3AED" />
+                <path d="M6 10l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              </svg>
             </div>
           )}
         </div>
