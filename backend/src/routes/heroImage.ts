@@ -62,9 +62,74 @@ async function translateToEnglish(name: string): Promise<string> {
 }
 
 /**
- * Search Wikipedia for the query string, return the best matching article thumbnail.
- * Uses: search API → summary API → thumbnail.source
+ * Google Custom Search — image search for a character.
+ * Requires GOOGLE_SEARCH_API_KEY + GOOGLE_SEARCH_CX in env.
+ * Returns the first safe image URL or null.
  */
+async function googleImageSearch(originalName: string, englishName: string): Promise<string | null> {
+  const apiKey = process.env.GOOGLE_SEARCH_API_KEY;
+  const cx = process.env.GOOGLE_SEARCH_CX;
+  if (!apiKey || !cx) return null;
+
+  // Try two queries: Russian first (more specific for RU cartoons), then English
+  const queries = hasCyrillic(originalName)
+    ? [`${originalName} персонаж`, `${englishName} cartoon character`]
+    : [`${englishName} cartoon character`, `${englishName} character`];
+
+  for (const q of queries) {
+    try {
+      const url = new URL('https://www.googleapis.com/customsearch/v1');
+      url.searchParams.set('key', apiKey);
+      url.searchParams.set('cx', cx);
+      url.searchParams.set('q', q);
+      url.searchParams.set('searchType', 'image');
+      url.searchParams.set('num', '3');
+      url.searchParams.set('safe', 'active');
+      url.searchParams.set('imgSize', 'medium');
+
+      const res = await fetch(url.toString(), { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) {
+        console.error('[HeroImage] Google search HTTP error:', res.status);
+        return null; // API key / quota error — stop trying
+      }
+      const data = await res.json() as { items?: { link: string }[] };
+      const link = data.items?.[0]?.link;
+      if (link) {
+        console.log(`[HeroImage] Google found image for "${q}": ${link}`);
+        return link;
+      }
+    } catch (e) {
+      console.error('[HeroImage] Google search failed:', e);
+    }
+  }
+  return null;
+}
+
+/**
+ * Download an image from a URL and upload it to Supabase Storage.
+ * Returns the public CDN URL on success, null on failure.
+ */
+async function fetchAndCache(imageUrl: string, storageKey: string): Promise<string | null> {
+  try {
+    const res = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) return null;
+    const buffer = await res.arrayBuffer();
+    const contentType = res.headers.get('content-type') || 'image/jpeg';
+    const ext = contentType.includes('png') ? 'png'
+      : contentType.includes('webp') ? 'webp'
+      : 'jpg';
+    const finalKey = storageKey.replace(/\.jpg$/, `.${ext}`);
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(finalKey, Buffer.from(buffer), { contentType, upsert: true });
+    if (error) return null;
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(finalKey);
+    return data.publicUrl;
+  } catch {
+    return null;
+  }
+}
+
 /** Fetch Wikipedia thumbnail by article title from a given language wiki */
 async function wikipediaThumbnail(title: string, lang = 'en'): Promise<string | null> {
   try {
@@ -101,41 +166,18 @@ async function wikiSearch(query: string, lang = 'en'): Promise<string | null> {
   }
 }
 
-/**
- * Find a character image via Wikipedia.
- * Priority: direct title (exact match) → search with character context → broader search.
- */
 async function wikipediaImage(originalName: string, englishName: string): Promise<string | null> {
   if (hasCyrillic(originalName)) {
-    // 1. Direct title lookup on Russian Wikipedia (name = article title)
     const direct = await wikipediaThumbnail(originalName, 'ru');
     if (direct) return direct;
-
-    // 2. Search RU Wikipedia — character-biased
     for (const q of [originalName, `${originalName} персонаж`]) {
       const r = await wikiSearch(q, 'ru');
       if (r) return r;
     }
   }
-
-  // 3. Direct title on English Wikipedia
   const directEn = await wikipediaThumbnail(englishName, 'en');
   if (directEn) return directEn;
-
-  // 4. English Wikipedia with character-biased queries
-  // Join original + english if they differ to add disambiguation context (e.g. "Ladybug Lady Bug")
-  const extraHint = hasCyrillic(originalName) && englishName !== originalName
-    ? englishName
-    : '';
-  const enQueries = [
-    `${englishName} fictional character`,
-    `${englishName} animated character`,
-    `${englishName} cartoon character`,
-    extraHint ? `${extraHint} character` : '',
-    englishName,
-  ].filter(Boolean) as string[];
-
-  for (const q of enQueries) {
+  for (const q of [`${englishName} fictional character`, `${englishName} animated character`, englishName]) {
     const result = await wikiSearch(q, 'en');
     if (result) return result;
   }
@@ -167,11 +209,12 @@ router.get('/img', async (req: Request, res: Response) => {
 /**
  * GET /api/hero-image?name=...
  *
- * 1. Translate RU → EN (MyMemory)
- * 2. Supabase Storage cache — instant if already generated before
- * 3. Pollinations AI generation → clean character illustration, no logos/text
- *    → uploaded to Supabase Storage for future cache hits
- * 4. Wikipedia fallback — only if Pollinations fails
+ * 1. Supabase Storage cache — instant on repeat requests
+ * 2. Google Custom Search — finds real character artwork (requires API key)
+ *    → downloaded and uploaded to Supabase for caching
+ * 3. Pollinations AI generation — clean illustration when Google unavailable
+ *    → uploaded to Supabase for caching
+ * 4. Wikipedia — last resort (may return show logos)
  * 5. null — frontend shows mascot-surprise fallback
  */
 router.get('/', async (req: Request, res: Response) => {
@@ -182,9 +225,9 @@ router.get('/', async (req: Request, res: Response) => {
 
   // ── 1. Translate RU → EN ─────────────────────────────────────────────────
   const englishName = await translateToEnglish(name);
+  const key = toStorageKey(englishName);
 
   // ── 2. Supabase Storage cache ────────────────────────────────────────────
-  const key = toStorageKey(englishName);
   const { data: cachedUrlData } = supabase.storage.from(BUCKET).getPublicUrl(key);
   try {
     const headRes = await fetch(cachedUrlData.publicUrl, {
@@ -196,8 +239,18 @@ router.get('/', async (req: Request, res: Response) => {
     }
   } catch { /* not cached */ }
 
-  // ── 3. Pollinations AI generation → Supabase Storage ────────────────────
-  // Generates a clean character illustration without logos, titles, or text
+  // ── 3. Google Custom Search → cache in Supabase ──────────────────────────
+  const googleUrl = await googleImageSearch(name, englishName);
+  if (googleUrl) {
+    const cached = await fetchAndCache(googleUrl, key);
+    if (cached) {
+      return res.json({ imageUrl: cached, source: 'google', name: englishName });
+    }
+    // Download failed but we have the URL — return it directly
+    return res.json({ imageUrl: googleUrl, source: 'google', name: englishName });
+  }
+
+  // ── 4. Pollinations AI generation → cache in Supabase ───────────────────
   try {
     const polUrl = pollinationsUrl(englishName);
     const imgRes = await fetch(polUrl, { signal: AbortSignal.timeout(25000) });
@@ -215,18 +268,17 @@ router.get('/', async (req: Request, res: Response) => {
         const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(finalKey);
         return res.json({ imageUrl: urlData.publicUrl, source: 'generated', name: englishName });
       }
-      // Upload failed but image fetched — return direct Pollinations URL as last resort
       return res.json({ imageUrl: polUrl, source: 'generated', name: englishName });
     }
-  } catch { /* Pollinations down — fall through to Wikipedia */ }
+  } catch { /* Pollinations down */ }
 
-  // ── 4. Wikipedia fallback (may return show logos — only used if AI fails) ─
+  // ── 5. Wikipedia fallback ────────────────────────────────────────────────
   const wikiImage = await wikipediaImage(name, englishName);
   if (wikiImage) {
     return res.json({ imageUrl: wikiImage, source: 'wikipedia', name: englishName });
   }
 
-  // ── 5. No image — frontend shows mascot-surprise ─────────────────────────
+  // ── 6. No image ──────────────────────────────────────────────────────────
   return res.json({ imageUrl: null, source: 'none', name: englishName });
 });
 
