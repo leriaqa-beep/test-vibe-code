@@ -43,6 +43,50 @@ function HeroImageCircle({ src, accent, light, border }: { src?: string; accent:
   );
 }
 
+/* ── Hero image large card — used on the last page ────────────── */
+function HeroImageLarge({ src, accent, light, border }: { src?: string; accent: string; light: string; border: string }) {
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  const loaded = !!src && loadedSrc === src;
+  const W = 200, H = 260;
+  return (
+    <div style={{ display: 'inline-block', position: 'relative', width: W, height: H, margin: '0 auto 24px' }}>
+      {/* background + placeholder */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 24,
+        background: `linear-gradient(160deg, ${light} 0%, ${border}60 100%)`,
+        border: `2px solid ${border}`,
+        boxShadow: `0 8px 32px ${accent}28`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden',
+      }}>
+        <img
+          src="/assets/mascot/mascot-surprise.png"
+          alt=""
+          style={{
+            width: 80, height: 80, objectFit: 'contain',
+            opacity: loaded ? 0 : 0.7, transition: 'opacity 0.3s',
+          }}
+        />
+      </div>
+      {/* hero image */}
+      {src && (
+        <img
+          src={src}
+          alt=""
+          style={{
+            position: 'absolute', inset: 0,
+            width: W, height: H,
+            objectFit: 'contain', borderRadius: 24,
+            opacity: loaded ? 1 : 0, transition: 'opacity 0.45s',
+          }}
+          onLoad={() => setLoadedSrc(src)}
+          onError={() => setLoadedSrc(null)}
+        />
+      )}
+    </div>
+  );
+}
+
 /* ── Hero colour theming ──────────────────────────────────────── */
 const HERO_THEMES: Record<string, { accent: string; light: string; border: string }> = {
   '🦄': { accent: '#7C3AED', light: '#EDE9FE', border: '#C4B5FD' },
@@ -292,16 +336,14 @@ export default function BookPage({
               <span style={{ fontSize: 14, color: theme.accent }}>✦</span>
               <div style={{ flex: 1, height: 1, background: `linear-gradient(to left, transparent, ${theme.border})` }} />
             </div>
-            {/* Hero image circle — shown on last page in illustration slot */}
+            {/* Hero image large card — shown on last page */}
             {heroImage && (
-              <div style={{ marginBottom: 24 }}>
-                <HeroImageCircle
-                  src={heroImage}
-                  accent={theme.accent}
-                  light={theme.light}
-                  border={theme.border}
-                />
-              </div>
+              <HeroImageLarge
+                src={heroImage}
+                accent={theme.accent}
+                light={theme.light}
+                border={theme.border}
+              />
             )}
 
             {/* Story illustration — only shown if no hero image */}

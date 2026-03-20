@@ -103,24 +103,38 @@ async function wikiSearch(query: string, lang = 'en'): Promise<string | null> {
 
 /**
  * Find a character image via Wikipedia.
- * 1. Russian Wikipedia with original name (most accurate for RU characters).
- * 2. English Wikipedia with translated name + "fictional character" suffix.
- * 3. English Wikipedia with translated name + "cartoon character" suffix.
- * 4. English Wikipedia with translated name plain.
+ * Priority: direct title (exact match) → search with character context → broader search.
  */
 async function wikipediaImage(originalName: string, englishName: string): Promise<string | null> {
-  // Russian Wikipedia first — exact match for Russian character names
   if (hasCyrillic(originalName)) {
-    const ruResult = await wikiSearch(originalName, 'ru');
-    if (ruResult) return ruResult;
+    // 1. Direct title lookup on Russian Wikipedia (name = article title)
+    const direct = await wikipediaThumbnail(originalName, 'ru');
+    if (direct) return direct;
+
+    // 2. Search RU Wikipedia — character-biased
+    for (const q of [originalName, `${originalName} персонаж`]) {
+      const r = await wikiSearch(q, 'ru');
+      if (r) return r;
+    }
   }
 
-  // English Wikipedia with character-biased queries
+  // 3. Direct title on English Wikipedia
+  const directEn = await wikipediaThumbnail(englishName, 'en');
+  if (directEn) return directEn;
+
+  // 4. English Wikipedia with character-biased queries
+  // Join original + english if they differ to add disambiguation context (e.g. "Ladybug Lady Bug")
+  const extraHint = hasCyrillic(originalName) && englishName !== originalName
+    ? englishName
+    : '';
   const enQueries = [
     `${englishName} fictional character`,
+    `${englishName} animated character`,
     `${englishName} cartoon character`,
+    extraHint ? `${extraHint} character` : '',
     englishName,
-  ];
+  ].filter(Boolean) as string[];
+
   for (const q of enQueries) {
     const result = await wikiSearch(q, 'en');
     if (result) return result;
