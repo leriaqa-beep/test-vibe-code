@@ -207,19 +207,18 @@ export default function NewStory() {
       // Debounce: wait 700ms after user stops typing before fetching
       imageDebounceRef.current = setTimeout(async () => {
         const trimmed = name.trim();
-        let imageUrl = buildPollinationsUrl(trimmed); // fallback: direct Pollinations
+        let imageUrl: string | undefined;
 
         try {
-          // Try backend first — it translates Russian name to English for better results
+          // Backend: Wikipedia → translate → Pollinations → Supabase cache
           const result = await api.heroes.getImage(trimmed);
-          imageUrl = result.imageUrl; // may be Wikipedia URL or Pollinations URL
+          // result.imageUrl may be null when all sources failed — treat as no image
+          imageUrl = result.imageUrl ?? undefined;
         } catch {
-          // Backend unavailable — use direct Pollinations URL built on client
+          // Backend unavailable — no image (emoji fallback will show)
         }
 
-        // Set URL immediately — HeroCircle handles mascot→image transition on its own.
-        // No preload: Pollinations can take 30-60s and preloading just blocks the UI.
-        setCustomImageUrl(imageUrl);
+        setCustomImageUrl(imageUrl ?? '');
         setSelectedHero({ name: trimmed, emoji: '✨', imageUrl });
         setImageLoading(false);
       }, 700);

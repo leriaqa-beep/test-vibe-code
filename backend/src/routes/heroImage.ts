@@ -92,33 +92,36 @@ router.get('/', async (req: Request, res: Response) => {
 
   let bestName = name;
 
-  // ── 1. Wikipedia via DuckDuckGo ─────────────────────────────────────────
-  try {
-    const ddgUrl =
-      `https://api.duckduckgo.com/?q=${encodeURIComponent(name)}` +
+  // ── Helper: query DuckDuckGo and return Wikipedia image URL if found ──────
+  async function ddgWikipediaImage(query: string): Promise<{ imageUrl: string; heading: string } | null> {
+    const url =
+      `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}` +
       `&format=json&t=pochemu4ki&no_redirect=1&no_html=1&skip_disambig=1`;
-
-    const ddgRes = await fetch(ddgUrl, {
+    const res2 = await fetch(url, {
       headers: { 'User-Agent': 'pochemu4ki/1.0 hero-image-lookup' },
       signal: AbortSignal.timeout(4000),
     });
-
-    if (ddgRes.ok) {
-      const data = (await ddgRes.json()) as { Image?: string; Heading?: string };
-
-      if (data.Heading && data.Heading.trim().length > 1) {
-        bestName = data.Heading.trim();
-      }
-
-      if (data.Image && data.Image.includes('upload.wikimedia.org') && data.Image.length > 20) {
-        return res.json({ imageUrl: data.Image, source: 'wikipedia', name: bestName });
-      }
+    if (!res2.ok) return null;
+    const data = (await res2.json()) as { Image?: string; Heading?: string };
+    const heading = data.Heading?.trim() || '';
+    if (data.Image && data.Image.includes('upload.wikimedia.org') && data.Image.length > 20) {
+      return { imageUrl: data.Image, heading };
     }
-  } catch {
-    // DDG failed — continue
+    return heading ? { imageUrl: '', heading } : null;
   }
 
-  // ── 1.5 Translate Cyrillic name → English for better Pollinations results
+  // ── 1. Wikipedia via DuckDuckGo (Russian name) ───────────────────────────
+  try {
+    const hit = await ddgWikipediaImage(name);
+    if (hit) {
+      if (hit.heading) bestName = hit.heading;
+      if (hit.imageUrl) {
+        return res.json({ imageUrl: hit.imageUrl, source: 'wikipedia', name: bestName });
+      }
+    }
+  } catch { /* continue */ }
+
+  // ── 1.5 Translate Cyrillic → English, then retry DuckDuckGo ─────────────
   if (hasCyrillic(bestName)) {
     try {
       const transUrl =
@@ -136,12 +139,20 @@ router.get('/', async (req: Request, res: Response) => {
           }
         }
       }
-    } catch {
-      // Translation failed — use original name
+    } catch { /* use original */ }
+
+    // Retry DuckDuckGo with the English name
+    if (!hasCyrillic(bestName)) {
+      try {
+        const hit2 = await ddgWikipediaImage(bestName);
+        if (hit2?.imageUrl) {
+          return res.json({ imageUrl: hit2.imageUrl, source: 'wikipedia', name: bestName });
+        }
+      } catch { /* continue */ }
     }
   }
 
-  // ── 2. Check Supabase Storage cache ────────────────────────────────────
+  // ── 2. Check Supabase Storage cache ──────────────────────────────────────
   const key = toStorageKey(bestName);
   const { data: cachedUrlData } = supabase.storage.from(BUCKET).getPublicUrl(key);
 
@@ -153,11 +164,9 @@ router.get('/', async (req: Request, res: Response) => {
     if (headRes.ok) {
       return res.json({ imageUrl: cachedUrlData.publicUrl, source: 'cache', name: bestName });
     }
-  } catch {
-    // Not cached — continue
-  }
+  } catch { /* not cached */ }
 
-  // ── 3. Fetch from Pollinations → upload to Supabase Storage ────────────
+  // ── 3. Fetch from Pollinations → upload to Supabase Storage ─────────────
   try {
     const polUrl = pollinationsUrl(bestName);
     const imgRes = await fetch(polUrl, { signal: AbortSignal.timeout(20000) });
@@ -179,12 +188,10 @@ router.get('/', async (req: Request, res: Response) => {
         return res.json({ imageUrl: urlData.publicUrl, source: 'generated', name: bestName });
       }
     }
-  } catch {
-    // Pollinations or upload failed — fall through to direct URL
-  }
+  } catch { /* Pollinations down */ }
 
-  // ── 4. Hard fallback: direct Pollinations URL ──────────────────────────
-  return res.json({ imageUrl: pollinationsUrl(bestName), source: 'pollinations', name: bestName });
+  // ── 4. No image available — frontend will show emoji avatar ──────────────
+  return res.json({ imageUrl: null, source: 'none', name: bestName });
 });
 
 export default router;
