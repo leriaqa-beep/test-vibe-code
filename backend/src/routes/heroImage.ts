@@ -13,19 +13,16 @@ function pollinationsUrl(name: string): string {
   return `https://image.pollinations.ai/prompt/${prompt}?width=256&height=256&nologo=true&nofeed=true&model=turbo&seed=${seed}`;
 }
 
-/** Returns true if the string contains Cyrillic characters */
 function hasCyrillic(text: string): boolean {
   return /[а-яёА-ЯЁ]/.test(text);
 }
 
-/** Deterministic storage key — same name always maps to the same file */
 function toStorageKey(name: string): string {
   const slug = name
     .toLowerCase()
     .replace(/[^a-zа-яёa-z0-9]+/gi, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 60);
-  // Simple 32-bit hash for uniqueness
   let h = 0;
   for (let i = 0; i < name.length; i++) {
     h = Math.imul(31, h) + name.charCodeAt(i) | 0;
@@ -33,12 +30,11 @@ function toStorageKey(name: string): string {
   return `${slug}-${Math.abs(h).toString(36)}.jpg`;
 }
 
-/** Create the bucket once at startup — safe to call repeatedly */
 async function ensureBucket(): Promise<void> {
   const { error } = await supabase.storage.createBucket(BUCKET, {
     public: true,
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-    fileSizeLimit: 2 * 1024 * 1024, // 2 MB
+    fileSizeLimit: 2 * 1024 * 1024,
   });
   if (error && !error.message.toLowerCase().includes('already exist')) {
     console.error('[HeroImage] bucket error:', error.message);
@@ -47,16 +43,69 @@ async function ensureBucket(): Promise<void> {
 ensureBucket();
 
 /**
+ * Translate Russian name → English via MyMemory (free, no key).
+ * Returns original string on failure.
+ */
+async function translateToEnglish(name: string): Promise<string> {
+  if (!hasCyrillic(name)) return name;
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(name)}&langpair=ru|en`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+    if (!res.ok) return name;
+    const data = await res.json() as { responseStatus: number; responseData: { translatedText: string } };
+    if (data.responseStatus === 200) {
+      const t = data.responseData.translatedText?.trim();
+      if (t && !hasCyrillic(t)) return t;
+    }
+  } catch { /* fall through */ }
+  return name;
+}
+
+/**
+ * Search Wikipedia for the query string, return the best matching article thumbnail.
+ * Uses: search API → summary API → thumbnail.source
+ */
+async function wikipediaImage(query: string): Promise<string | null> {
+  try {
+    // Step 1: find the article title
+    const searchUrl =
+      `https://en.wikipedia.org/w/api.php?action=query&list=search` +
+      `&srsearch=${encodeURIComponent(query)}&format=json&srlimit=1&origin=*`;
+    const searchRes = await fetch(searchUrl, {
+      headers: { 'User-Agent': 'pochemu4ki/1.0 hero-image-lookup' },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!searchRes.ok) return null;
+    const searchData = await searchRes.json() as {
+      query: { search: { title: string }[] };
+    };
+    const title = searchData.query?.search?.[0]?.title;
+    if (!title) return null;
+
+    // Step 2: get page summary with thumbnail
+    const summaryUrl =
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+    const summaryRes = await fetch(summaryUrl, {
+      headers: { 'User-Agent': 'pochemu4ki/1.0 hero-image-lookup' },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!summaryRes.ok) return null;
+    const summaryData = await summaryRes.json() as {
+      thumbnail?: { source: string };
+    };
+    return summaryData.thumbnail?.source ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * GET /api/hero-image/img?name=...
- *
- * Legacy backend proxy — kept for old story URLs that may still reference it.
- * Fetches the image from Pollinations server-side and pipes it back.
- * Response is cached for 24 h in the browser.
+ * Legacy backend proxy for old story URLs.
  */
 router.get('/img', async (req: Request, res: Response) => {
   const name = ((req.query.name as string) || '').trim();
   if (!name) return res.status(400).send('name required');
-
   const url = pollinationsUrl(name);
   try {
     const imgRes = await fetch(url, { signal: AbortSignal.timeout(25000) });
@@ -75,14 +124,11 @@ router.get('/img', async (req: Request, res: Response) => {
 /**
  * GET /api/hero-image?name=...
  *
- * Returns a stable, fast-loading image URL for the given character name:
- *
- * 1. Query DuckDuckGo for a Wikipedia image (fast, reliable, no generation needed).
- * 2. Check if we already have a cached image in Supabase Storage hero-images.
- * 3. Otherwise: fetch from Pollinations server-side → upload to Supabase Storage
- *    → return the permanent CDN URL.  Subsequent requests for the same character
- *    are served from cache (step 2) — near-instant.
- * 4. Hard fallback: return the direct Pollinations URL in case Supabase is down.
+ * 1. Translate RU → EN (MyMemory)
+ * 2. Wikipedia Search + Summary → reliable thumbnail for known characters
+ * 3. Supabase Storage cache (previously generated images)
+ * 4. Pollinations server-side → upload to Supabase Storage
+ * 5. null — frontend shows mascot-surprise fallback
  */
 router.get('/', async (req: Request, res: Response) => {
   const name = ((req.query.name as string) || '').trim();
@@ -90,87 +136,32 @@ router.get('/', async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'name required' });
   }
 
-  let bestName = name;
+  // ── 1. Translate RU → EN ─────────────────────────────────────────────────
+  const englishName = await translateToEnglish(name);
 
-  // ── Helper: query DuckDuckGo and return Wikipedia image URL if found ──────
-  async function ddgWikipediaImage(query: string): Promise<{ imageUrl: string; heading: string } | null> {
-    const url =
-      `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}` +
-      `&format=json&t=pochemu4ki&no_redirect=1&no_html=1&skip_disambig=1`;
-    const res2 = await fetch(url, {
-      headers: { 'User-Agent': 'pochemu4ki/1.0 hero-image-lookup' },
-      signal: AbortSignal.timeout(4000),
-    });
-    if (!res2.ok) return null;
-    const data = (await res2.json()) as { Image?: string; Heading?: string };
-    const heading = data.Heading?.trim() || '';
-    if (data.Image && data.Image.includes('upload.wikimedia.org') && data.Image.length > 20) {
-      return { imageUrl: data.Image, heading };
-    }
-    return heading ? { imageUrl: '', heading } : null;
+  // ── 2. Wikipedia image ───────────────────────────────────────────────────
+  const wikiImage = await wikipediaImage(englishName);
+  if (wikiImage) {
+    return res.json({ imageUrl: wikiImage, source: 'wikipedia', name: englishName });
   }
 
-  // ── 1. Wikipedia via DuckDuckGo (Russian name) ───────────────────────────
-  try {
-    const hit = await ddgWikipediaImage(name);
-    if (hit) {
-      if (hit.heading) bestName = hit.heading;
-      if (hit.imageUrl) {
-        return res.json({ imageUrl: hit.imageUrl, source: 'wikipedia', name: bestName });
-      }
-    }
-  } catch { /* continue */ }
-
-  // ── 1.5 Translate Cyrillic → English, then retry DuckDuckGo ─────────────
-  if (hasCyrillic(bestName)) {
-    try {
-      const transUrl =
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(bestName)}&langpair=ru|en`;
-      const transRes = await fetch(transUrl, { signal: AbortSignal.timeout(3000) });
-      if (transRes.ok) {
-        const transData = await transRes.json() as {
-          responseStatus: number;
-          responseData: { translatedText: string };
-        };
-        if (transData.responseStatus === 200) {
-          const translated = transData.responseData.translatedText?.trim();
-          if (translated && !hasCyrillic(translated)) {
-            bestName = translated;
-          }
-        }
-      }
-    } catch { /* use original */ }
-
-    // Retry DuckDuckGo with the English name
-    if (!hasCyrillic(bestName)) {
-      try {
-        const hit2 = await ddgWikipediaImage(bestName);
-        if (hit2?.imageUrl) {
-          return res.json({ imageUrl: hit2.imageUrl, source: 'wikipedia', name: bestName });
-        }
-      } catch { /* continue */ }
-    }
-  }
-
-  // ── 2. Check Supabase Storage cache ──────────────────────────────────────
-  const key = toStorageKey(bestName);
+  // ── 3. Supabase Storage cache ────────────────────────────────────────────
+  const key = toStorageKey(englishName);
   const { data: cachedUrlData } = supabase.storage.from(BUCKET).getPublicUrl(key);
-
   try {
     const headRes = await fetch(cachedUrlData.publicUrl, {
       method: 'HEAD',
       signal: AbortSignal.timeout(3000),
     });
     if (headRes.ok) {
-      return res.json({ imageUrl: cachedUrlData.publicUrl, source: 'cache', name: bestName });
+      return res.json({ imageUrl: cachedUrlData.publicUrl, source: 'cache', name: englishName });
     }
   } catch { /* not cached */ }
 
-  // ── 3. Fetch from Pollinations → upload to Supabase Storage ─────────────
+  // ── 4. Pollinations server-side → Supabase Storage ──────────────────────
   try {
-    const polUrl = pollinationsUrl(bestName);
+    const polUrl = pollinationsUrl(englishName);
     const imgRes = await fetch(polUrl, { signal: AbortSignal.timeout(20000) });
-
     if (imgRes.ok) {
       const buffer = await imgRes.arrayBuffer();
       const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
@@ -178,20 +169,18 @@ router.get('/', async (req: Request, res: Response) => {
         : contentType.includes('webp') ? 'webp'
         : 'jpg';
       const finalKey = key.replace(/\.jpg$/, `.${ext}`);
-
       const { error: uploadError } = await supabase.storage
         .from(BUCKET)
         .upload(finalKey, Buffer.from(buffer), { contentType, upsert: true });
-
       if (!uploadError) {
         const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(finalKey);
-        return res.json({ imageUrl: urlData.publicUrl, source: 'generated', name: bestName });
+        return res.json({ imageUrl: urlData.publicUrl, source: 'generated', name: englishName });
       }
     }
   } catch { /* Pollinations down */ }
 
-  // ── 4. No image available — frontend will show emoji avatar ──────────────
-  return res.json({ imageUrl: null, source: 'none', name: bestName });
+  // ── 5. No image — frontend shows mascot-surprise ─────────────────────────
+  return res.json({ imageUrl: null, source: 'none', name: englishName });
 });
 
 export default router;
