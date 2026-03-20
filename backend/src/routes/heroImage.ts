@@ -13,6 +13,11 @@ function pollinationsUrl(name: string): string {
   return `https://image.pollinations.ai/prompt/${prompt}?width=256&height=256&nologo=true&nofeed=true&model=turbo&seed=${seed}`;
 }
 
+/** Returns true if the string contains Cyrillic characters */
+function hasCyrillic(text: string): boolean {
+  return /[а-яёА-ЯЁ]/.test(text);
+}
+
 /** Deterministic storage key — same name always maps to the same file */
 function toStorageKey(name: string): string {
   const slug = name
@@ -111,6 +116,29 @@ router.get('/', async (req: Request, res: Response) => {
     }
   } catch {
     // DDG failed — continue
+  }
+
+  // ── 1.5 Translate Cyrillic name → English for better Pollinations results
+  if (hasCyrillic(bestName)) {
+    try {
+      const transUrl =
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(bestName)}&langpair=ru|en`;
+      const transRes = await fetch(transUrl, { signal: AbortSignal.timeout(3000) });
+      if (transRes.ok) {
+        const transData = await transRes.json() as {
+          responseStatus: number;
+          responseData: { translatedText: string };
+        };
+        if (transData.responseStatus === 200) {
+          const translated = transData.responseData.translatedText?.trim();
+          if (translated && !hasCyrillic(translated)) {
+            bestName = translated;
+          }
+        }
+      }
+    } catch {
+      // Translation failed — use original name
+    }
   }
 
   // ── 2. Check Supabase Storage cache ────────────────────────────────────
