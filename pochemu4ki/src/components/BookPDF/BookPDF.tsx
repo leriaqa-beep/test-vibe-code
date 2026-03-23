@@ -25,14 +25,18 @@ export function BookDocument({ title, child, stories, baseUrl, imageMap }: BookD
     return imageMap?.[url] ?? url;
   };
   const resolveHeroUrl = (story: Story): string | null => {
-    // 1. Custom hero image from this specific story
+    // 1. Custom hero image URL (uploaded or pasted)
     if (story.heroUsed?.imageUrl) {
       return imageMap?.[story.heroUsed.imageUrl] ?? story.heroUsed.imageUrl;
     }
-    // 2. Emoji of the hero actually used, or fall back to child's default hero
-    const emoji = story.heroUsed?.emoji ?? child.hero?.emoji;
-    if (emoji && HERO[emoji]) {
-      const raw = `${baseUrl}${HERO[emoji]}`;
+    // 2. Standard emoji hero from this story (🦄 🦉 🐉 etc.)
+    if (story.heroUsed?.emoji && HERO[story.heroUsed.emoji]) {
+      const raw = `${baseUrl}${HERO[story.heroUsed.emoji]}`;
+      return imageMap?.[raw] ?? raw;
+    }
+    // 3. Fall back to child's default hero (covers custom heroes with no image, e.g. emoji ✨)
+    if (child.hero?.emoji && HERO[child.hero.emoji]) {
+      const raw = `${baseUrl}${HERO[child.hero.emoji]}`;
       return imageMap?.[raw] ?? raw;
     }
     return null;
