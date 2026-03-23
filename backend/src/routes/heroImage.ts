@@ -35,10 +35,10 @@ async function ensureBucket(): Promise<void> {
   const { error } = await supabase.storage.createBucket(BUCKET, {
     public: true,
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-    fileSizeLimit: 2 * 1024 * 1024,
+    fileSizeLimit: 5 * 1024 * 1024,
   });
   if (error && !error.message.toLowerCase().includes('already exist')) {
-    console.error('[HeroImage] bucket error:', error.message);
+    console.error('[HeroImage] bucket create error:', error.message);
   }
 }
 ensureBucket();
@@ -345,13 +345,16 @@ router.post('/upload', async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'File too large (max 5 MB)' });
   }
 
+  // Ensure bucket exists before uploading (in case startup creation failed)
+  await ensureBucket();
+
   const { error } = await supabase.storage
     .from(BUCKET)
     .upload(key, buffer, { contentType: mimeType, upsert: true });
 
   if (error) {
-    console.error('[HeroImage] Upload error:', error.message);
-    return res.status(500).json({ error: 'Upload failed' });
+    console.error('[HeroImage] Upload error:', error.message, '| key:', key, '| size:', buffer.length);
+    return res.status(500).json({ error: `Ошибка загрузки: ${error.message}` });
   }
 
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(key);
