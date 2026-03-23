@@ -24,9 +24,19 @@ export function BookDocument({ title, child, stories, baseUrl, imageMap }: BookD
     const url = `${baseUrl}/assets/mascot/${name}`;
     return imageMap?.[url] ?? url;
   };
-  const rawHeroUrl = child.hero?.emoji && HERO[child.hero.emoji]
-    ? `${baseUrl}${HERO[child.hero.emoji]}` : null;
-  const heroUrl = rawHeroUrl ? (imageMap?.[rawHeroUrl] ?? rawHeroUrl) : null;
+  const resolveHeroUrl = (story: Story): string | null => {
+    // 1. Custom hero image from this specific story
+    if (story.heroUsed?.imageUrl) {
+      return imageMap?.[story.heroUsed.imageUrl] ?? story.heroUsed.imageUrl;
+    }
+    // 2. Emoji of the hero actually used, or fall back to child's default hero
+    const emoji = story.heroUsed?.emoji ?? child.hero?.emoji;
+    if (emoji && HERO[emoji]) {
+      const raw = `${baseUrl}${HERO[emoji]}`;
+      return imageMap?.[raw] ?? raw;
+    }
+    return null;
+  };
 
   const tocOffset = stories.length > 1 ? 1 : 0;
   // First story text page: cover(1) + endpaper(1) + toc(0|1) + per-story divider
@@ -64,7 +74,7 @@ export function BookDocument({ title, child, stories, baseUrl, imageMap }: BookD
           <BookStoryPage
             story={story}
             child={child}
-            heroUrl={heroUrl}
+            heroUrl={resolveHeroUrl(story)}
             pageNum={4 + tocOffset + idx * 2}
             mascotExplainUrl={m('mascot-explain.png')}
             mascotHeroUrl={m('mascot-hero.png')}

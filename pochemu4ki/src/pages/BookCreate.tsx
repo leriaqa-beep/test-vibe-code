@@ -128,6 +128,18 @@ export default function BookCreate() {
           compressImage(`${origin}${heroPath}`, 360).then(data => [`${origin}${heroPath}`, data] as const)
         );
       }
+
+      // Pre-compress custom hero images used in individual stories
+      const storyHeroUrls = new Set<string>();
+      for (const story of selectedStories) {
+        if (story.heroUsed?.imageUrl) storyHeroUrls.add(story.heroUsed.imageUrl);
+      }
+      for (const url of storyHeroUrls) {
+        compressions.push(
+          compressImage(url, 360).then(data => [url, data] as const)
+        );
+      }
+
       const imageMap = Object.fromEntries(await Promise.all(compressions));
 
       const instance = pdf(
