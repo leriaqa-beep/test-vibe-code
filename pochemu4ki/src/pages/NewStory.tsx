@@ -137,8 +137,6 @@ export default function NewStory() {
   const [customMode, setCustomMode] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customImageUrl, setCustomImageUrl] = useState('');
-  const [imageLoading, setImageLoading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
   const [customUrlInput, setCustomUrlInput] = useState('');
   const [savedCustomHeroes, setSavedCustomHeroes] = useState<SelectedHero[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -211,35 +209,10 @@ export default function NewStory() {
     }
   };
 
-  // Upload image file from device → base64 → backend → Supabase CDN
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !customName.trim()) return;
-    setImageLoading(true);
-    setUploadError('');
-    try {
-      const imageData = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const data = await api.heroes.uploadImage(customName.trim(), imageData, file.type);
-      setCustomImageUrl(data.imageUrl);
-      setSelectedHero({ name: customName.trim(), emoji: '✨', imageUrl: data.imageUrl });
-    } catch (err: unknown) {
-      const e = err as { message?: string };
-      setUploadError(e.message || 'Не удалось загрузить картинку');
-    }
-    setImageLoading(false);
-    e.target.value = '';
-  };
-
   // Apply manually pasted URL
   const handleUrlApply = () => {
     const url = customUrlInput.trim();
     if (!url || !customName.trim()) return;
-    setUploadError('');
     setCustomImageUrl(url);
     setSelectedHero({ name: customName.trim(), emoji: '✨', imageUrl: url });
     setCustomUrlInput('');
@@ -462,14 +435,7 @@ export default function NewStory() {
                   transition: 'all 0.15s',
                   boxShadow: customMode ? '0 0 0 3px rgba(124,58,237,0.2)' : 'none',
                 }}>
-                  {customMode && imageLoading ? (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10" stroke="#C4B5FD" strokeWidth="3"/>
-                      <path d="M12 2a10 10 0 0 1 10 10" stroke="#7C3AED" strokeWidth="3" strokeLinecap="round">
-                        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/>
-                      </path>
-                    </svg>
-                  ) : customMode ? (
+                  {customMode ? (
                     <HeroCircle imageUrl={customImageUrl || undefined} size={44} />
                   ) : (
                     <Pencil size={20} color="#C4B5FD" />
