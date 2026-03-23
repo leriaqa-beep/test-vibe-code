@@ -554,27 +554,6 @@ export default function NewStory() {
                     <a href="https://www.pinterest.com" target="_blank" rel="noopener noreferrer" style={{ color: '#7C3AED', textDecoration: 'underline' }}>Pinterest</a>
                   </p>
 
-                  {/* Upload from device */}
-                  <label style={{
-                    display: 'flex', alignItems: 'center', gap: 8, cursor: imageLoading ? 'not-allowed' : 'pointer',
-                    padding: '9px 14px', borderRadius: 14,
-                    border: '1.5px dashed #C4B5FD', background: '#FAF8FF',
-                    fontSize: 13, color: '#7C3AED', fontWeight: 600,
-                    opacity: imageLoading ? 0.6 : 1,
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                    {imageLoading ? 'Загружаем...' : 'Загрузить картинку с устройства'}
-                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={imageLoading} />
-                  </label>
-
-                  {/* Upload error */}
-                  {uploadError && (
-                    <p style={{ fontSize: 11, color: '#EF4444', margin: 0, lineHeight: 1.4 }}>
-                      {uploadError}
-                    </p>
-                  )}
 
                   {/* AI Photo Transform — FUTURE FEATURE placeholder */}
                   <div style={{
