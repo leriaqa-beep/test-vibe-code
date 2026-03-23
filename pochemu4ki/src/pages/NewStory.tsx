@@ -29,6 +29,7 @@ const HeroCircle = memo(function HeroCircle({ imageUrl, size }: { imageUrl?: str
         <img
           src={imageUrl}
           alt=""
+          referrerPolicy="no-referrer"
           style={{
             position: 'absolute', inset: 0, width: size, height: size,
             objectFit: 'cover', objectPosition: 'top center', borderRadius: '50%',
@@ -96,6 +97,7 @@ function SelectedHeroAvatar({ hero }: { hero: SelectedHero }) {
       <img
         src={src}
         alt={hero.name}
+        referrerPolicy="no-referrer"
         style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
         onError={() => setFailedSrc(src)}
       />
@@ -136,6 +138,7 @@ export default function NewStory() {
   const [customName, setCustomName] = useState('');
   const [customImageUrl, setCustomImageUrl] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [customUrlInput, setCustomUrlInput] = useState('');
   const [savedCustomHeroes, setSavedCustomHeroes] = useState<SelectedHero[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -213,6 +216,7 @@ export default function NewStory() {
     const file = e.target.files?.[0];
     if (!file || !customName.trim()) return;
     setImageLoading(true);
+    setUploadError('');
     try {
       const imageData = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -223,7 +227,10 @@ export default function NewStory() {
       const data = await api.heroes.uploadImage(customName.trim(), imageData, file.type);
       setCustomImageUrl(data.imageUrl);
       setSelectedHero({ name: customName.trim(), emoji: '✨', imageUrl: data.imageUrl });
-    } catch { /* ignore */ }
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setUploadError(e.message || 'Не удалось загрузить картинку');
+    }
     setImageLoading(false);
     e.target.value = '';
   };
@@ -232,6 +239,7 @@ export default function NewStory() {
   const handleUrlApply = () => {
     const url = customUrlInput.trim();
     if (!url || !customName.trim()) return;
+    setUploadError('');
     setCustomImageUrl(url);
     setSelectedHero({ name: customName.trim(), emoji: '✨', imageUrl: url });
     setCustomUrlInput('');
@@ -509,20 +517,6 @@ export default function NewStory() {
               {customName.trim().length >= 2 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-                  {/* Upload from device */}
-                  <label style={{
-                    display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-                    padding: '9px 14px', borderRadius: 14,
-                    border: '1.5px dashed #C4B5FD', background: '#FAF8FF',
-                    fontSize: 13, color: '#7C3AED', fontWeight: 600,
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                    {imageLoading ? 'Загружаем...' : 'Загрузить картинку с устройства'}
-                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={imageLoading} />
-                  </label>
-
                   {/* Paste URL */}
                   <div style={{ display: 'flex', gap: 6 }}>
                     <input
@@ -530,7 +524,7 @@ export default function NewStory() {
                       value={customUrlInput}
                       onChange={e => setCustomUrlInput(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleUrlApply()}
-                      placeholder="Или вставьте ссылку на картинку"
+                      placeholder="Вставьте ссылку на картинку"
                       style={{
                         flex: 1, border: '1.5px solid #E9D5FF', borderRadius: 14,
                         padding: '8px 12px', fontSize: 12, color: '#4C1D95',
@@ -559,6 +553,28 @@ export default function NewStory() {
                     {' · '}
                     <a href="https://www.pinterest.com" target="_blank" rel="noopener noreferrer" style={{ color: '#7C3AED', textDecoration: 'underline' }}>Pinterest</a>
                   </p>
+
+                  {/* Upload from device */}
+                  <label style={{
+                    display: 'flex', alignItems: 'center', gap: 8, cursor: imageLoading ? 'not-allowed' : 'pointer',
+                    padding: '9px 14px', borderRadius: 14,
+                    border: '1.5px dashed #C4B5FD', background: '#FAF8FF',
+                    fontSize: 13, color: '#7C3AED', fontWeight: 600,
+                    opacity: imageLoading ? 0.6 : 1,
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    {imageLoading ? 'Загружаем...' : 'Загрузить картинку с устройства'}
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={imageLoading} />
+                  </label>
+
+                  {/* Upload error */}
+                  {uploadError && (
+                    <p style={{ fontSize: 11, color: '#EF4444', margin: 0, lineHeight: 1.4 }}>
+                      {uploadError}
+                    </p>
+                  )}
 
                   {/* AI Photo Transform — FUTURE FEATURE placeholder */}
                   <div style={{
