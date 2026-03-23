@@ -209,9 +209,11 @@ export default function Dashboard() {
                     className="w-full bg-white rounded-xl p-4 shadow-sm border border-gray-200 text-left flex items-center gap-3 hover:border-purple-300 transition"
                   >
                     <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      {storyChild
-                        ? <HeroImage emoji={storyChild.hero.emoji} size="md" />
-                        : <BookOpen className="w-5 h-5 text-purple-400" />}
+                      {story.heroUsed?.imageUrl
+                        ? <img src={story.heroUsed.imageUrl} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                        : story.heroUsed?.emoji || storyChild
+                          ? <HeroImage emoji={story.heroUsed?.emoji ?? storyChild!.hero.emoji} size="md" />
+                          : <BookOpen className="w-5 h-5 text-purple-400" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900 text-sm truncate">{story.title}</p>
