@@ -10,17 +10,17 @@
   --font-display: 'Comfortaa', cursive;
   --font-body:    'Nunito', sans-serif;
 
-  /* Размеры (base = 17px задан на html) */
-  --text-xs:   0.75rem;    /* ~12.75px */
-  --text-sm:   0.824rem;   /* ~14px    */
-  --text-base: 1rem;       /* 17px     */
-  --text-lg:   1.059rem;   /* ~18px    */
-  --text-xl:   1.176rem;   /* ~20px    */
-  --text-2xl:  1.412rem;   /* ~24px    */
-  --text-3xl:  1.647rem;   /* ~28px    */
-  --text-h3:   1.412rem;   /* 24px     */
-  --text-h2:   1.882rem;   /* 32px     */
-  --text-h1:   2.471rem;   /* 42px     */
+  /* Размеры (base = 16px на мобиле, 17px на десктопе) */
+  --text-xs:   0.875rem;   /* 14px — минимум для мобильного UI  */
+  --text-sm:   0.9375rem;  /* 15px — secondary text, метаданные */
+  --text-base: 1rem;       /* 16/17px — body text               */
+  --text-lg:   1.0625rem;  /* ~17px                             */
+  --text-xl:   1.1875rem;  /* ~19px                             */
+  --text-2xl:  1.4375rem;  /* ~23px                             */
+  --text-3xl:  1.6875rem;  /* ~27px                             */
+  --text-h3:   1.4375rem;  /* ~23px                             */
+  --text-h2:   1.875rem;   /* 30px                              */
+  --text-h1:   2.5rem;     /* 40px                              */
 
   --leading-tight:   1.2;
   --leading-snug:    1.35;
@@ -94,8 +94,8 @@
 
   /* ── Текст ──────────────────────────────────────────────────── */
   --text-primary:    #2D2B3D;   /* тёмно-фиолетово-серый — НЕ чёрный */
-  --text-secondary:  #7A7890;   /* мягкий серый — подписи, хинты      */
-  --text-muted:      #ABA9C0;   /* плейсхолдеры, отключённые          */
+  --text-secondary:  #5C5A72;   /* усиленный серый — подписи, хинты (5.5:1 на bg-primary) */
+  --text-muted:      #8E8CA4;   /* плейсхолдеры, отключённые (3.2:1 на bg-primary)        */
   --text-on-accent:  #FFFFFF;   /* белый на кнопках                    */
   --text-on-warm:    #7A4B1A;   /* тёмный на персиковом фоне          */
 
