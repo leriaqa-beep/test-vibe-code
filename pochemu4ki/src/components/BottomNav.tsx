@@ -91,7 +91,7 @@ export default function BottomNav() {
       }}
     >
       {NAV_ITEMS.map(({ path, label, Icon, exact }) => {
-        const active = exact ? pathname === path : pathname === path;
+        const active = exact ? pathname === path : pathname.startsWith(path);
         return (
           <button
             key={path}
@@ -102,11 +102,11 @@ export default function BottomNav() {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 4,
+              gap: 3,
               border: 'none',
               background: 'none',
               cursor: 'pointer',
-              padding: '10px 4px 10px',
+              padding: '8px 4px 10px',
               minHeight: 60,
               color: active ? 'var(--accent-primary)' : 'var(--text-muted)',
               transition: 'color 0.15s',
@@ -114,25 +114,28 @@ export default function BottomNav() {
               position: 'relative',
             }}
           >
-            {/* Active indicator dot */}
-            {active && (
-              <span style={{
-                position: 'absolute',
-                top: 6,
-                width: 4,
-                height: 4,
-                borderRadius: '50%',
-                background: 'var(--accent-primary)',
-              }} />
-            )}
-            <Icon active={active} />
+            {/* Active pill highlight */}
             <span style={{
-              fontSize: 10,
+              position: 'absolute',
+              top: 6,
+              width: 44,
+              height: 28,
+              borderRadius: 10,
+              background: active ? 'var(--accent-primary-50)' : 'transparent',
+              transition: 'background 0.2s',
+            }} />
+            <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 24 }}>
+              <Icon active={active} />
+            </span>
+            <span style={{
+              fontSize: 11,
               fontFamily: 'var(--font-display)',
               fontWeight: active ? 700 : 400,
-              letterSpacing: active ? '0.02em' : 0,
+              letterSpacing: active ? '0.01em' : 0,
               lineHeight: 1,
               color: active ? 'var(--accent-primary)' : 'var(--text-muted)',
+              position: 'relative',
+              zIndex: 1,
             }}>
               {label}
             </span>

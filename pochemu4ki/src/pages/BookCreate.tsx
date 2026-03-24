@@ -51,7 +51,7 @@ export default function BookCreate() {
   const [titleEdited, setTitleEdited] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
-  const [step, setStep] = useState<'select' | 'title'>('select');
+  const [step, setStep] = useState<'select' | 'title' | 'done'>('select');
 
   useEffect(() => {
     Promise.all([loadChildren(), loadStories()]);
@@ -165,6 +165,7 @@ export default function BookCreate() {
       document.body.appendChild(a);
       a.click();
       setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+      setStep('done');
     } catch (e) {
       console.error('PDF generation error:', e);
       setPdfError(e instanceof Error ? e.message : 'Не удалось создать PDF. Попробуйте ещё раз.');
@@ -199,18 +200,21 @@ export default function BookCreate() {
           </div>
         </div>
 
-        {/* Step tabs */}
-        <div className="flex rounded-xl bg-white border border-purple-100 p-1 gap-1 mb-5 shadow-sm">
-          {(['select', 'title'] as const).map((s, i) => (
-            <button
-              key={s}
-              onClick={() => step === 'title' && s === 'select' ? setStep('select') : (selected.size > 0 && setStep(s))}
-              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${step === s ? 'bg-purple-600 text-white shadow-sm' : 'text-text-secondary hover:text-purple-600'}`}
-            >
-              {i + 1}. {s === 'select' ? 'Выбрать истории' : 'Оформление'}
-            </button>
-          ))}
-        </div>
+        {/* Step tabs — only when not in done state */}
+        {step !== 'done' && (
+          <div className="flex rounded-xl bg-white border border-purple-100 p-1 gap-1 mb-5 shadow-sm">
+            {(['select', 'title'] as const).map((s, i) => (
+              <button
+                key={s}
+                onClick={() => step === 'title' && s === 'select' ? setStep('select') : (selected.size > 0 && setStep(s))}
+                className={`flex-1 rounded-lg text-sm font-semibold transition ${step === s ? 'bg-purple-600 text-white shadow-sm' : 'text-text-secondary hover:text-purple-600'}`}
+                style={{ minHeight: 44 }}
+              >
+                {i + 1}. {s === 'select' ? 'Выбрать истории' : 'Оформление'}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* ── Step 1: Select stories ── */}
         {step === 'select' && (
@@ -374,6 +378,43 @@ export default function BookCreate() {
               ← Изменить выбор историй
             </button>
           </>
+        )}
+
+        {/* ── Done state ── */}
+        {step === 'done' && (
+          <div className="flex flex-col items-center py-10 text-center">
+            <img
+              src="/assets/mascot/mascot-joy.png"
+              alt=""
+              className="w-28 h-28 object-contain mb-4 animate-bounce-in"
+            />
+            <h2 className="text-xl font-bold text-text-primary mb-2">Книга готова! 📥</h2>
+            <p className="text-sm text-text-secondary mb-1">PDF скачивается в папку «Загрузки»</p>
+            <p className="text-xs text-text-muted mb-8">
+              {bookTitle && `«${bookTitle}» · `}{selectedStories.length} {storiesWord(selectedStories.length)}
+            </p>
+            <div className="flex flex-col gap-3 w-full">
+              <button
+                onClick={handleDownload}
+                disabled={generating}
+                className="w-full py-3.5 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-100 transition disabled:opacity-40"
+                style={{ background: 'var(--gradient-button)', boxShadow: 'var(--shadow-button)', minHeight: 52 }}
+              >
+                {generating ? <Loader className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                {generating ? 'Создаём PDF...' : 'Скачать ещё раз'}
+              </button>
+              <button
+                onClick={() => { setStep('select'); setSelected(new Set()); }}
+                className="w-full py-3 rounded-2xl font-semibold text-sm border border-purple-200 text-purple-600 bg-white hover:bg-purple-50 transition"
+                style={{ minHeight: 48 }}
+              >
+                Создать другую книгу
+              </button>
+            </div>
+            {pdfError && (
+              <p className="text-xs text-red-500 mt-4 bg-red-50 rounded-xl px-3 py-2 w-full">⚠️ {pdfError}</p>
+            )}
+          </div>
         )}
       </div>
     </div>

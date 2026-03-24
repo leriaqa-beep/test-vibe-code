@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, BookOpen, UserPlus, Crown } from 'lucide-react';
 import HeroImage from '../components/HeroImage';
@@ -16,6 +16,8 @@ export default function Dashboard() {
     loadChildren();
     loadStories();
   }, []);
+
+  const [betaDismissed, setBetaDismissed] = useState(() => localStorage.getItem('pochemu4ki_beta_dismissed') === '1');
 
   const storiesUsed = user?.storiesUsed || 0;
   const storiesLeft = Math.max(0, FREE_STORY_LIMIT - storiesUsed);
@@ -42,21 +44,35 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Beta banner */}
-        <div
-          className="rounded-xl px-4 py-3 mb-4 flex items-center gap-3"
-          style={{ background: 'linear-gradient(135deg,#f3f0ff,#fce7f3)', border: '1px solid #e9d5ff' }}
-        >
-          <span style={{ fontSize: 20 }}>🚀</span>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold" style={{ color: 'var(--accent-primary)' }}>
-              Бета-версия · Premium бесплатно
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              Вы среди первых! Все функции открыты — расскажите нам, что думаете
-            </p>
+        {/* Beta banner — dismissable */}
+        {!betaDismissed && (
+          <div
+            className="rounded-xl px-4 py-3 mb-4 flex items-center gap-3"
+            style={{ background: 'linear-gradient(135deg,#f3f0ff,#fce7f3)', border: '1px solid #e9d5ff' }}
+          >
+            <span style={{ fontSize: 20 }}>🚀</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold" style={{ color: 'var(--accent-primary)' }}>
+                Бета-версия · Premium бесплатно
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                Вы среди первых! Все функции открыты — расскажите нам, что думаете
+              </p>
+            </div>
+            <button
+              onClick={() => { setBetaDismissed(true); localStorage.setItem('pochemu4ki_beta_dismissed', '1'); }}
+              style={{
+                width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                background: 'rgba(124,107,196,0.12)', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'var(--accent-primary)', fontSize: 16, lineHeight: 1,
+              }}
+              aria-label="Скрыть"
+            >
+              ×
+            </button>
           </div>
-        </div>
+        )}
 
         {/* Welcome card */}
         <div className="bg-purple-50 border border-purple-100 rounded-xl p-5 mb-4 shadow-sm">
@@ -168,14 +184,16 @@ export default function Dashboard() {
                             navigate(`/app/children/${child.id}/story`);
                           }
                         }}
-                        className="bg-purple-600 text-white py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-purple-700 transition"
+                        className="bg-purple-600 text-white py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-purple-700 transition"
+                        style={{ minHeight: 48 }}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z"/></svg>
                         Сказку!
                       </button>
                       <button
                         onClick={() => navigate(`/app/library?child=${child.id}`)}
-                        className="border border-purple-600 text-purple-600 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-purple-50 transition"
+                        className="border border-purple-600 text-purple-600 py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-purple-50 transition"
+                        style={{ minHeight: 48 }}
                       >
                         <BookOpen className="w-4 h-4" /> Библиотека
                       </button>
@@ -194,9 +212,9 @@ export default function Dashboard() {
               <h2 className="font-bold text-gray-900">Последние истории</h2>
               <button
                 onClick={() => navigate('/app/library')}
-                className="text-purple-600 text-sm font-medium hover:text-purple-800 transition"
+                className="text-purple-600 text-sm font-semibold hover:text-purple-800 transition flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-purple-50"
               >
-                Все →
+                Все <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
               </button>
             </div>
             <div className="space-y-2">

@@ -363,7 +363,7 @@ export default function NewStory() {
                         </div>
                       )}
                     </div>
-                    <span style={{ fontSize: 10, color: active ? '#7C3AED' : '#7A7890', fontFamily: 'Comfortaa, sans-serif', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.2, maxWidth: 60 }}>
+                    <span style={{ fontSize: 12, color: active ? '#7C3AED' : 'var(--text-secondary)', fontFamily: 'Comfortaa, sans-serif', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.2, maxWidth: 64 }}>
                       {h.name.split(' ')[0]}
                     </span>
                   </button>
@@ -380,20 +380,27 @@ export default function NewStory() {
                     style={{ minWidth: 64, cursor: 'pointer', position: 'relative' }}
                     onClick={() => { setCustomMode(false); setCustomName(''); setCustomImageUrl(''); setSelectedHero(h); }}
                   >
-                    {/* Delete button */}
+                    {/* Delete button — visual 16px but touch target 36px via padding */}
                     <button
                       onClick={e => handleDeleteSavedHero(h.name, e)}
                       style={{
-                        position: 'absolute', top: -2, right: 2,
-                        width: 16, height: 16, borderRadius: '50%',
-                        background: '#EF4444', border: '1.5px solid #fff',
+                        position: 'absolute', top: -8, right: -4,
+                        width: 36, height: 36, borderRadius: '50%',
+                        background: 'transparent', border: 'none',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         cursor: 'pointer', zIndex: 3,
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
                       }}
                       aria-label={`Удалить ${h.name}`}
                     >
-                      <X size={8} color="#fff" strokeWidth={3} />
+                      <span style={{
+                        width: 18, height: 18, borderRadius: '50%',
+                        background: '#EF4444', border: '2px solid #fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                        flexShrink: 0,
+                      }}>
+                        <X size={9} color="#fff" strokeWidth={3} />
+                      </span>
                     </button>
 
                     <div style={{
@@ -413,7 +420,7 @@ export default function NewStory() {
                         </div>
                       )}
                     </div>
-                    <span style={{ fontSize: 10, color: active ? '#7C3AED' : '#7A7890', fontFamily: 'Comfortaa, sans-serif', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.2, maxWidth: 60 }}>
+                    <span style={{ fontSize: 12, color: active ? '#7C3AED' : 'var(--text-secondary)', fontFamily: 'Comfortaa, sans-serif', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.2, maxWidth: 64 }}>
                       {h.name.split(' ')[0]}
                     </span>
                   </div>
@@ -492,17 +499,18 @@ export default function NewStory() {
                       placeholder="Вставьте ссылку на картинку"
                       style={{
                         flex: 1, border: '1.5px solid #E9D5FF', borderRadius: 14,
-                        padding: '8px 12px', fontSize: 12, color: '#4C1D95',
-                        outline: 'none', background: '#fff',
+                        padding: '11px 14px', fontSize: 14, color: '#4C1D95',
+                        outline: 'none', background: '#fff', minHeight: 44,
                       }}
                     />
                     <button
                       onClick={handleUrlApply}
                       disabled={!customUrlInput.trim()}
                       style={{
-                        padding: '8px 14px', borderRadius: 14, fontSize: 12, fontWeight: 700,
+                        minHeight: 44, padding: '0 18px', borderRadius: 14, fontSize: 14, fontWeight: 700,
                         background: customUrlInput.trim() ? '#7C3AED' : '#E9D5FF',
                         color: '#fff', border: 'none', cursor: customUrlInput.trim() ? 'pointer' : 'default',
+                        flexShrink: 0,
                       }}
                     >
                       ОК
@@ -510,7 +518,7 @@ export default function NewStory() {
                   </div>
 
                   {/* Hint: where to find images */}
-                  <p style={{ fontSize: 11, color: '#9CA3AF', margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
                     Найти картинку:{' '}
                     <a href="https://yandex.ru/images" target="_blank" rel="noopener noreferrer" style={{ color: '#7C3AED', textDecoration: 'underline' }}>Яндекс Картинки</a>
                     {' · '}
@@ -558,7 +566,7 @@ export default function NewStory() {
             }}>
               <SelectedHeroAvatar hero={selectedHero} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#7A7890' }}>Выбранный герой</p>
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>Выбранный герой</p>
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#4C1D95', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {selectedHero.name}
                 </p>
@@ -618,12 +626,13 @@ export default function NewStory() {
           <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-3">
             Популярные вопросы
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2">
             {QUICK_QUESTIONS.map((q, i) => (
               <button
                 key={i}
                 onClick={() => setQuestion(q.text)}
-                className={`text-left px-3 py-2 rounded-xl text-xs font-medium border transition ${question === q.text ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-text-secondary hover:border-purple-300'}`}
+                className={`text-left px-4 py-3 rounded-xl text-sm font-medium border transition ${question === q.text ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-text-secondary hover:border-purple-300'}`}
+                style={{ minHeight: 48 }}
               >
                 {q.emoji} {q.text}
               </button>
@@ -637,21 +646,29 @@ export default function NewStory() {
           </div>
         )}
 
-        {/* Generate button */}
-        <button
-          onClick={handleGenerate}
-          disabled={!question.trim() || isGenerating || (customMode && !customName.trim())}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90 transition shadow-lg"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z"/></svg>
-          {selectedHero ? `Создать сказку с ${selectedHero.name.split(' ')[0]}` : 'Создать сказку'}
-        </button>
-
         {child && child.toys.length > 0 && (
-          <p className="text-center text-xs text-purple-400 mt-3">
+          <p className="text-center text-xs text-purple-400 mb-4">
             В сказке появятся: {child.toys.map(t => t.nickname).join(', ')} 🧸
           </p>
         )}
+
+        {/* Generate button — sticky above bottom nav */}
+        <div style={{
+          position: 'sticky',
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 68px)',
+          zIndex: 50,
+          paddingBottom: 8,
+        }}>
+          <button
+            onClick={handleGenerate}
+            disabled={!question.trim() || isGenerating || (customMode && !customName.trim())}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90 transition"
+            style={{ boxShadow: '0 4px 24px rgba(124,58,237,0.45)' }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z"/></svg>
+            {selectedHero ? `Создать сказку с ${selectedHero.name.split(' ')[0]}` : 'Создать сказку'}
+          </button>
+        </div>
       </div>
 
     </div>

@@ -80,7 +80,7 @@ export default function StoryView() {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
-      {/* Back button — always on top */}
+      {/* Back button — top left, 44×44 */}
       <button
         onClick={() => navigate(-1)}
         style={{
@@ -88,8 +88,8 @@ export default function StoryView() {
           top: 16,
           left: 16,
           zIndex: 200,
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           borderRadius: '50%',
           background: 'rgba(76,29,149,0.75)',
           backdropFilter: 'blur(8px)',
@@ -106,111 +106,135 @@ export default function StoryView() {
         <ArrowLeft size={18} />
       </button>
 
-      {/* Share button */}
-      <div style={{ position: 'fixed', top: 16, right: 64, zIndex: 200 }}>
-        <ShareButtons storyId={story.id} storyTitle={story.title} childName={child?.name} />
-      </div>
+      {/* Bottom action bar — Save + Share + Rating + Next */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 200,
+        paddingBottom: 'env(safe-area-inset-bottom, 8px)',
+      }}>
+        {/* Action sheet (slides up) */}
+        {showActions && (
+          <>
+            {/* Backdrop */}
+            <div
+              onClick={() => setShowActions(false)}
+              style={{ position: 'fixed', inset: 0, zIndex: 198 }}
+            />
+            <div style={{
+              position: 'relative',
+              zIndex: 199,
+              background: 'rgba(76,29,149,0.95)',
+              backdropFilter: 'blur(16px)',
+              borderRadius: '24px 24px 0 0',
+              padding: '20px 20px 12px',
+              boxShadow: '0 -8px 40px rgba(76,29,149,0.35)',
+              border: '1px solid rgba(255,255,255,0.12)',
+            }}>
+              {/* Drag handle */}
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', margin: '0 auto 16px' }} />
 
-      {/* Actions toggle (top-right) */}
-      <button
-        onClick={() => setShowActions(a => !a)}
-        style={{
-          position: 'fixed',
-          top: 16,
-          right: 16,
-          zIndex: 200,
-          width: 40,
-          height: 40,
-          borderRadius: '50%',
-          background: story.isSaved ? 'rgba(232,160,191,0.85)' : 'rgba(76,29,149,0.75)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          cursor: 'pointer',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
-        }}
-        aria-label="Сохранить"
-      >
-        <Heart size={17} style={{ fill: story.isSaved ? '#fff' : 'none' }} />
-      </button>
+              {/* Stars rating */}
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontFamily: 'Comfortaa, sans-serif', marginBottom: 10, textAlign: 'center' }}>
+                Понравилась история?
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
+                {[1, 2, 3, 4, 5].map(r => {
+                  const active = r <= (hoverRating || rating);
+                  const isPopped = poppedStar !== null && r <= poppedStar;
+                  return (
+                    <button
+                      key={r}
+                      onClick={() => handleRate(r)}
+                      onMouseEnter={() => setHoverRating(r)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      style={{
+                        width: 44, height: 44,
+                        background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                        transform: isPopped ? 'scale(1.3)' : active ? 'scale(1.1)' : 'scale(1)',
+                        transition: 'transform 0.15s ease',
+                      }}
+                    >
+                      <svg width={32} height={32} viewBox="0 0 24 24" style={{ fill: active ? '#F9D56E' : 'rgba(255,255,255,0.3)', transition: 'fill 0.15s' }}>
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                      </svg>
+                    </button>
+                  );
+                })}
+              </div>
 
-      {/* Action panel */}
-      {showActions && (
-        <div style={{
-          position: 'fixed',
-          top: 64,
-          right: 16,
-          zIndex: 200,
-          background: 'rgba(76,29,149,0.92)',
-          backdropFilter: 'blur(12px)',
-          borderRadius: 16,
-          padding: '16px',
-          boxShadow: '0 8px 32px rgba(76,29,149,0.4)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          minWidth: 200,
-        }}>
-          {/* Stars rating */}
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: 'Comfortaa, sans-serif', marginBottom: 8, textAlign: 'center' }}>
-            Понравилась история?
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
-            {[1, 2, 3, 4, 5].map(r => {
-              const active = r <= (hoverRating || rating);
-              const isPopped = poppedStar !== null && r <= poppedStar;
-              return (
-                <button
-                  key={r}
-                  onClick={() => handleRate(r)}
-                  onMouseEnter={() => setHoverRating(r)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  style={{
-                    width: 36,
-                    height: 36,
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: 0,
-                    transform: isPopped ? 'scale(1.3)' : active ? 'scale(1.1)' : 'scale(1)',
-                    transition: 'transform 0.15s ease',
-                  }}
-                >
-                  <svg width={28} height={28} viewBox="0 0 24 24" style={{ fill: active ? '#F9D56E' : 'rgba(255,255,255,0.3)', transition: 'fill 0.15s' }}>
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                  </svg>
+              {/* Action buttons */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                <button onClick={handleSave} style={{ ...actionBtnStyle, background: story.isSaved ? 'rgba(232,160,191,0.4)' : 'rgba(255,255,255,0.1)', minHeight: 48 }}>
+                  <Heart size={16} style={{ fill: story.isSaved ? '#fff' : 'none' }} />
+                  {story.isSaved ? 'Сохранено' : 'Сохранить'}
                 </button>
-              );
-            })}
-          </div>
+                <button onClick={() => navigate(`/app/children/${story.childId}/story`)} style={{ ...actionBtnStyle, minHeight: 48 }}>
+                  <BookOpen size={16} />
+                  Ещё сказку
+                </button>
+                <button onClick={() => navigate('/app/library')} style={{ ...actionBtnStyle, minHeight: 48 }}>
+                  <Library size={16} />
+                  Библиотека
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
-          {/* Action buttons */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* Always-visible bar */}
+        {!showActions && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 16px 10px',
+            background: 'rgba(76,29,149,0.82)',
+            backdropFilter: 'blur(12px)',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            {/* Save */}
             <button
               onClick={handleSave}
-              style={{ ...actionBtnStyle, background: story.isSaved ? 'rgba(232,160,191,0.5)' : 'rgba(255,255,255,0.1)' }}
+              style={{
+                width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+                background: story.isSaved ? 'rgba(232,160,191,0.6)' : 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', cursor: 'pointer',
+              }}
+              aria-label={story.isSaved ? 'Убрать из сохранённых' : 'Сохранить'}
             >
-              <Heart size={14} style={{ fill: story.isSaved ? '#fff' : 'none' }} />
-              {story.isSaved ? 'Сохранено' : 'Сохранить'}
+              <Heart size={18} style={{ fill: story.isSaved ? '#fff' : 'none' }} />
             </button>
+
+            {/* Share */}
+            <ShareButtons storyId={story.id} storyTitle={story.title} childName={child?.name} />
+
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
+
+            {/* Open action sheet (rating + next story) */}
             <button
-              onClick={() => navigate(`/app/children/${story.childId}/story`)}
-              style={actionBtnStyle}
+              onClick={() => setShowActions(true)}
+              style={{
+                height: 44, borderRadius: 22, flexShrink: 0,
+                background: 'rgba(255,255,255,0.18)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                color: '#fff', cursor: 'pointer', padding: '0 16px',
+                fontFamily: 'Comfortaa, sans-serif', fontSize: 13, fontWeight: 600,
+              }}
             >
-              <BookOpen size={14} />
-              Ещё сказку
-            </button>
-            <button
-              onClick={() => navigate('/app/library')}
-              style={actionBtnStyle}
-            >
-              <Library size={14} />
-              Библиотека
+              {rating > 0
+                ? <>{'★'.repeat(rating)}</>
+                : <>⭐ Оценить</>}
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* BookReader */}
       <BookReader story={story} child={child} />
