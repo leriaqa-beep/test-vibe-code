@@ -31,7 +31,7 @@ export default function Dashboard() {
       style={{ background: 'var(--bg-primary)' }}
     >
       <DecorationLayer preset="dashboard" />
-      <div className="max-w-lg mx-auto px-4 py-5 pb-28 relative">
+      <div className="max-w-lg mx-auto px-4 py-5 relative" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)' }}>
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between mb-4">
@@ -299,30 +299,25 @@ export default function Dashboard() {
                         {limitReached ? 'Подключить Premium' : `Сказку для ${firstName}!`}
                       </button>
 
-                      {/* SECONDARY — ghost */}
-                      <button
-                        onClick={() => navigate(`/app/library?child=${child.id}`)}
-                        className="w-full flex items-center justify-center gap-1.5 rounded-xl font-medium text-sm transition hover:bg-purple-50 active:scale-[0.98]"
-                        style={{
-                          color: 'var(--accent-primary)',
-                          minHeight: 40,
-                          border: '1px solid var(--border-default)',
-                        }}
-                      >
-                        <BookOpen className="w-4 h-4" />
-                        Библиотека
-                        {childStories.length > 0 && (
-                          <span
-                            className="text-xs font-bold px-1.5 py-0.5 rounded-full ml-0.5"
-                            style={{
-                              background: 'var(--accent-primary-50)',
-                              color: 'var(--accent-primary)',
-                            }}
-                          >
-                            {childStories.length}
-                          </span>
-                        )}
-                      </button>
+                      {/* SECONDARY — text link, only if stories exist */}
+                      {childStories.length > 0 && (
+                        <button
+                          onClick={() => navigate(`/app/library?child=${child.id}`)}
+                          style={{
+                            width: '100%', background: 'none', border: 'none',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                            color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer',
+                            minHeight: 36, padding: '4px 0',
+                            WebkitTapHighlightColor: 'transparent',
+                            fontFamily: 'var(--font-body)',
+                          }}
+                        >
+                          {childStories.length} {childStories.length === 1 ? 'история' : childStories.length <= 4 ? 'истории' : 'историй'} · смотреть
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <path d="M9 18l6-6-6-6" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

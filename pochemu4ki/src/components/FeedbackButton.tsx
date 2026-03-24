@@ -1,14 +1,29 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { MessageSquare, X, Send, Star } from 'lucide-react';
 import { api } from '../api/client';
 
+/* Pages where BottomNav or a fixed bottom bar is present */
+const BOTTOM_OCCUPIED_PATHS = ['/app', '/app/library', '/app/book/create', '/app/settings', '/app/pricing'];
+
 export default function FeedbackButton() {
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  /* Raise FAB above BottomNav (60px) or StoryView bottom bar (~64px) */
+  const hasFixedBottom = BOTTOM_OCCUPIED_PATHS.includes(pathname) || pathname.startsWith('/app/story/');
+  const fabBottom = hasFixedBottom
+    ? 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
+    : 'calc(env(safe-area-inset-bottom, 0px) + 20px)';
+  /* Modal sits directly above the FAB (52px height + 8px gap = 60px offset) */
+  const modalBottom = hasFixedBottom
+    ? 'calc(env(safe-area-inset-bottom, 0px) + 144px)'
+    : 'calc(env(safe-area-inset-bottom, 0px) + 84px)';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +53,7 @@ export default function FeedbackButton() {
         aria-label="Оставить отзыв"
         style={{
           position: 'fixed',
-          bottom: 24,
+          bottom: fabBottom,
           right: 20,
           zIndex: 1000,
           width: 52,
@@ -51,8 +66,10 @@ export default function FeedbackButton() {
           justifyContent: 'center',
           border: 'none',
           cursor: 'pointer',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-        }}
+          transition: 'bottom 0.2s, transform 0.2s, box-shadow 0.2s',
+          WebkitTapHighlightColor: 'transparent',
+          touchAction: 'manipulation',
+        } as React.CSSProperties}
         onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.1)')}
         onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
       >
@@ -66,10 +83,11 @@ export default function FeedbackButton() {
         <div
           style={{
             position: 'fixed',
-            bottom: 84,
+            bottom: modalBottom,
             right: 20,
             zIndex: 999,
             width: 300,
+            maxWidth: 'calc(100vw - 40px)',
             background: 'var(--bg-surface)',
             borderRadius: 20,
             boxShadow: '0 8px 40px rgba(45,43,61,0.18)',

@@ -64,7 +64,7 @@ const VISIBLE_PATHS = ['/app', '/app/library', '/app/book/create', '/app/setting
 const NAV_ITEMS = [
   { path: '/app',              label: 'Главная',    Icon: IconHome,     exact: true  },
   { path: '/app/library',      label: 'Библиотека', Icon: IconLibrary,  exact: false },
-  { path: '/app/book/create',  label: 'Книги',      Icon: IconBook,     exact: false },
+  { path: '/app/book/create',  label: 'Сборник',    Icon: IconBook,     exact: false },
   { path: '/app/settings',     label: 'Профиль',    Icon: IconSettings, exact: false },
 ];
 
@@ -111,6 +111,7 @@ export default function BottomNav() {
               color: active ? 'var(--accent-primary)' : 'var(--text-muted)',
               transition: 'color 0.15s',
               WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation',
               position: 'relative',
             }}
           >

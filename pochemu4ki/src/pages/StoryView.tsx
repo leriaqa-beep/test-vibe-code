@@ -133,8 +133,18 @@ export default function StoryView() {
               boxShadow: '0 -8px 40px rgba(76,29,149,0.35)',
               border: '1px solid rgba(255,255,255,0.12)',
             }}>
-              {/* Drag handle */}
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', margin: '0 auto 16px' }} />
+              {/* Drag handle — tappable to close */}
+              <button
+                onClick={() => setShowActions(false)}
+                aria-label="Закрыть"
+                style={{
+                  display: 'block', margin: '0 auto 16px',
+                  padding: '8px 24px', background: 'none', border: 'none', cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation',
+                }}
+              >
+                <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.35)' }} />
+              </button>
 
               {/* Stars rating */}
               <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontFamily: 'Comfortaa, sans-serif', marginBottom: 10, textAlign: 'center' }}>

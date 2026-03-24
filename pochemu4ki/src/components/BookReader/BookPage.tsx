@@ -6,7 +6,7 @@ function HeroImageCircle({ src, accent, light, border }: { src?: string; accent:
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const loaded = !!src && loadedSrc === src;
   return (
-    <div style={{ textAlign: 'center', margin: '16px 0 20px' }}>
+    <div style={{ textAlign: 'center', margin: '24px 0 28px' }}>
       <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto' }}>
         <div style={{
           position: 'absolute', inset: 0, borderRadius: '50%',
@@ -126,10 +126,10 @@ function Paragraph({ text, isFirst, accentColor }: ParagraphProps) {
     return (
       <p style={{
         fontFamily: 'Literata, Georgia, serif',
-        fontSize: 'clamp(1rem, 2.5vw, 1.1rem)',
-        lineHeight: 1.85,
+        fontSize: 'clamp(1.0625rem, 2.5vw, 1.125rem)',
+        lineHeight: 1.9,
         color: '#2D1B0E',
-        marginBottom: '1.4em',
+        marginBottom: '1.55em',
         textAlign: 'justify',
         hyphens: 'auto',
       }}>
@@ -245,29 +245,30 @@ export default function BookPage({
       }} />
 
       {/* Main content */}
-      <div style={{ position: 'relative', zIndex: 2, padding: '36px 28px 28px', flex: 1, maxWidth: 680, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
+      <div style={{ position: 'relative', zIndex: 2, padding: '68px 22px 24px', flex: 1, maxWidth: 680, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
 
         {/* First page: title block */}
         {isFirst && (
           <div style={{ marginBottom: 28 }}>
-            {/* Mascot-explain centered, larger */}
-            <div style={{ textAlign: 'center', marginBottom: 12 }}>
+            {/* Mascot */}
+            <div style={{ textAlign: 'center', marginBottom: 10 }}>
               <img
                 src="/assets/mascot/mascot-explain.png"
                 alt=""
-                style={{ width: 80, height: 92, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(124,58,237,0.28))' }}
+                style={{ width: 72, height: 84, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(124,58,237,0.25))' }}
               />
             </div>
 
-            {/* Title centered */}
+            {/* Title */}
             <h2 style={{
               fontFamily: 'Literata, Georgia, serif',
               fontWeight: 700,
-              fontSize: 'clamp(1.3rem, 4vw, 1.8rem)',
+              fontSize: 'clamp(1.25rem, 4.5vw, 1.75rem)',
               color: theme.accent,
-              lineHeight: 1.2,
-              margin: '0 0 16px',
+              lineHeight: 1.25,
+              margin: '0 0 14px',
               textAlign: 'center',
+              letterSpacing: '-0.01em',
             }}>
               {storyTitle}
             </h2>
@@ -276,24 +277,24 @@ export default function BookPage({
             <div style={{
               background: theme.light,
               border: `1px solid ${theme.border}`,
-              borderRadius: 12,
-              padding: '10px 14px',
-              marginBottom: 20,
+              borderRadius: 14,
+              padding: '11px 14px',
+              marginBottom: 22,
               display: 'flex',
-              gap: 8,
+              gap: 10,
               alignItems: 'flex-start',
             }}>
               <img
                 src="/assets/mascot/mascot-hero.png"
                 alt=""
-                style={{ width: 36, height: 40, objectFit: 'contain', flexShrink: 0, marginTop: 2 }}
+                style={{ width: 34, height: 38, objectFit: 'contain', flexShrink: 0, marginTop: 3 }}
               />
               <p style={{
                 fontFamily: 'Literata, Georgia, serif',
-                fontSize: 13,
+                fontSize: 14,
                 color: theme.accent,
                 fontStyle: 'italic',
-                lineHeight: 1.5,
+                lineHeight: 1.65,
                 margin: 0,
               }}>
                 «{question}»
@@ -301,11 +302,36 @@ export default function BookPage({
             </div>
 
             {/* Ornamental divider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, opacity: 0.5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, opacity: 0.45 }}>
               <div style={{ flex: 1, height: 1, background: `linear-gradient(to right, transparent, ${theme.border})` }} />
-              <span style={{ fontSize: 14, color: theme.accent }}>✦</span>
+              <span style={{ fontSize: 13, color: theme.accent, letterSpacing: '0.15em' }}>✦ ✦ ✦</span>
               <div style={{ flex: 1, height: 1, background: `linear-gradient(to left, transparent, ${theme.border})` }} />
             </div>
+          </div>
+        )}
+
+        {/* Running title — shown on all pages except the first */}
+        {!isFirst && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 20, gap: 8, opacity: 0.5,
+          }}>
+            <div style={{ flex: 1, height: 1, background: `linear-gradient(to right, transparent, ${theme.border})` }} />
+            <p style={{
+              fontFamily: 'Literata, Georgia, serif',
+              fontSize: 11,
+              color: theme.accent,
+              fontStyle: 'italic',
+              margin: 0,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '55%',
+              textAlign: 'center',
+            }}>
+              {storyTitle}
+            </p>
+            <div style={{ flex: 1, height: 1, background: `linear-gradient(to left, transparent, ${theme.border})` }} />
           </div>
         )}
 
@@ -332,10 +358,10 @@ export default function BookPage({
 
         {/* Last page: illustration + mascot-joy ending */}
         {isLast && (
-          <div style={{ textAlign: 'center', marginTop: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, opacity: 0.45 }}>
+          <div style={{ textAlign: 'center', marginTop: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, opacity: 0.4 }}>
               <div style={{ flex: 1, height: 1, background: `linear-gradient(to right, transparent, ${theme.border})` }} />
-              <span style={{ fontSize: 14, color: theme.accent }}>✦</span>
+              <span style={{ fontSize: 12, color: theme.accent, letterSpacing: '0.18em' }}>✦ ✦ ✦</span>
               <div style={{ flex: 1, height: 1, background: `linear-gradient(to left, transparent, ${theme.border})` }} />
             </div>
             {/* Hero image large card — shown on last page */}
@@ -383,24 +409,25 @@ export default function BookPage({
               src="/assets/mascot/mascot-joy.png"
               alt=""
               style={{
-                width: 80,
-                height: 80,
+                width: 88,
+                height: 88,
                 objectFit: 'contain',
-                marginBottom: 12,
                 display: 'block',
-                margin: '0 auto 12px',
+                margin: '0 auto 14px',
                 animation: 'bookMascotFloat 3s ease-in-out infinite',
-                filter: 'drop-shadow(0 4px 16px rgba(124,58,237,0.3))',
+                filter: 'drop-shadow(0 6px 20px rgba(124,58,237,0.32))',
               }}
             />
             <p style={{
               fontFamily: 'Literata, Georgia, serif',
-              fontSize: 14,
+              fontSize: 15,
               color: theme.accent,
               fontStyle: 'italic',
-              opacity: 0.8,
+              opacity: 0.85,
+              letterSpacing: '0.06em',
+              margin: 0,
             }}>
-              Конец ✦
+              — ✦ Конец ✦ —
             </p>
           </div>
         )}
@@ -413,9 +440,9 @@ export default function BookPage({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '12px 28px 20px',
+        padding: `14px 22px calc(env(safe-area-inset-bottom, 0px) + 108px)`,
         borderTop: `1px solid ${theme.border}`,
-        opacity: 0.6,
+        opacity: 0.78,
         maxWidth: 680,
         width: '100%',
         marginLeft: 'auto',
@@ -424,18 +451,19 @@ export default function BookPage({
         <img
           src="/assets/mascot/mascot-calm.png"
           alt=""
-          style={{ width: 28, height: 32, objectFit: 'contain' }}
+          style={{ width: 26, height: 30, objectFit: 'contain' }}
         />
         <p style={{
           fontFamily: 'Literata, Georgia, serif',
-          fontSize: 12,
+          fontSize: 13,
           color: '#8B5E3C',
           fontStyle: 'italic',
           margin: 0,
+          letterSpacing: '0.04em',
         }}>
           {pageNumber} / {totalPages}
         </p>
-        <div style={{ width: 28 }} />
+        <div style={{ width: 26 }} />
       </div>
     </div>
   );

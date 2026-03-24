@@ -5,7 +5,7 @@ import BookCover from './BookCover';
 import BookPage from './BookPage';
 
 /* ── Parse story content into paragraph arrays per page ────────── */
-const PARAS_PER_PAGE = 4;
+const PARAS_PER_PAGE = 3;
 
 function parseStory(content: string): string[][] {
   const paragraphs = content
@@ -189,25 +189,27 @@ export default function BookReader({ story, child }: BookReaderProps) {
         />
       </div>
 
-      {/* Navigation overlay — bottom of screen */}
+      {/* Navigation overlay — raised above StoryView bottom bar */}
       <div style={{
         position: 'fixed',
-        bottom: 24,
+        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)',
         left: '50%',
         transform: 'translateX(-50%)',
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        background: 'rgba(76,29,149,0.88)',
-        backdropFilter: 'blur(10px)',
+        gap: 8,
+        background: 'rgba(45,27,80,0.90)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         borderRadius: 50,
-        padding: '8px 16px',
-        boxShadow: '0 4px 20px rgba(76,29,149,0.35)',
+        padding: '6px 10px 6px 8px',
+        boxShadow: '0 4px 24px rgba(45,27,80,0.40), 0 1px 4px rgba(0,0,0,0.2)',
+        border: '1px solid rgba(255,255,255,0.12)',
         zIndex: 100,
-      }}>
+        whiteSpace: 'nowrap',
+      } as React.CSSProperties}>
         <button
           onClick={goPrev}
-          disabled={pageIdx === 0 && false /* allow going to cover */}
           style={navBtnStyle}
           aria-label="Предыдущая страница"
         >
@@ -215,21 +217,23 @@ export default function BookReader({ story, child }: BookReaderProps) {
         </button>
 
         {/* Page dots */}
-        <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', padding: '0 4px' }}>
           {pages.map((_, i) => (
             <div
               key={i}
+              role="button"
+              tabIndex={0}
               onClick={() => {
                 const dir = i > pageIdx ? 'forward' : 'backward';
                 setPageIdx(i);
                 changePage(dir);
               }}
               style={{
-                width: i === pageIdx ? 20 : 7,
-                height: 7,
+                width: i === pageIdx ? 22 : 8,
+                height: 8,
                 borderRadius: 4,
-                background: i === pageIdx ? '#F9D56E' : 'rgba(255,255,255,0.35)',
-                transition: 'all 0.25s ease',
+                background: i === pageIdx ? '#F9D56E' : 'rgba(255,255,255,0.30)',
+                transition: 'width 0.25s cubic-bezier(.34,1.56,.64,1), background 0.2s',
                 cursor: 'pointer',
               }}
             />
@@ -239,7 +243,7 @@ export default function BookReader({ story, child }: BookReaderProps) {
         <button
           onClick={goNext}
           disabled={pageIdx === totalPages - 1}
-          style={{ ...navBtnStyle, opacity: pageIdx === totalPages - 1 ? 0.35 : 1 }}
+          style={{ ...navBtnStyle, opacity: pageIdx === totalPages - 1 ? 0.32 : 1 }}
           aria-label="Следующая страница"
         >
           <ChevronRight size={18} color="#fff" />
@@ -250,14 +254,15 @@ export default function BookReader({ story, child }: BookReaderProps) {
 }
 
 const navBtnStyle: React.CSSProperties = {
-  width: 36,
-  height: 36,
+  width: 44,
+  height: 44,
   borderRadius: '50%',
-  background: 'rgba(255,255,255,0.15)',
-  border: '1px solid rgba(255,255,255,0.2)',
+  background: 'rgba(255,255,255,0.12)',
+  border: '1px solid rgba(255,255,255,0.18)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   cursor: 'pointer',
   transition: 'background 0.15s',
+  flexShrink: 0,
 };
