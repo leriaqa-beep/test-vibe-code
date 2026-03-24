@@ -210,7 +210,7 @@ export default function BookCreate() {
                 className={`flex-1 rounded-lg text-sm font-semibold transition ${step === s ? 'bg-purple-600 text-white shadow-sm' : 'text-text-secondary hover:text-purple-600'}`}
                 style={{ minHeight: 44 }}
               >
-                {i + 1}. {s === 'select' ? 'Выбрать истории' : 'Оформление'}
+                {i + 1}. {s === 'select' ? 'Формирование' : 'Создание книги'}
               </button>
             ))}
           </div>
