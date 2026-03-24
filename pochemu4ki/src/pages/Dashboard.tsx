@@ -17,7 +17,9 @@ export default function Dashboard() {
     loadStories();
   }, []);
 
-  const [betaDismissed, setBetaDismissed] = useState(() => localStorage.getItem('pochemu4ki_beta_dismissed') === '1');
+  const [betaDismissed, setBetaDismissed] = useState(
+    () => localStorage.getItem('pochemu4ki_beta_dismissed') === '1'
+  );
 
   const storiesUsed = user?.storiesUsed || 0;
   const storiesLeft = Math.max(0, FREE_STORY_LIMIT - storiesUsed);
@@ -29,28 +31,50 @@ export default function Dashboard() {
       style={{ background: 'var(--bg-primary)' }}
     >
       <DecorationLayer preset="dashboard" />
-      <div className="max-w-lg mx-auto px-4 py-6 pb-24 relative">
+      <div className="max-w-lg mx-auto px-4 py-5 pb-28 relative">
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <img src="/assets/mascot/mascot-logo.png" alt="Почему-Ка!" className="w-8 h-8 object-contain" />
-            <span className="text-xl font-bold text-purple-700">Почему-Ка!</span>
+        {/* ── Header ─────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/assets/mascot/mascot-logo.png"
+              alt="Почему-Ка!"
+              className="w-9 h-9 object-contain flex-shrink-0"
+            />
+            <div>
+              <span
+                className="text-xl font-bold block leading-tight"
+                style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-display)' }}
+              >
+                Почему-Ка!
+              </span>
+              {user?.email && (
+                <span className="caption block" style={{ lineHeight: 1.2 }}>
+                  {user.email.split('@')[0]}
+                </span>
+              )}
+            </div>
           </div>
           {user?.isPremium && (
-            <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+            <span
+              className="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
+              style={{ background: 'var(--accent-yellow-100)', color: '#8A6A00' }}
+            >
               <Crown className="w-3 h-3" /> Премиум
             </span>
           )}
         </div>
 
-        {/* Beta banner — dismissable */}
+        {/* ── Beta banner — dismissable ───────────────────────────── */}
         {!betaDismissed && (
           <div
             className="rounded-xl px-4 py-3 mb-4 flex items-center gap-3"
-            style={{ background: 'linear-gradient(135deg,#f3f0ff,#fce7f3)', border: '1px solid #e9d5ff' }}
+            style={{
+              background: 'linear-gradient(135deg,#f3f0ff,#fce7f3)',
+              border: '1px solid var(--accent-primary-100)',
+            }}
           >
-            <span style={{ fontSize: 20 }}>🚀</span>
+            <span style={{ fontSize: 20, flexShrink: 0 }}>🚀</span>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold" style={{ color: 'var(--accent-primary)' }}>
                 Бета-версия · Premium бесплатно
@@ -60,12 +84,15 @@ export default function Dashboard() {
               </p>
             </div>
             <button
-              onClick={() => { setBetaDismissed(true); localStorage.setItem('pochemu4ki_beta_dismissed', '1'); }}
+              onClick={() => {
+                setBetaDismissed(true);
+                localStorage.setItem('pochemu4ki_beta_dismissed', '1');
+              }}
               style={{
-                width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
                 background: 'rgba(124,107,196,0.12)', border: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: 'var(--accent-primary)', fontSize: 16, lineHeight: 1,
+                cursor: 'pointer', color: 'var(--accent-primary)', fontSize: 18, lineHeight: 1,
               }}
               aria-label="Скрыть"
             >
@@ -74,128 +101,227 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Welcome card */}
-        <div className="bg-purple-50 border border-purple-100 rounded-xl p-5 mb-4 shadow-sm">
-          <h1 className="text-lg font-bold text-gray-900 mb-0.5">Добро пожаловать!</h1>
-          <p className="text-sm text-gray-600 truncate">
-            {user?.email}
-            {children.length > 0 && (
-              <> · {children.length} {children.length === 1 ? 'ребёнок' : 'детей'}</>
-            )}
-          </p>
-        </div>
-
-        {/* Stories usage bar (non-premium only) */}
-        {!user?.isPremium && (
-          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-gray-800">Бесплатные истории</span>
-              <span className={`text-sm font-bold ${limitReached ? 'text-red-600' : 'text-purple-600'}`}>
-                {storiesUsed} / {FREE_STORY_LIMIT}
-              </span>
-            </div>
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
+        {/* ── Stories usage — compact strip (non-premium, used > 0) ── */}
+        {!user?.isPremium && storiesUsed > 0 && (
+          <div
+            className="flex items-center gap-3 rounded-xl px-4 py-3 mb-4"
+            style={{
+              background: 'var(--bg-subtle)',
+              border: '1px solid var(--border-muted)',
+            }}
+          >
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="caption">Бесплатные истории</span>
+                <span
+                  className="text-xs font-bold"
+                  style={{ color: limitReached ? 'var(--color-error)' : 'var(--accent-primary)' }}
+                >
+                  {storiesUsed} / {FREE_STORY_LIMIT}
+                </span>
+              </div>
               <div
-                className={`h-full rounded-full transition-all ${limitReached ? 'bg-red-500' : 'bg-purple-600'}`}
-                style={{ width: `${Math.min((storiesUsed / FREE_STORY_LIMIT) * 100, 100)}%` }}
-              />
+                className="h-1.5 rounded-full overflow-hidden"
+                style={{ background: 'var(--border-default)' }}
+              >
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${Math.min((storiesUsed / FREE_STORY_LIMIT) * 100, 100)}%`,
+                    background: limitReached ? 'var(--color-error)' : 'var(--gradient-button)',
+                  }}
+                />
+              </div>
+              {!limitReached && (
+                <p className="caption mt-1">
+                  Осталось {storiesLeft} {storiesLeft === 1 ? 'история' : 'истории'}
+                </p>
+              )}
             </div>
-            {limitReached ? (
+            {limitReached && (
               <button
                 onClick={() => navigate('/app/pricing')}
-                className="w-full bg-purple-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-purple-700 transition flex items-center justify-center gap-1"
+                className="flex-shrink-0 flex items-center gap-1 text-xs font-bold text-white px-3 rounded-lg"
+                style={{
+                  background: 'var(--accent-primary)',
+                  minHeight: 36,
+                  boxShadow: 'var(--shadow-button)',
+                }}
               >
-                <Crown className="w-4 h-4" /> Подключить Premium
+                <Crown className="w-3 h-3" /> Upgrade
               </button>
-            ) : (
-              <p className="text-xs text-gray-500">
-                Осталось {storiesLeft} {storiesLeft === 1 ? 'история' : 'истории'} — хватит на сегодня!
-              </p>
             )}
           </div>
         )}
 
-        {/* Children section */}
-        <div className="mb-5">
+        {/* ── Children ───────────────────────────────────────────── */}
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-gray-900">Дети</h2>
+            <span className="section-label">Мои дети</span>
             <button
               onClick={() => navigate('/app/children/new')}
-              className="flex items-center gap-1.5 bg-purple-600 text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-purple-700 transition"
+              className="flex items-center gap-1.5 text-sm font-semibold px-3 rounded-xl"
+              style={{
+                background: 'var(--accent-primary)',
+                color: '#fff',
+                minHeight: 36,
+                boxShadow: '0 2px 8px rgba(124,107,196,0.25)',
+              }}
             >
               <Plus className="w-4 h-4" /> Добавить
             </button>
           </div>
 
           {children.length === 0 ? (
+            /* Empty state */
             <button
               onClick={() => navigate('/app/children/new')}
-              className="w-full bg-purple-50 border border-purple-200 rounded-xl py-10 flex flex-col items-center gap-3 text-purple-400 hover:bg-purple-100 transition"
+              className="w-full rounded-2xl py-10 flex flex-col items-center gap-3 transition"
+              style={{
+                background: 'var(--accent-primary-50)',
+                border: '1.5px dashed var(--accent-primary-200)',
+              }}
             >
-              <UserPlus className="w-10 h-10 text-purple-400" />
+              <UserPlus className="w-10 h-10" style={{ color: 'var(--accent-primary-light)' }} />
               <div className="text-center">
-                <p className="font-semibold text-gray-700">Добавьте первого ребёнка</p>
-                <p className="text-sm text-gray-500">Укажите имя, возраст и любимые игрушки</p>
+                <p className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                  Добавьте первого ребёнка
+                </p>
+                <p className="helper-text text-sm mt-0.5">Имя, возраст и любимые игрушки</p>
               </div>
             </button>
           ) : (
-            <div className="grid grid-cols-1 gap-3">
+            <div className="flex flex-col gap-3">
               {children.map(child => {
                 const childStories = stories.filter(s => s.childId === child.id);
+                const firstName = child.name.split(' ')[0];
+
                 return (
                   <div
                     key={child.id}
-                    className="bg-white rounded-xl p-4 shadow-sm border border-gray-200"
+                    className="rounded-2xl overflow-hidden"
+                    style={{
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border-default)',
+                      boxShadow: 'var(--shadow-card)',
+                    }}
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
-                          <HeroImage emoji={child.hero.emoji} size="md" />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-gray-900">{child.name}</h3>
-                          <p className="text-sm text-gray-600">{child.age} лет · {child.gender === 'girl' ? '👧' : '👦'}</p>
-                        </div>
+                    {/* Card top: hero + info */}
+                    <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+                      {/* Hero avatar — круг 60px */}
+                      <div
+                        className="flex-shrink-0 flex items-center justify-center"
+                        style={{
+                          width: 60, height: 60,
+                          borderRadius: '50%',
+                          background: 'var(--accent-primary-50)',
+                          border: '2px solid var(--accent-primary-100)',
+                        }}
+                      >
+                        <HeroImage emoji={child.hero.emoji} size="lg" />
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-400">{childStories.length} историй</p>
-                        {child.toys.length > 0 && (
-                          <p className="text-xs text-purple-600">{child.toys.length} игрушки 🧸</p>
-                        )}
+
+                      {/* Name + meta */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3
+                            className="text-lg font-bold leading-tight truncate"
+                            style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+                          >
+                            {child.name}
+                          </h3>
+                          {childStories.length > 0 && (
+                            <span
+                              className="caption flex-shrink-0 mt-0.5"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
+                              {childStories.length} ист.
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                          {child.age} лет · {child.gender === 'girl' ? '👧' : '👦'}
+                          {' · '}{child.hero.name}
+                        </p>
                       </div>
                     </div>
 
+                    {/* Toys chips — max 3 */}
                     {child.toys.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {child.toys.map(t => (
-                          <span key={t.id} className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">
+                      <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+                        {child.toys.slice(0, 3).map(t => (
+                          <span
+                            key={t.id}
+                            className="caption px-2.5 py-1 rounded-full"
+                            style={{
+                              background: 'var(--accent-primary-50)',
+                              color: 'var(--accent-primary-dark)',
+                              border: '1px solid var(--accent-primary-100)',
+                            }}
+                          >
                             🧸 {t.nickname}
                           </span>
                         ))}
+                        {child.toys.length > 3 && (
+                          <span
+                            className="caption px-2 py-1"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            +{child.toys.length - 3}
+                          </span>
+                        )}
                       </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-2">
+                    {/* Divider */}
+                    <div style={{ height: 1, background: 'var(--border-muted)', margin: '0 16px' }} />
+
+                    {/* Actions */}
+                    <div className="px-4 py-3 flex flex-col gap-2">
+                      {/* PRIMARY — full width gradient */}
                       <button
-                        onClick={() => {
-                          if (limitReached) {
-                            navigate('/app/pricing');
-                          } else {
-                            navigate(`/app/children/${child.id}/story`);
-                          }
+                        onClick={() => limitReached
+                          ? navigate('/app/pricing')
+                          : navigate(`/app/children/${child.id}/story`)
+                        }
+                        className="w-full font-bold text-base rounded-xl flex items-center justify-center gap-2 transition active:scale-[0.98]"
+                        style={{
+                          background: 'var(--gradient-button)',
+                          color: '#fff',
+                          minHeight: 52,
+                          boxShadow: 'var(--shadow-button)',
+                          letterSpacing: '0.01em',
                         }}
-                        className="bg-purple-600 text-white py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-purple-700 transition"
-                        style={{ minHeight: 48 }}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z"/></svg>
-                        Сказку!
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
+                          <path d="M12 3L14 10L21 12L14 14L12 21L10 14L3 12L10 10Z" />
+                        </svg>
+                        {limitReached ? 'Подключить Premium' : `Сказку для ${firstName}!`}
                       </button>
+
+                      {/* SECONDARY — ghost */}
                       <button
                         onClick={() => navigate(`/app/library?child=${child.id}`)}
-                        className="border border-purple-600 text-purple-600 py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-purple-50 transition"
-                        style={{ minHeight: 48 }}
+                        className="w-full flex items-center justify-center gap-1.5 rounded-xl font-medium text-sm transition hover:bg-purple-50 active:scale-[0.98]"
+                        style={{
+                          color: 'var(--accent-primary)',
+                          minHeight: 40,
+                          border: '1px solid var(--border-default)',
+                        }}
                       >
-                        <BookOpen className="w-4 h-4" /> Библиотека
+                        <BookOpen className="w-4 h-4" />
+                        Библиотека
+                        {childStories.length > 0 && (
+                          <span
+                            className="text-xs font-bold px-1.5 py-0.5 rounded-full ml-0.5"
+                            style={{
+                              background: 'var(--accent-primary-50)',
+                              color: 'var(--accent-primary)',
+                            }}
+                          >
+                            {childStories.length}
+                          </span>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -205,42 +331,101 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Recent stories */}
+        {/* ── Recent stories ─────────────────────────────────────── */}
         {stories.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-gray-900">Последние истории</h2>
+              <span className="section-label">Последние истории</span>
               <button
                 onClick={() => navigate('/app/library')}
-                className="text-purple-600 text-sm font-semibold hover:text-purple-800 transition flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-purple-50"
+                className="text-sm font-semibold flex items-center gap-1 px-2 py-1 rounded-lg transition hover:bg-purple-50"
+                style={{ color: 'var(--accent-primary)', minHeight: 36 }}
               >
-                Все <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+                Все
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
               </button>
             </div>
-            <div className="space-y-2">
+
+            <div className="flex flex-col gap-2">
               {stories.slice(0, 3).map(story => {
                 const storyChild = children.find(c => c.id === story.childId);
                 return (
                   <button
                     key={story.id}
                     onClick={() => navigate(`/app/story/${story.id}`)}
-                    className="w-full bg-white rounded-xl p-4 shadow-sm border border-gray-200 text-left flex items-center gap-3 hover:border-purple-300 transition"
+                    className="w-full text-left flex items-center gap-3 rounded-xl transition active:scale-[0.99]"
+                    style={{
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border-default)',
+                      minHeight: 68,
+                      padding: '12px 14px',
+                      boxShadow: 'var(--shadow-xs)',
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-primary-200)';
+                      (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-sm)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-default)';
+                      (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-xs)';
+                    }}
                   >
-                    <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {/* Hero thumbnail */}
+                    <div
+                      className="flex-shrink-0 flex items-center justify-center overflow-hidden"
+                      style={{
+                        width: 44, height: 44, borderRadius: 12,
+                        background: 'var(--accent-primary-50)',
+                        border: '1px solid var(--accent-primary-100)',
+                      }}
+                    >
                       {story.heroUsed?.imageUrl
-                        ? <img src={story.heroUsed.imageUrl} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                        ? <img
+                            src={story.heroUsed.imageUrl}
+                            alt=""
+                            referrerPolicy="no-referrer"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
                         : story.heroUsed?.emoji || storyChild
                           ? <HeroImage emoji={story.heroUsed?.emoji ?? storyChild!.hero.emoji} size="md" />
-                          : <BookOpen className="w-5 h-5 text-purple-400" />}
+                          : <BookOpen className="w-5 h-5" style={{ color: 'var(--accent-primary-light)' }} />
+                      }
                     </div>
+
+                    {/* Text */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm truncate">{story.title}</p>
-                      <p className="text-xs text-gray-600 truncate">{story.question}</p>
-                      {storyChild && <p className="text-xs text-purple-600">{storyChild.name}</p>}
+                      <p
+                        className="font-semibold text-sm truncate leading-tight"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        {story.title}
+                      </p>
+                      <p
+                        className="text-xs truncate mt-0.5"
+                        style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}
+                      >
+                        «{story.question}»
+                      </p>
+                      {storyChild && (
+                        <p className="caption mt-0.5" style={{ color: 'var(--accent-primary)' }}>
+                          {storyChild.name}
+                        </p>
+                      )}
                     </div>
-                    {story.rating > 0 && (
-                      <span className="text-xs text-yellow-500 flex-shrink-0">{'★'.repeat(story.rating)}</span>
-                    )}
+
+                    {/* Rating + chevron */}
+                    <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                      {story.rating > 0 && (
+                        <span className="text-xs font-medium" style={{ color: 'var(--accent-yellow-dark)' }}>
+                          {'★'.repeat(story.rating)}
+                        </span>
+                      )}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </div>
                   </button>
                 );
               })}
