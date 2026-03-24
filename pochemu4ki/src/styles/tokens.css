@@ -24,6 +24,7 @@
 
   --leading-tight:   1.2;
   --leading-snug:    1.35;
+  --leading-ui:      1.4;   /* кнопки, чипы, подписи — компактно, но читаемо */
   --leading-normal:  1.6;
   --leading-relaxed: 1.75;
   --leading-story:   1.8;   /* для текста сказок */
@@ -189,6 +190,10 @@
   --max-width-lg:      1024px;
   --max-width-xl:      1280px;
   --max-width-content: 720px;
+
+  /* ── Touch targets (iOS HIG / Material) ────────────────────── */
+  --touch-min:         44px;   /* абсолютный минимум — кнопки, чипы, поля */
+  --touch-comfortable: 48px;   /* комфортный размер — основные CTA       */
 
   /* ── Декоративные ───────────────────────────────────────────── */
   --decor-opacity:       0.18;   /* непрозрачность фоновых SVG */

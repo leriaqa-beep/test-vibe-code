@@ -315,7 +315,8 @@ img, svg { display: block; }
 
   .btn-sm {
     font-size: var(--text-sm);
-    padding: var(--space-2) var(--space-4);
+    padding: var(--space-2) var(--space-5);
+    min-height: var(--touch-min);   /* was ~32px — now 44px */
   }
 
   /* ── Cards ── */
@@ -355,9 +356,11 @@ img, svg { display: block; }
     font-weight: var(--weight-medium);
     color: var(--text-primary);
     background: var(--bg-surface);
-    border: 2px solid var(--border-default);
+    border: 1.5px solid var(--border-default);
     border-radius: var(--radius-lg);
     padding: var(--space-3) var(--space-4);
+    min-height: var(--touch-comfortable);   /* 48px — комфортный tap */
+    line-height: var(--leading-ui);
     transition: border-color var(--duration-fast) var(--ease-smooth),
                 box-shadow   var(--duration-fast) var(--ease-smooth),
                 background   var(--duration-fast) var(--ease-smooth);
@@ -371,7 +374,7 @@ img, svg { display: block; }
   .field:focus {
     border-color: var(--border-focus);
     background: var(--bg-surface);
-    box-shadow: 0 0 0 4px rgba(124, 107, 196, 0.10);
+    box-shadow: 0 0 0 3px rgba(124, 107, 196, 0.12);
   }
 
   .field-area {
@@ -400,6 +403,146 @@ img, svg { display: block; }
   .badge-pink     { background: var(--accent-pink-100);     color: var(--accent-pink-dark);    }
   .badge-yellow   { background: var(--accent-yellow-100);   color: #9A7A10;                    }
   .badge-sky      { background: var(--accent-sky-100);      color: var(--accent-sky-dark);     }
+
+  /* ── Chips / Filter pills ── */
+  /*
+   * Используется для фильтров (дети, тип, статус), quick-select и
+   * любых интерактивных тегов. min-height 40px — компромисс между
+   * визуальной лёгкостью и удобством нажатия.
+   */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-ui);
+    padding: 0 var(--space-4);
+    min-height: 40px;
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--border-default);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: border-color var(--duration-fast) var(--ease-smooth),
+                background   var(--duration-fast) var(--ease-smooth),
+                color         var(--duration-fast) var(--ease-smooth);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .chip:hover {
+    border-color: var(--accent-primary-200);
+    background: var(--accent-primary-50);
+  }
+
+  .chip-active {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary-50);
+    color: var(--accent-primary-dark);
+    font-weight: var(--weight-semibold);
+  }
+
+  /* ── Icon buttons ── */
+  /*
+   * Круглые кнопки с иконкой (back, close, share, etc.)
+   * 44px = touch minimum по iOS HIG и Material.
+   */
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--touch-min);
+    height: var(--touch-min);
+    border-radius: var(--radius-full);
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background var(--duration-fast) var(--ease-smooth),
+                transform  var(--duration-fast) var(--ease-smooth);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .icon-btn:active { transform: scale(0.94); }
+
+  /* Белый с тенью — типичная кнопка "назад" */
+  .icon-btn-surface {
+    background: var(--bg-surface);
+    color: var(--accent-primary);
+    box-shadow: var(--shadow-sm);
+  }
+  .icon-btn-surface:hover { background: var(--accent-primary-50); }
+
+  /* Прозрачная — для тулбаров поверх контента */
+  .icon-btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+  }
+  .icon-btn-ghost:hover { background: var(--bg-subtle); }
+
+  /* Акцентная — деструктивные / важные действия */
+  .icon-btn-accent {
+    background: var(--accent-primary-50);
+    color: var(--accent-primary);
+  }
+  .icon-btn-accent:hover { background: var(--accent-primary-100); }
+
+  /* ── Form labels ── */
+  .label {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+    line-height: var(--leading-ui);
+    margin-bottom: var(--space-2);
+  }
+
+  .label-muted {
+    color: var(--text-secondary);
+    font-weight: var(--weight-medium);
+  }
+
+  /* ── Helper / hint text ── */
+  /*
+   * Текст под полями ввода, пояснения, условия. 15px (text-sm),
+   * secondary цвет (5.5:1 контраст) — читаем, но не перетягивает
+   * внимание от основного текста.
+   */
+  .helper-text {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-normal);
+    color: var(--text-secondary);
+    line-height: var(--leading-normal);
+  }
+
+  /* Для мелких примечаний и метаданных — 14px, muted */
+  .caption {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-normal);
+    color: var(--text-muted);
+    line-height: var(--leading-ui);
+  }
+
+  /* ── Section label ── */
+  /*
+   * Паттерн встречается на каждом экране:
+   * "ПОПУЛЯРНЫЕ ВОПРОСЫ", "СОДЕРЖАНИЕ", "ПОСЛЕДНИЕ ИСТОРИИ" и т.д.
+   * Uppercase 13px, semibold, letter-spacing — иерархический разделитель.
+   */
+  .section-label {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-secondary);
+    letter-spacing: var(--letter-caps);
+    text-transform: uppercase;
+    line-height: var(--leading-ui);
+  }
 
   /* ── Блок "А ты знал?" ── */
   .fact-block {
@@ -578,6 +721,8 @@ img, svg { display: block; }
 
 /* ── Mobile ──────────────────────────────────────────────────── */
 @media (max-width: 640px) {
+
+  /* Story text */
   .story-text {
     font-size: 1rem;
     line-height: var(--leading-story);
@@ -588,22 +733,37 @@ img, svg { display: block; }
     padding-right: var(--space-4) !important;
   }
 
+  /* Buttons */
   .btn-lg {
     font-size: var(--text-base);
     padding: var(--space-3) var(--space-6);
   }
 
-  /* Reduce section headings on small screens */
-  .section-title {
-    font-size: var(--text-h3);
-  }
-
-  .section-subtitle {
-    font-size: var(--text-base);
-  }
-
-  /* Tighter headings */
+  /* Section headings scale down */
+  .section-title   { font-size: var(--text-h3); }
+  .section-subtitle { font-size: var(--text-base); }
   h1 { font-size: var(--text-h2); }
   h2 { font-size: var(--text-h3); }
   h3 { font-size: var(--text-2xl); }
+
+  /*
+   * На мобиле iOS игнорирует font-size < 16px в полях и
+   * авто-зумирует страницу при фокусе. Фиксируем минимум.
+   */
+  input, textarea, select {
+    font-size: max(1rem, 16px);
+  }
+
+  /* Chips не мельчают — 40px достаточно для одной руки */
+  .chip {
+    min-height: 40px;
+    font-size: var(--text-sm);
+  }
+
+  /* Страница в целом — горизонтальный padding */
+  .content-container,
+  .content-container-sm {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
 }
