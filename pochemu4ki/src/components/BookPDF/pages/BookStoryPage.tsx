@@ -67,7 +67,15 @@ export function BookStoryPage({
             {/* Hero image once — after paragraph index 1 (3rd paragraph total) */}
             {pIdx === 1 && heroUrl && (
               <View style={{ alignItems: 'center', marginTop: 15, marginBottom: 15 }}>
-                <Image src={heroUrl} style={{ width: 170, height: 170 }} />
+                <View style={{
+                  width: 180, height: 180,
+                  borderRadius: 16,
+                  backgroundColor: '#F9F5FF',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <Image src={heroUrl} style={{ width: 180, height: 180, objectFit: 'contain' }} />
+                </View>
                 <View style={{ marginTop: 10, width: 200, height: 0.5, backgroundColor: '#C9A96E', opacity: 0.4 }} />
               </View>
             )}
