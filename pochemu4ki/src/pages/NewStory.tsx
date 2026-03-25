@@ -104,7 +104,9 @@ export default function NewStory() {
   const [savedCustomHeroes, setSavedCustomHeroes] = useState<SelectedHero[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [fileLoading, setFileLoading] = useState(false);
   const customInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const heroRowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -176,6 +178,54 @@ export default function NewStory() {
       setSelectedHero({ name: name.trim(), emoji: '✨', imageUrl: customImageUrl || undefined });
     } else {
       setSelectedHero(null);
+    }
+  };
+
+  /** Compress an image File to a data URL (max 300×300, JPEG 85%) */
+  const compressImage = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const MAX = 300;
+          const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.width * ratio);
+          canvas.height = Math.round(img.height * ratio);
+          canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = ev.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileLoading(true);
+    try {
+      const dataUrl = await compressImage(file);
+      setCustomImageUrl(dataUrl);
+      setSelectedHero({ name: customName.trim() || 'Свой герой', emoji: '✨', imageUrl: dataUrl });
+      if (!customName.trim()) {
+        // Give a default name based on filename
+        const base = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+        setCustomName(base.slice(0, 30));
+        setSelectedHero({ name: base.slice(0, 30) || 'Свой герой', emoji: '✨', imageUrl: dataUrl });
+      }
+      // Clear URL input since we now have a file
+      setCustomUrlInput('');
+      setUrlImgStatus('idle');
+    } catch {
+      /* ignore compression errors */
+    } finally {
+      setFileLoading(false);
+      // Reset input so the same file can be re-selected
+      e.target.value = '';
     }
   };
 
@@ -601,8 +651,50 @@ export default function NewStory() {
                 }}
               />
 
+              {/* Hidden file input — triggered by the button below */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleFileSelect}
+              />
+
               {customName.trim().length >= 2 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+                  {/* ── Upload from gallery (primary on mobile) ── */}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={fileLoading}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      minHeight: 48, borderRadius: 14, border: '1.5px dashed var(--accent-primary-200)',
+                      background: customImageUrl && !customUrlInput ? 'var(--accent-primary-50)' : 'var(--bg-subtle)',
+                      color: 'var(--accent-primary)', fontSize: 14, fontWeight: 600,
+                      cursor: 'pointer', width: '100%',
+                      touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+                    } as React.CSSProperties}
+                  >
+                    {fileLoading ? (
+                      <>⏳ Загружаем…</>
+                    ) : customImageUrl && !customUrlInput ? (
+                      <>
+                        <img src={customImageUrl} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
+                        ✓ Фото загружено · Изменить
+                      </>
+                    ) : (
+                      <>📷 Загрузить фото из галереи</>
+                    )}
+                  </button>
+
+                  {/* Divider */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ flex: 1, height: 1, background: 'var(--border-muted)' }} />
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>или вставьте ссылку</span>
+                    <div style={{ flex: 1, height: 1, background: 'var(--border-muted)' }} />
+                  </div>
+
                   <div style={{ display: 'flex', gap: 6 }}>
                     <input
                       type="text"
@@ -680,7 +772,7 @@ export default function NewStory() {
                               Не удалось загрузить картинку
                             </p>
                             <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                              Нужна прямая ссылка на файл (.jpg, .png). Откройте картинку в полный размер, зажмите → «Скопировать адрес изображения».
+                              На телефоне: зажмите картинку → «Просмотреть изображение» → скопируйте адрес из строки браузера. Или используйте кнопку «Загрузить фото» выше.
                             </p>
                           </div>
                         )}
@@ -688,13 +780,15 @@ export default function NewStory() {
                     );
                   })()}
 
-                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>
                     Найти картинку:{' '}
                     <a href="https://yandex.ru/images" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)', textDecoration: 'underline' }}>Яндекс</a>
                     {' · '}
                     <a href="https://images.google.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)', textDecoration: 'underline' }}>Google</a>
                     {' · '}
                     <a href="https://www.pinterest.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)', textDecoration: 'underline' }}>Pinterest</a>
+                    <br />
+                    <span style={{ color: 'var(--text-muted)' }}>На телефоне: зажмите → «Просмотреть изображение» → скопируйте адрес</span>
                   </p>
 
                   <div style={{
