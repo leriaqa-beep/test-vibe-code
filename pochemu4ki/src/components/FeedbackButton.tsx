@@ -15,8 +15,10 @@ export default function FeedbackButton() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  /* Raise FAB above BottomNav (60px) or StoryView bottom bar (~64px) */
-  const hasFixedBottom = BOTTOM_OCCUPIED_PATHS.includes(pathname) || pathname.startsWith('/app/story/');
+  /* Raise FAB above BottomNav (60px), StoryView bottom bar (~64px), or ShareStory sticky CTA (~60px) */
+  const hasFixedBottom = BOTTOM_OCCUPIED_PATHS.includes(pathname)
+    || pathname.startsWith('/app/story/')
+    || pathname.startsWith('/share/');
   const fabBottom = hasFixedBottom
     ? 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
     : 'calc(env(safe-area-inset-bottom, 0px) + 20px)';
