@@ -32,6 +32,7 @@ export default function Library() {
   const [activeChildId, setActiveChildId] = useState(initialChildId);
   const [sort, setSort] = useState<SortKey>('newest');
   const [view, setView] = useState<ViewMode>('cards');
+  const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadChildren();
@@ -381,16 +382,14 @@ export default function Library() {
                   {/* Left thumbnail — always rendered for consistent rhythm */}
                   <div style={{
                     width: 72, flexShrink: 0, position: 'relative', overflow: 'hidden',
-                    background: story.imageUrl
-                      ? 'var(--bg-subtle)'
-                      : 'linear-gradient(160deg, var(--accent-primary-50) 0%, var(--bg-warm) 100%)',
+                    background: 'linear-gradient(160deg, var(--accent-primary-50) 0%, var(--bg-warm) 100%)',
                   }}>
-                    {story.imageUrl ? (
+                    {story.imageUrl && !imgErrors.has(story.id) ? (
                       <img
                         src={story.imageUrl}
                         alt=""
                         style={{ width: 72, height: '100%', minHeight: 92, objectFit: 'cover', objectPosition: 'center', display: 'block' }}
-                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        onError={() => setImgErrors(prev => new Set(prev).add(story.id))}
                       />
                     ) : (
                       <div style={{
