@@ -100,6 +100,7 @@ export default function NewStory() {
   const [customName, setCustomName] = useState('');
   const [customImageUrl, setCustomImageUrl] = useState('');
   const [customUrlInput, setCustomUrlInput] = useState('');
+  const [urlImgStatus, setUrlImgStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
   const [savedCustomHeroes, setSavedCustomHeroes] = useState<SelectedHero[]>([]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -166,12 +167,18 @@ export default function NewStory() {
     }
   };
 
+  const handleUrlInputChange = (val: string) => {
+    setCustomUrlInput(val);
+    setUrlImgStatus(val.trim() ? 'loading' : 'idle');
+  };
+
   const handleUrlApply = () => {
     const url = customUrlInput.trim();
     if (!url || !customName.trim()) return;
     setCustomImageUrl(url);
     setSelectedHero({ name: customName.trim(), emoji: '✨', imageUrl: url });
     setCustomUrlInput('');
+    setUrlImgStatus('idle');
   };
 
   const saveCustomHero = (hero: SelectedHero) => {
@@ -570,31 +577,88 @@ export default function NewStory() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <input
-                      type="url"
+                      type="text"
+                      inputMode="url"
                       value={customUrlInput}
-                      onChange={e => setCustomUrlInput(e.target.value)}
+                      onChange={e => handleUrlInputChange(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleUrlApply()}
                       placeholder="Вставьте ссылку на картинку"
                       style={{
-                        flex: 1, border: '1.5px solid var(--border-default)', borderRadius: 14,
+                        flex: 1, border: `1.5px solid ${urlImgStatus === 'error' ? 'var(--color-error)' : urlImgStatus === 'ok' ? 'var(--color-success)' : 'var(--border-default)'}`,
+                        borderRadius: 14,
                         padding: '11px 14px', fontSize: 14, color: 'var(--text-primary)',
                         outline: 'none', background: 'var(--bg-subtle)', minHeight: 44,
+                        transition: 'border-color 0.2s',
                       }}
                     />
                     <button
                       onClick={handleUrlApply}
-                      disabled={!customUrlInput.trim()}
+                      disabled={!customUrlInput.trim() || urlImgStatus === 'error'}
                       style={{
                         minHeight: 44, padding: '0 18px', borderRadius: 14, fontSize: 14, fontWeight: 700,
-                        background: customUrlInput.trim() ? 'var(--accent-primary)' : 'var(--accent-primary-100)',
+                        background: (customUrlInput.trim() && urlImgStatus !== 'error') ? 'var(--accent-primary)' : 'var(--accent-primary-100)',
                         color: '#fff', border: 'none',
-                        cursor: customUrlInput.trim() ? 'pointer' : 'default',
+                        cursor: (customUrlInput.trim() && urlImgStatus !== 'error') ? 'pointer' : 'default',
                         flexShrink: 0,
-                      }}
+                        touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+                      } as React.CSSProperties}
                     >
                       ОК
                     </button>
                   </div>
+
+                  {/* Live preview */}
+                  {customUrlInput.trim() && (() => {
+                    const previewUrl = customUrlInput.trim();
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 52 }}>
+                        {/* Hidden img to test load */}
+                        <img
+                          key={previewUrl}
+                          src={previewUrl}
+                          referrerPolicy="no-referrer"
+                          style={{ display: 'none' }}
+                          onLoad={() => setUrlImgStatus('ok')}
+                          onError={() => setUrlImgStatus('error')}
+                        />
+                        {urlImgStatus === 'loading' && (
+                          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>
+                            Проверяем ссылку…
+                          </p>
+                        )}
+                        {urlImgStatus === 'ok' && (
+                          <>
+                            <img
+                              src={previewUrl}
+                              referrerPolicy="no-referrer"
+                              style={{
+                                width: 48, height: 48, borderRadius: '50%',
+                                objectFit: 'cover', flexShrink: 0,
+                                border: '2px solid var(--color-success)',
+                              }}
+                            />
+                            <p style={{ margin: 0, fontSize: 13, color: 'var(--color-success)', fontWeight: 600 }}>
+                              ✓ Картинка загружена
+                            </p>
+                          </>
+                        )}
+                        {urlImgStatus === 'error' && (
+                          <div style={{
+                            background: 'var(--color-error-bg)',
+                            border: '1px solid var(--color-error-border)',
+                            borderRadius: 12, padding: '10px 12px',
+                          }}>
+                            <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: 'var(--color-error)' }}>
+                              Не удалось загрузить картинку
+                            </p>
+                            <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                              Нужна прямая ссылка на файл (.jpg, .png). Откройте картинку в полный размер, зажмите → «Скопировать адрес изображения».
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
                     Найти картинку:{' '}
