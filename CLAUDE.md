@@ -30,6 +30,8 @@ npm run build   # tsc -b && vite build → dist/
 npm run lint    # ESLint
 ```
 
+TypeScript check without building: `npx tsc -b --noEmit` — always run this before committing frontend changes.
+
 No test framework is configured.
 
 ## Environment Variables
@@ -58,6 +60,8 @@ VITE_API_URL=http://localhost:3001/api
 ```
 `VITE_SUPABASE_*` keys are present but unused (placeholder for future migration).
 
+**Local dev note:** Google OAuth does not work on localhost unless `http://localhost:3001/api/auth/google/callback` is added to Google Cloud Console → OAuth 2.0 → Authorized redirect URIs. Use email/password auth for local development.
+
 ## Architecture
 
 ### Backend (`backend/src/`)
@@ -80,6 +84,28 @@ VITE_API_URL=http://localhost:3001/api
 - **Protected routes:** `ProtectedRoute.tsx` guards all `/app/*` routes.
 - **Voice input:** `VoiceInput.tsx` uses Web Speech API with `ru-RU` locale.
 - **Mascot:** Always use PNG files from `pochemu4ki/public/assets/mascot/mascot-{emotion}.png`. Never render characters in SVG/CSS. Supported emotions: `joy | think | explain | surprise | calm | hero | logo`.
+- **Styling:** Mix of Tailwind v4 utility classes and inline `style={{}}` objects — both are intentional and used throughout. Don't consolidate one into the other.
+
+### Mobile Layout Patterns
+
+**BottomNav** (`components/BottomNav.tsx`) is `position: fixed, bottom: 0, height: ~60px`. It only renders on:
+```ts
+const VISIBLE_PATHS = ['/app', '/app/library', '/app/book/create', '/app/settings', '/app/pricing'];
+```
+This is an exact-match check (`pathname === path`), so `/app/story/123` does not show the nav.
+
+**Safe-area rules** — always account for both the nav height and `env(safe-area-inset-bottom)`:
+- Page scroll containers on BottomNav pages: `paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)'`
+- Fixed/sticky CTAs above the nav: `bottom: 'calc(env(safe-area-inset-bottom, 0px) + 64px)'`
+- BookReader nav pill (above StoryView bottom bar ~64px): `bottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)'`
+
+**FeedbackButton** (`components/FeedbackButton.tsx`) uses `useLocation` to detect whether it's on a BottomNav page or StoryView, and raises itself automatically:
+- On BottomNav/StoryView pages: `bottom: calc(env(safe-area-inset-bottom, 0px) + 80px)`
+- Elsewhere: `bottom: calc(env(safe-area-inset-bottom, 0px) + 20px)`
+
+**Touch targets:** All interactive elements must have `WebkitTapHighlightColor: 'transparent'` and `touchAction: 'manipulation'`. Minimum height: 44px for icons/chips, 48px for primary CTAs, 56–60px for main action buttons.
+
+**Sticky vs fixed CTAs:** Prefer `position: sticky` over `position: fixed` for CTAs within scrollable page content — avoids iOS keyboard overlap issues.
 
 ### BookPDF (`pochemu4ki/src/components/BookPDF/`)
 
@@ -111,6 +137,16 @@ BookPDF/
 
 **Page numbering:** `cover(1) + endpaper(1) + toc(0|1) + per story: divider + text = 2 pages` → story text page number = `4 + tocOffset + idx * 2`.
 
+**BookReader** (`components/BookReader/BookReader.tsx`): `PARAS_PER_PAGE = 3` controls how many paragraphs appear per reading page.
+
+### Static Assets (`pochemu4ki/public/`)
+
+- `assets/mascot/` — mascot PNG files (7 emotions)
+- `assets/fonts/` — Comfortaa, Literata, PTSans TTF files used by BookPDF
+- `heroes/` — preset hero images: `unicorn | owl | dragon | fairy | lion | cat`
+- `og-image.png` — 1200×630 Open Graph image for link previews
+- `manifest.json` + `sw.js` — PWA support
+
 ### API Endpoints
 
 | Method | Path | Auth | Description |
@@ -140,3 +176,5 @@ BookPDF/
 - **Icons:** Lucide icons have `stroke="currentColor"` and no fill. For gold stars use custom `<svg fill="#F9D56E">`, for lavender sparkles `fill="#9B8EC4"` — never Lucide Star/Sparkle on light backgrounds.
 - **Design tokens:** All CSS variables are in `pochemu4ki/src/styles/tokens.css`. Never use raw hex for page backgrounds or text — use `var(--bg-primary)`, `var(--text-primary)`, etc.
 - **No pure black/white:** `#000000` is forbidden. Page backgrounds must use `var(--bg-primary)` (#FFFBF5 warm cream), not `#FFFFFF`.
+- **Cover previews / dark gradients:** When using dark purple backgrounds, use design tokens (`var(--accent-primary)` → `var(--accent-primary-light)`) rather than hardcoded deep hex values like `#4C1D95` — keeps consistency with the warm palette.
+- **BottomNav tab labels:** Home=«Главная», Library=«Библиотека», BookCreate=«Сборник», Settings=«Профиль». "Сборник" (not "Книги") avoids confusion with the Library tab.
