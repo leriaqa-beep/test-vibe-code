@@ -603,13 +603,8 @@ export default function Landing() {
                     fontSize: 'var(--text-h2)',
                     color: p.highlight ? '#fff' : 'var(--text-primary)',
                   }}>
-                    {p.price === '0' ? 'Бесплатно' : `${p.price}₽`}
+                    {p.price === '0' ? 'Бесплатно' : 'Скоро'}
                   </span>
-                  {p.period && (
-                    <span style={{ color: p.highlight ? 'rgba(255,255,255,0.7)' : 'var(--text-muted)', fontSize: 'var(--text-base)' }}>
-                      {p.period}
-                    </span>
-                  )}
                 </div>
                 <div style={{
                   fontSize: 'var(--text-sm)',
