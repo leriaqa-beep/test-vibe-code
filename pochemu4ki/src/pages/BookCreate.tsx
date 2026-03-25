@@ -74,7 +74,7 @@ export default function BookCreate() {
     if (children.length === 0) return;
     const child = children.find(c => c.id === activeChildId);
     if (child) {
-      setBookTitle(`${child.name}: Сборник сказок`);
+      setBookTitle(`${child.name} Сборник сказок`);
       setTitleEdited(true); // lock after first fill so re-renders don't reset it
     } else if (!activeChildId) {
       setBookTitle('Сборник сказок');
