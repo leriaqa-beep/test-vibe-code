@@ -10,6 +10,7 @@ export interface User {
   createdAt: string;
   isPremium: boolean;
   storiesUsed: number;
+  referralSource?: string;
 }
 
 export interface Toy {
@@ -60,6 +61,7 @@ function mapUser(row: any): User {
     createdAt: row.created_at,
     isPremium: row.is_premium,
     storiesUsed: row.stories_used,
+    referralSource: row.referral_source || undefined,
   };
 }
 
@@ -145,6 +147,14 @@ export const store = {
       },
       { onConflict: 'id' }
     );
+    if (error) throw error;
+  },
+
+  async updateReferralSource(userId: string, source: string): Promise<void> {
+    const { error } = await supabase
+      .from('users')
+      .update({ referral_source: source })
+      .eq('id', userId);
     if (error) throw error;
   },
 

@@ -27,6 +27,7 @@ export interface AdminStats {
   avgRating: number;
   storiesByDay: { date: string; count: number }[];
   userList: AdminUserEntry[];
+  referralSources: { source: string; count: number }[];
 }
 
 export interface Toy {

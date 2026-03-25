@@ -90,4 +90,20 @@ router.post('/feedback', async (req: AuthRequest & Request, res: Response) => {
   res.json({ success: true });
 });
 
+// POST /api/users/referral-source — save how user heard about the app
+router.post('/referral-source', async (req: AuthRequest, res: Response) => {
+  const { source } = req.body as { source?: string };
+  if (!source || typeof source !== 'string' || source.trim().length === 0) {
+    res.status(400).json({ error: 'source обязателен' });
+    return;
+  }
+  const user = await store.getUserById(req.userId!);
+  if (!user) { res.status(404).json({ error: 'Пользователь не найден' }); return; }
+  // Only save if not already set
+  if (!user.referralSource) {
+    await store.updateReferralSource(req.userId!, source.trim().slice(0, 100));
+  }
+  res.json({ success: true });
+});
+
 export default router;

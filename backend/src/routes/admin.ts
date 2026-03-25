@@ -48,6 +48,11 @@ router.get('/stats', authMiddleware, adminMiddleware as never, async (_req: Auth
     supabase.from('users').select('id, email, created_at, stories_used, is_premium').order('created_at', { ascending: false }),
   ]);
 
+  const { data: referralData } = await supabase
+    .from('users')
+    .select('referral_source')
+    .not('referral_source', 'is', null);
+
   // Average rating
   const ratings = (ratingData || []).map((r: { rating: number }) => r.rating);
   const avgRating = ratings.length > 0
@@ -85,6 +90,16 @@ router.get('/stats', authMiddleware, adminMiddleware as never, async (_req: Auth
     childrenCount: childrenByUser[u.id] || 0,
   }));
 
+  // Referral source breakdown
+  const referralMap: Record<string, number> = {};
+  for (const row of (referralData || [])) {
+    const src = (row as { referral_source: string }).referral_source;
+    if (src) referralMap[src] = (referralMap[src] || 0) + 1;
+  }
+  const referralSources = Object.entries(referralMap)
+    .map(([source, count]) => ({ source, count }))
+    .sort((a, b) => b.count - a.count);
+
   res.json({
     totalUsers: totalUsers ?? 0,
     totalStories: totalStories ?? 0,
@@ -97,6 +112,7 @@ router.get('/stats', authMiddleware, adminMiddleware as never, async (_req: Auth
     avgRating,
     storiesByDay,
     userList: users,
+    referralSources,
   });
 });
 

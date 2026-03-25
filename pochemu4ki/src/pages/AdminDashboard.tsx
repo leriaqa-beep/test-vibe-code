@@ -242,6 +242,40 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Referral sources */}
+        {stats.referralSources && stats.referralSources.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
+            <div className="px-5 py-3 border-b border-purple-50">
+              <h2 className="text-sm font-bold text-text-primary">📣 Откуда узнали о приложении</h2>
+              <p className="text-xs text-text-muted mt-0.5">
+                Ответили {stats.referralSources.reduce((s, r) => s + r.count, 0)} из {stats.totalUsers} пользователей
+              </p>
+            </div>
+            <div className="px-5 py-4 flex flex-col gap-3">
+              {(() => {
+                const max = Math.max(...stats.referralSources.map(r => r.count));
+                return stats.referralSources.map(r => (
+                  <div key={r.source}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-text-primary">{r.source}</span>
+                      <span className="text-sm font-bold text-purple-600">{r.count}</span>
+                    </div>
+                    <div style={{ background: 'var(--bg-subtle)', borderRadius: 6, height: 8, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${Math.round((r.count / max) * 100)}%`,
+                        background: 'var(--gradient-button)',
+                        borderRadius: 6,
+                        transition: 'width 0.4s ease',
+                      }} />
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        )}
+
         {/* User list */}
         <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
           <div className="px-5 py-3 border-b border-purple-50 flex items-center justify-between">

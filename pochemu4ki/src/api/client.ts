@@ -80,5 +80,10 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ text, rating, page }),
       }),
+    saveReferralSource: (source: string) =>
+      request<{ success: boolean }>('/users/referral-source', {
+        method: 'POST',
+        body: JSON.stringify({ source }),
+      }),
   },
 };

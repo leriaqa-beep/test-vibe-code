@@ -6,6 +6,7 @@ import { useApp } from '../context/AppContext';
 import type { Story } from '../types';
 import { api } from '../api/client';
 import BookReader from '../components/BookReader/BookReader';
+import ReferralSourceModal, { isReferralDone } from '../components/ReferralSourceModal';
 
 export default function StoryView() {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,7 @@ export default function StoryView() {
   const [loading, setLoading] = useState(true);
   const [poppedStar, setPoppedStar] = useState<number | null>(null);
   const [showActions, setShowActions] = useState(false);
+  const [showReferral, setShowReferral] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -31,6 +33,15 @@ export default function StoryView() {
         .finally(() => setLoading(false));
     }
   }, [id, stories]);
+
+  // Show referral survey after first story if not yet answered
+  useEffect(() => {
+    if (loading || !story) return;
+    if (isReferralDone()) return;
+    // Show after short delay so user sees the story first
+    const t = setTimeout(() => setShowReferral(true), 2000);
+    return () => clearTimeout(t);
+  }, [loading, story]);
 
   const handleSave = useCallback(async () => {
     if (!story) return;
@@ -80,6 +91,7 @@ export default function StoryView() {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
+      {showReferral && <ReferralSourceModal onClose={() => setShowReferral(false)} />}
       {/* Back button — top left, 44×44 */}
       <button
         onClick={() => navigate(-1)}
