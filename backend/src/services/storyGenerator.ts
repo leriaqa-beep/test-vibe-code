@@ -221,6 +221,10 @@ async function generateFallback(input: StoryInput): Promise<GeneratedStory> {
   const category = categorize(question);
   const g = genderForm(child);
 
+  // Hero verb suffix depends on HERO gender, not child gender
+  const heroGender = detectHeroGender(hero.name);
+  const hs = heroGender === 'feminine' ? 'а' : ''; // hero suffix
+
   const shouldUseToys = child.useToys !== false && child.toys?.length > 0;
   const toy = shouldUseToys ? pickToy(child) : null;
 
@@ -228,12 +232,18 @@ async function generateFallback(input: StoryInput): Promise<GeneratedStory> {
     ? `${context}\n\n${childName} остановил${g.suffix === 'а' ? 'ась' : 'ся'} и тихо спросил${g.suffix}:`
     : `Был тихий вечер. ${childName} смотрел${g.suffix} в окно и вдруг спросил${g.suffix}:`;
 
+  // Toy: neuteral gender for verb ("лежало"/"слушало" — but toys are usually treated as masculine/feminine by name)
+  // Use toy name ending to guess toy gender for verbs
+  const toyLast = toy ? toy.nickname[toy.nickname.length - 1].toLowerCase() : '';
+  const toySuffix = (toyLast === 'а' || toyLast === 'я') ? 'а' : '';
+  const toyDative = toy ? declineName(toy.nickname, toySuffix === 'а' ? 'female' : 'male', 'предложный') : '';
+
   const toyMoment = toy
-    ? `\n\n${toy.nickname} лежал${g.suffix === 'а' ? '' : ''} рядом и, кажется, тоже слушал${g.suffix === 'а' ? 'а' : ''} — не моргая.`
+    ? `\n\n${toy.nickname} лежал${toySuffix} рядом и, кажется, тоже слушал${toySuffix} — не моргая.`
     : '';
 
   const closing = toy
-    ? `${childName} ${g.smiled} и прижал${g.suffix === 'а' ? 'ась' : 'ся'} к ${toy.nickname}. За окном мигнула звезда — будто тоже услышала.`
+    ? `${childName} ${g.smiled} и прижал${g.suffix === 'а' ? 'ась' : 'ся'} к ${toyDative}. За окном мигнула звезда — будто тоже услышала.`
     : `${childName} ${g.smiled} и посмотрел${g.suffix} на небо. Казалось, оно стало чуть ближе.`;
 
   const imageUrl = generateStoryImage(storyId, category);
@@ -243,11 +253,11 @@ async function generateFallback(input: StoryInput): Promise<GeneratedStory> {
 
 — ${question}
 
-${hero.name} оказался рядом — он всегда появлялся именно тогда, когда нужен.${toyMoment}
+${hero.name} оказал${hs === 'а' ? 'ась' : 'ся'} рядом — он всегда появлял${hs === 'а' ? 'ась' : 'ся'} именно тогда, когда нужен.${toyMoment}
 
-— Знаешь, — тихо сказал${g.suffix} ${hero.name}, — это один из самых важных вопросов на свете.
+— Знаешь, — тихо сказал${hs} ${hero.name}, — это один из самых важных вопросов на свете.
 
-И ${hero.name} рассказал${g.suffix} — не торопясь, мягко, как будто раскрывал${g.suffix} секрет.
+И ${hero.name} рассказал${hs} — не торопясь, мягко, как будто раскрывал${hs} секрет.
 
 ${childName} ${g.listened} и не перебивал${g.suffix}. Слова складывались в картинки, картинки — в тепло внутри.
 
