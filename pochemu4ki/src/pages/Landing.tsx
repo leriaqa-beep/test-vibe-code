@@ -603,7 +603,7 @@ export default function Landing() {
                     fontSize: 'var(--text-h2)',
                     color: p.highlight ? '#fff' : 'var(--text-primary)',
                   }}>
-                    {p.price === '0' ? 'Бесплатно' : 'Скоро'}
+                    {p.price === '0' ? 'Бесплатно' : 'Цена скоро'}
                   </span>
                 </div>
                 <div style={{
