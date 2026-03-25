@@ -21,6 +21,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       content: story.content,
       imageUrl: story.imageUrl,
       createdAt: story.createdAt,
+      heroUsed: story.heroUsed || null,
     },
     child: child
       ? { name: child.name, age: child.age, gender: child.gender, hero: child.hero }

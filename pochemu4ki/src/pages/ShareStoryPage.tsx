@@ -32,6 +32,7 @@ export default function ShareStoryPage() {
           rating: 0,
           readCount: 0,
           createdAt: data.story.createdAt,
+          heroUsed: data.story.heroUsed || undefined,
         });
 
         if (data.child) {
@@ -97,11 +98,11 @@ export default function ShareStoryPage() {
   }
 
   return (
-    <div>
+    <div style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)' }}>
       {/* BookReader — read-only, no action buttons */}
       <BookReader story={story} child={child ?? undefined} />
 
-      {/* CTA banner for new visitors */}
+      {/* Full CTA banner at bottom for new visitors */}
       <div style={{
         background: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)',
         padding: '32px 20px 40px',
@@ -149,6 +150,54 @@ export default function ShareStoryPage() {
           }}
         >
           Попробовать бесплатно →
+        </Link>
+      </div>
+
+      {/* Sticky CTA — always visible at bottom while reading */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        background: 'rgba(76, 29, 149, 0.97)',
+        backdropFilter: 'blur(8px)',
+        borderTop: '1px solid rgba(196, 181, 253, 0.2)',
+        padding: 'calc(env(safe-area-inset-bottom, 0px) + 10px) 16px 10px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+      }}>
+        <p style={{
+          color: 'rgba(255,255,255,0.85)',
+          fontFamily: 'Comfortaa, sans-serif',
+          fontSize: 12,
+          lineHeight: 1.4,
+          margin: 0,
+          flex: 1,
+        }}>
+          Создайте сказку<br />для своего ребёнка
+        </p>
+        <Link
+          to="/auth"
+          style={{
+            display: 'inline-block',
+            background: '#F9D56E',
+            color: '#2D1B0E',
+            fontFamily: 'Comfortaa, sans-serif',
+            fontWeight: 700,
+            fontSize: 13,
+            padding: '10px 18px',
+            borderRadius: 50,
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 4px 16px rgba(249,213,110,0.35)',
+            WebkitTapHighlightColor: 'transparent',
+            touchAction: 'manipulation',
+          }}
+        >
+          Попробовать →
         </Link>
       </div>
     </div>
