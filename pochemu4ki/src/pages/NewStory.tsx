@@ -707,61 +707,12 @@ export default function NewStory() {
           </div>
         </div>
 
-        {/* ── 3. Quick questions — secondary suggestions ──────── */}
-        <div style={{ marginBottom: 10 }}>
-          <p style={{
-            margin: '0 0 7px',
-            fontSize: 'var(--text-xs)',
-            fontWeight: 'var(--weight-semibold)',
-            color: 'var(--text-muted)',
-            letterSpacing: 'var(--letter-caps)',
-            textTransform: 'uppercase',
-          }}>
-            или выберите тему:
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
-            {QUICK_QUESTIONS.map((q, i) => {
-              const active = question === q.text;
-              return (
-                <button
-                  key={i}
-                  onClick={() => setQuestion(active ? '' : q.text)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 5,
-                    padding: '8px 10px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: active
-                      ? '1.5px solid var(--accent-primary)'
-                      : '1px solid var(--border-muted)',
-                    background: active
-                      ? 'var(--accent-primary-50)'
-                      : 'var(--bg-subtle)',
-                    color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                    fontSize: 13,
-                    fontWeight: active ? 600 : 400,
-                    fontFamily: 'var(--font-body)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    minHeight: 44,
-                    transition: 'all 0.15s',
-                    lineHeight: 1.35,
-                    boxShadow: active ? 'var(--shadow-xs)' : 'none',
-                  }}
-                >
-                  <span style={{ flexShrink: 0, fontSize: 14 }}>{q.emoji}</span>
-                  <span style={{ overflow: 'hidden' }}>{q.text}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── 4. Context — collapsible ────────────────────────── */}
+        {/* ── 3. Context — collapsible ────────────────────────── */}
         <div style={{
           background: 'var(--bg-surface)',
           borderRadius: 'var(--radius-xl)',
           border: `1px solid ${context.trim() ? 'var(--color-success-border)' : 'var(--border-default)'}`,
-          marginBottom: 12,
+          marginBottom: 10,
           overflow: 'hidden',
           transition: 'border-color 0.2s',
         }}>
@@ -842,6 +793,55 @@ export default function NewStory() {
               )}
             </div>
           )}
+        </div>
+
+        {/* ── 4. Quick questions — secondary suggestions ──────── */}
+        <div style={{ marginBottom: 10 }}>
+          <p style={{
+            margin: '0 0 7px',
+            fontSize: 'var(--text-xs)',
+            fontWeight: 'var(--weight-semibold)',
+            color: 'var(--text-muted)',
+            letterSpacing: 'var(--letter-caps)',
+            textTransform: 'uppercase',
+          }}>
+            или выберите тему:
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
+            {QUICK_QUESTIONS.map((q, i) => {
+              const active = question === q.text;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setQuestion(active ? '' : q.text)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    padding: '8px 10px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: active
+                      ? '1.5px solid var(--accent-primary)'
+                      : '1px solid var(--border-muted)',
+                    background: active
+                      ? 'var(--accent-primary-50)'
+                      : 'var(--bg-subtle)',
+                    color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                    fontSize: 13,
+                    fontWeight: active ? 600 : 400,
+                    fontFamily: 'var(--font-body)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    minHeight: 44,
+                    transition: 'all 0.15s',
+                    lineHeight: 1.35,
+                    boxShadow: active ? 'var(--shadow-xs)' : 'none',
+                  }}
+                >
+                  <span style={{ flexShrink: 0, fontSize: 14 }}>{q.emoji}</span>
+                  <span style={{ overflow: 'hidden' }}>{q.text}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Toys note */}
