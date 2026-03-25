@@ -1,6 +1,6 @@
 # Почему-Ка! — Аналитический документ проекта
 
-> Дата анализа: 9 марта 2026
+> Дата анализа: 25 марта 2026
 > Версия: актуальная (ветка `main`, Render deployment)
 
 ---
@@ -40,13 +40,15 @@
 | Сборщик | Vite | ^7.3.1 |
 | Язык | TypeScript | ~5.9.3 |
 | Роутер | React Router v7 | ^7.13.0 |
-| Стили | Tailwind CSS v4 + CSS токены | ^4.1.18 |
+| Стили | Tailwind CSS v4 + CSS токены + инлайн-стили | ^4.1.18 |
 | PDF генерация | @react-pdf/renderer | ^4.3.2 |
 | Иконки | Lucide React | ^0.574.0 |
 | Голосовой ввод | Web Speech API (ru-RU) | native |
 | State Management | React Context (2 контекста) | — |
 | PWA | manifest.json + InstallPrompt | — |
 | Порты (dev) | 5173 / 5174 / 5175 | — |
+
+> **Примечание по стилям:** Tailwind v4 (utility-классы) + CSS-токены (`var(--*)`) + инлайн-стили используются вперемежку — это намеренно. Предпочтительны инлайн-стили для сложных динамических значений (safe-area calc, анимации), Tailwind — для простых layout-классов.
 
 ---
 
@@ -75,6 +77,7 @@ test-vibe-code/
 │           └── logger.ts          # HTTP и AI логи
 │
 ├── pochemu4ki/                    # Frontend
+│   ├── index.html                 # OG/Twitter meta теги, PWA meta
 │   └── src/
 │       ├── context/
 │       │   ├── AuthContext.tsx    # JWT + user state + localStorage
@@ -104,7 +107,9 @@ test-vibe-code/
 │       │   ├── WaveDivider.tsx
 │       │   ├── Decorations.tsx
 │       │   ├── HeroImage.tsx
-│       │   ├── FeedbackButton.tsx
+│       │   ├── BottomNav.tsx      # Нижняя навигация (5 вкладок)
+│       │   ├── FeedbackButton.tsx # Плавающий виджет обратной связи (маршрутно-адаптивный)
+│       │   ├── ShareButtons.tsx   # Кнопки шаринга
 │       │   └── InstallPrompt.tsx
 │       ├── styles/
 │       │   └── tokens.css         # Все CSS-переменные дизайна
@@ -132,7 +137,7 @@ test-vibe-code/
 | `SESSION_SECRET` | Шифрование сессий OAuth | Нет (fallback тот же) |
 | `GROQ_API_KEY` | Groq LLM для генерации сказок | **Да** |
 | `GEMINI_API_KEY` | Google Gemini для AI-изображений | Нет (fallback: Unsplash URL) |
-| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | Нет (OAuth отключён) |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | Нет (OAuth отключён в localhost) |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth Secret | Нет |
 | `GOOGLE_CALLBACK_URL` | URL коллбэка OAuth | Нет |
 | `FRONTEND_URL` | Origin фронтенда для CORS и редиректов | **Да** (prod) |
@@ -151,6 +156,8 @@ test-vibe-code/
 | `VITE_API_URL` | URL бэкенда (`http://localhost:3001/api` для dev) |
 | `VITE_SUPABASE_URL` | Не используется (плейсхолдер) |
 | `VITE_SUPABASE_ANON_KEY` | Не используется (плейсхолдер) |
+
+> **Локальная разработка:** Google OAuth не работает на localhost — URL коллбэка зарегистрирован только для prod домена в Google Cloud Console. Используйте email/password для local dev.
 
 ---
 
@@ -291,7 +298,7 @@ POST /api/stories/generate
   ├─ Build User Prompt:
   │   - Имя, возраст, пол ребёнка
   │   - Вопрос + контекст
-  │   - Список игрушек (если useToys=true)
+  │   - Список игрушек (если useToys=true, появление обязательно)
   │
   ├─ Groq API Call (llama-3.3-70b-versatile):
   │   - temperature: 0.9
@@ -360,8 +367,26 @@ POST /api/stories/generate
 | HeroImage | HeroImage.tsx | Иллюстрация героя персонажа |
 | WaveDivider | WaveDivider.tsx | SVG волны (gentle, deep, cloud, tilt) |
 | Decorations | Decorations.tsx | SVG фоновые декорации (hero, auth, dashboard, story, minimal) |
-| FeedbackButton | FeedbackButton.tsx | Плавающий виджет обратной связи |
+| BottomNav | BottomNav.tsx | Нижняя навигация (5 вкладок, только на `/app`, `/app/library`, `/app/book/create`, `/app/settings`, `/app/pricing`) |
+| FeedbackButton | FeedbackButton.tsx | FAB обратной связи — позиция адаптируется к маршруту (поднимается на 80px на страницах с BottomNav или фиксированным баром) |
+| ShareButtons | ShareButtons.tsx | Кнопки шаринга ссылки на сказку |
 | InstallPrompt | InstallPrompt.tsx | PWA Install prompt |
+
+### BottomNav — вкладки
+
+| Вкладка | Иконка | Маршрут |
+|---------|--------|---------|
+| Главная | Home | `/app` |
+| Библиотека | Library | `/app/library` |
+| Сборник | BookOpen | `/app/book/create` |
+| Настройки | Settings | `/app/settings` |
+| Тариф | Crown | `/app/pricing` |
+
+### FeedbackButton — маршрутно-адаптивное позиционирование
+
+`FeedbackButton` использует `useLocation` для определения текущего маршрута:
+- На страницах с `BottomNav` или фиксированным баром (`/app`, `/app/library`, `/app/book/create`, `/app/settings`, `/app/pricing`, `/app/story/*`): FAB поднимается до `calc(env(safe-area-inset-bottom, 0px) + 80px)`
+- На остальных страницах: `calc(env(safe-area-inset-bottom, 0px) + 20px)`
 
 ### BookReader (интерактивный ридер)
 
@@ -370,6 +395,8 @@ POST /api/stories/generate
 | BookReader.tsx | Контейнер: навигация по страницам, анимации slide, свайп, клавиатура |
 | BookPage.tsx | Одна страница ридера: текст + декоративная рамка |
 | BookCover.tsx | Обложка ридера |
+
+**Константа:** `PARAS_PER_PAGE = 3` — количество абзацев на одну страницу ридера.
 
 ### BookPDF (экспорт в PDF)
 
@@ -399,7 +426,7 @@ POST /api/stories/generate
 
 | Страница | Дизайн |
 |----------|-------|
-| 1. Обложка | Тёмно-фиолетовый `#4C1D95`, золотые звёзды/рамки, mascot-logo, имя ребёнка в родительном падеже (52pt Comfortaa) |
+| 1. Обложка | Фиолетовый градиент `var(--accent-primary)`, золотые звёзды/рамки, mascot-logo, имя ребёнка в родительном падеже (52pt Comfortaa) |
 | 2. Форзац | Лавандовый `#F3EEFF`, сетка 8×7 звёзд SVG (quadratic bezier ✦), дата |
 | 3. Оглавление *(если сказок > 1)* | Пергамент, точки-лидеры, Literata 14pt, mascot-think, номера страниц |
 | 4a. Разделитель главы | Пергамент `#FDF6E3`, СКАЗКА N, mascot-surprise 142pt, заголовок 24pt, SVG-завитки с бриллиантом |
@@ -423,6 +450,14 @@ POST /api/stories/generate
 - Comfortaa Regular/Bold (`/assets/fonts/Comfortaa-*.ttf`)
 - Literata Regular/Bold/Italic (`/assets/fonts/Literata-*.ttf`)
 - PTSans Regular/Bold/Italic (`/assets/fonts/PTSans-*.ttf`)
+
+### BookCreate (страница `/app/book/create`)
+
+Двухшаговый flow:
+1. **Формирование** (`step='select'`) — выбор историй для книги
+2. **Создание книги** (`step='preview'`) — превью обложки и скачивание PDF
+
+Предпросмотр обложки использует дизайн-токены (`var(--accent-primary)` → `var(--accent-primary-light)` → `#C4B5FD`), а не хардкоженный `#4C1D95`. Кнопка "← Изменить выбор историй" всегда видна над блоком ошибок PDF.
 
 ---
 
@@ -496,6 +531,11 @@ POST /api/stories/generate
 - Comfortaa-Regular.ttf, Comfortaa-Bold.ttf
 - Literata-Regular.ttf, Literata-Bold.ttf, Literata-Italic.ttf
 - PTSans-Regular.ttf, PTSans-Bold.ttf, PTSans-Italic.ttf
+
+### Open Graph (`public/`)
+| Файл | Назначение |
+|------|-----------|
+| og-image.png | 1200×630px OG-изображение для Telegram/VK/WhatsApp ссылок |
 
 ---
 
@@ -579,6 +619,8 @@ api.users.activatePremium() | subscriptionStatus() | deleteAccount() | sendFeedb
 → AuthCallback.tsx → AuthContext.loginWithToken()
 → Редирект на /app
 ```
+
+> **Ограничение:** Google OAuth работает только в production (Render). На localhost callback URL не зарегистрирован в Google Cloud Console → используйте email/password.
 
 ### Protected Routes
 
@@ -669,6 +711,8 @@ cd backend && npm run dev        # ts-node-dev, порт 3001
 cd pochemu4ki && npm run dev     # Vite, порт 5173/5174
 ```
 
+> **Важно:** перед коммитом запускать `npx tsc -b --noEmit` в `pochemu4ki/` для проверки TypeScript ошибок.
+
 ### Production сборка
 
 ```bash
@@ -688,28 +732,63 @@ cd pochemu4ki && npm run build   # tsc -b && vite build → dist/
 
 ---
 
-## 20. ТЕКУЩЕЕ СОСТОЯНИЕ / ИЗВЕСТНЫЕ ОСОБЕННОСТИ
+## 20. MOBILE LAYOUT PATTERNS
+
+### Safe Area + Bottom Padding
+
+Все страницы с `BottomNav` используют паттерн:
+```tsx
+paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)'
+```
+Страница сказки (`StoryView`) — `calc(env(safe-area-inset-bottom, 0px) + 60px)` для action bar.
+
+**Не использовать** статические Tailwind-классы `pb-24`/`pb-28` — они не учитывают `env(safe-area-inset-bottom)` у телефонов с вырезом.
+
+### Touch Targets
+
+Все интерактивные элементы: `min-height: 48px`, `touchAction: 'manipulation'`, `WebkitTapHighlightColor: 'transparent'`.
+
+### Sticky vs Fixed CTA
+
+- Используй `position: sticky` для inline CTA-кнопок внутри скролла — не конфликтует с iOS-клавиатурой.
+- `position: fixed` — только для постоянных баров (BottomNav, action bar в StoryView).
+
+### BottomNav visibility
+
+`VISIBLE_PATHS` — точное совпадение маршрута (exact-match, без `startsWith`):
+```typescript
+const VISIBLE_PATHS = ['/app', '/app/library', '/app/book/create', '/app/settings', '/app/pricing'];
+```
+
+---
+
+## 21. ТЕКУЩЕЕ СОСТОЯНИЕ / ИЗВЕСТНЫЕ ОСОБЕННОСТИ
 
 ### Что реализовано
 - ✅ Полная аутентификация (email + Google OAuth + сброс пароля)
 - ✅ CRUD профилей детей с игрушками, интересами, героями
 - ✅ AI-генерация сказок через Groq (`llama-3.3-70b-versatile`)
 - ✅ Опциональная генерация изображений через Gemini + Supabase Storage
-- ✅ Библиотека сказок с поиском, сортировкой, фильтрацией (без thumbnail-изображений)
-- ✅ PDF экспорт книги сказок — полный арт-директорский редизайн (9 марта 2026):
-  - Форзац: лавандовый фон, SVG-сетка звёзд ✦
-  - Оглавление: точки-лидеры, показывается только при 2+ сказках
-  - Разделитель главы: пергамент, mascot-surprise 50мм, SVG-завитки
-  - Страница сказки: объединённый блок вопроса + текст, адаптивный фон по герою, угловые ромбы, буквица 42pt, `ParaSeparator` каждые 3 абзаца
-  - Задняя обложка: зеркало передней с mascot-calm и whykids.app
-- ✅ BookPDF рефакторинг (9 марта 2026): монолит ~570 строк → 10 модульных файлов (`constants`, `decorations/`, `pages/`)
-- ✅ Интерактивный книжный ридер (BookReader) со свайп/клавиатурой (без изображений в сказках)
+- ✅ Библиотека сказок с поиском, сортировкой, фильтрацией
+- ✅ PDF экспорт книги сказок — полный арт-директорский редизайн (9 марта 2026)
+- ✅ BookPDF рефакторинг: монолит → 10 модульных файлов
+- ✅ Интерактивный книжный ридер (BookReader) со свайп/клавиатурой
 - ✅ Голосовой ввод вопросов (Web Speech API, ru-RU)
 - ✅ Freemium: лимит 3 сказки, страница подписки
 - ✅ Admin-панель с аналитикой
 - ✅ PWA (manifest, InstallPrompt)
 - ✅ Персонализированные локальные TTF-шрифты (Comfortaa, Literata)
 - ✅ Склонение русских имён по падежам
+- ✅ Open Graph + Twitter Card мета-теги для красивых превью ссылок (og-image.png)
+- ✅ Mobile UX polish (Steps 4–12, 25 марта 2026):
+  - BottomNav с корректными safe-area отступами и touch targets
+  - FeedbackButton с маршрутно-адаптивным позиционированием
+  - Dismissible filter chip в Library при активном фильтре по ребёнку
+  - StoryView drag handle — тапабельный для закрытия action sheet
+  - Dashboard secondary CTA → компактная текст-ссылка (убраны конкурирующие кнопки)
+  - Все страницы: `calc(env(safe-area-inset-bottom) + 84px)` вместо статических Tailwind pb-*
+  - BookCreate cover preview — дизайн-токены вместо хардкоженного `#4C1D95`
+  - BookCreate error state — кнопка "назад" всегда видна над ошибкой PDF
 
 ### Изменения (9 марта 2026)
 
@@ -720,6 +799,23 @@ cd pochemu4ki && npm run build   # tsc -b && vite build → dist/
 | PDF: нумерация ToC исправлена | Формула `4 + idx * 3` → `4 + tocOffset + idx * 2` |
 | BookPDF → модули | `BookPDF.tsx` (~570 строк) разбит на 10 файлов в `decorations/` и `pages/` |
 
+### Изменения (25 марта 2026)
+
+| Изменение | Детали |
+|-----------|-------|
+| Mobile UX Steps 4–12 | Полный mobile polish pass всех страниц и компонентов |
+| Safe area padding | Все страницы с BottomNav: `calc(env(safe-area-inset-bottom, 0px) + 84px)` |
+| FeedbackButton routing | `useLocation` + динамическая позиция FAB чтобы не перекрывал навигацию |
+| Library child filter | Dismissible chip в заголовке при активном фильтре `?child=id` |
+| StoryView drag handle | Drag handle завёрнут в `<button>` для корректного тапа на мобиле |
+| BottomNav touch | `touchAction: 'manipulation'` + `WebkitTapHighlightColor: 'transparent'` на всех кнопках |
+| BookCreate labels | Вкладки: "Выбрать истории" → "Формирование", "Оформление" → "Создание книги" |
+| BookCreate cover | Превью обложки: `var(--accent-primary)` токены вместо хардкоженного `#4C1D95` |
+| BookCreate error UX | Кнопка "← Изменить выбор" перемещена выше блока ошибки — всегда видна |
+| Dashboard CTA | Secondary "Библиотека" кнопка → компактная текст-ссылка со счётчиком историй |
+| Open Graph | OG + Twitter Card мета-теги в `index.html`, `og-image.png` (1200×630) в `public/` |
+| BottomNav label | "Книги" → "Сборник" |
+
 ### Технический долг / Особенности
 - ⚠️ `@supabase/supabase-js` установлен во frontend, но не используется (плейсхолдер для будущей миграции)
 - ⚠️ Нет тестов (ни unit, ни e2e) — рекомендуется Vitest/Playwright
@@ -727,7 +823,8 @@ cd pochemu4ki && npm run build   # tsc -b && vite build → dist/
 - ⚠️ PDF не поддерживает автоматический перенос страниц для длинных сказок (react-pdf auto-break)
 - ⚠️ `data/db.json` — fallback для local dev; в prod данные в Supabase
 - ⚠️ `image_url` хранится в БД (`stories`), но больше не отображается в UI и PDF
+- ⚠️ Google OAuth недоступен на localhost — только email/password для локальной разработки
 
 ---
 
-*Документ обновлён: 9 марта 2026*
+*Документ обновлён: 25 марта 2026*
