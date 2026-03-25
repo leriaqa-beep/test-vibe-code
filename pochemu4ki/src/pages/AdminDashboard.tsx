@@ -47,15 +47,17 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user && !user.isAdmin) {
-      navigate('/app');
-      return;
-    }
     api.admin.stats()
       .then(setStats)
-      .catch(e => setError(e.message || 'Ошибка загрузки'))
+      .catch(e => {
+        if (e.status === 403) {
+          navigate('/app');
+        } else {
+          setError(e.message || 'Ошибка загрузки');
+        }
+      })
       .finally(() => setLoading(false));
-  }, [user, navigate]);
+  }, [navigate]);
 
   if (loading) {
     return (
