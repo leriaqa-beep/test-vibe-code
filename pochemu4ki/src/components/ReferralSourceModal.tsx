@@ -2,14 +2,12 @@ import { useState } from 'react';
 import { api } from '../api/client';
 
 const SOURCES = [
-  { id: 'instagram',  label: 'Инстаграм',              emoji: '📸' },
-  { id: 'vk',        label: 'ВКонтакте',               emoji: '💙' },
-  { id: 'telegram',  label: 'Телеграм',                emoji: '✈️' },
-  { id: 'tiktok',    label: 'TikTok',                  emoji: '🎵' },
-  { id: 'youtube',   label: 'YouTube',                 emoji: '▶️' },
-  { id: 'friends',   label: 'От друзей / знакомых',    emoji: '🤝' },
-  { id: 'search',    label: 'Поисковик (Google, Яндекс)', emoji: '🔍' },
-  { id: 'other',     label: 'Другое',                  emoji: '💬' },
+  { id: 'instagram',   label: 'Инстаграм',       emoji: '📸' },
+  { id: 'whatsapp',    label: 'Вотсап',           emoji: '💬' },
+  { id: 'invite',      label: 'По приглашению',   emoji: '✉️' },
+  { id: 'recommend',   label: 'Рекомендация',     emoji: '🤝' },
+  { id: 'afisha',      label: 'Афиша',            emoji: '📋' },
+  { id: 'other',       label: 'Другое',           emoji: '💡' },
 ];
 
 const LS_KEY = 'referralSourceDone';
