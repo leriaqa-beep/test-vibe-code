@@ -149,13 +149,8 @@ export default function Pricing() {
                   </div>
                 </div>
                 <div className="text-right">
-                  {plan.price === 0 ? (
+                  {plan.price === 0 && (
                     <span className="text-2xl font-bold text-text-primary">Бесплатно</span>
-                  ) : (
-                    <>
-                      <span className="text-3xl font-bold text-text-primary">{plan.price}₽</span>
-                      <span className="text-text-secondary">{plan.period}</span>
-                    </>
                   )}
                 </div>
               </div>
