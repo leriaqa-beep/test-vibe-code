@@ -9,7 +9,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 // Admin-only middleware
 async function adminMiddleware(req: AuthRequest, res: Response, next: () => void) {
   const user = await store.getUserById(req.userId!);
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!user || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
     res.status(403).json({ error: 'Доступ запрещён' });
     return;
   }
