@@ -132,16 +132,25 @@ export default function ChildSetup() {
             <p className="text-sm text-gray-500 mb-6">Это поможет создавать сказки по возрасту</p>
 
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Возраст: <span className="text-purple-600">{age} лет</span>
-              </label>
-              <input
-                type="range" min={3} max={8} value={age}
-                onChange={e => setAge(Number(e.target.value))}
-                className="w-full accent-purple-600"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>3 года</span><span>8 лет</span>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Возраст</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[3, 4, 5, 6, 7, 8].map(a => (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => setAge(a)}
+                    style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                    className={`py-4 rounded-2xl border-2 font-bold text-lg transition flex flex-col items-center gap-0.5
+                      ${age === a
+                        ? 'border-purple-600 bg-purple-50 text-purple-700'
+                        : 'border-gray-200 bg-white text-gray-700'}`}
+                  >
+                    {a}
+                    <span className="text-xs font-normal text-gray-400">
+                      {a === 3 ? 'года' : a <= 4 ? 'года' : 'лет'}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
 
