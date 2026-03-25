@@ -111,6 +111,18 @@ export default function NewStory() {
     if (children.length === 0) loadChildren();
   }, []);
 
+  // Pick up image shared from Android gallery / browser via Web Share Target
+  useEffect(() => {
+    const pending = sessionStorage.getItem('pendingHeroImageUrl');
+    if (!pending) return;
+    sessionStorage.removeItem('pendingHeroImageUrl');
+    setCustomMode(true);
+    setCustomImageUrl(pending);
+    setSelectedHero({ name: 'Свой герой', emoji: '✨', imageUrl: pending });
+    // scroll into view so user sees the pre-filled hero
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  }, []);
+
   const child = children.find(c => c.id === childId);
 
   useEffect(() => {
@@ -167,13 +179,29 @@ export default function NewStory() {
     }
   };
 
+  /** Decode URL-encoded strings and add https:// if protocol is missing */
+  const normalizeImageUrl = (raw: string): string => {
+    let url = raw.trim();
+    if (!url) return url;
+    // Decode %2F, %3A etc. (happens when user copies a Yandex preview URL param)
+    if (url.includes('%2F') || url.includes('%3A') || url.includes('%2f')) {
+      try { url = decodeURIComponent(url); } catch (_) { /* keep original */ }
+    }
+    // Add protocol if missing
+    if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('blob:')) {
+      url = 'https://' + url;
+    }
+    return url;
+  };
+
   const handleUrlInputChange = (val: string) => {
-    setCustomUrlInput(val);
-    setUrlImgStatus(val.trim() ? 'loading' : 'idle');
+    const normalized = normalizeImageUrl(val);
+    setCustomUrlInput(normalized);
+    setUrlImgStatus(normalized.trim() ? 'loading' : 'idle');
   };
 
   const handleUrlApply = () => {
-    const url = customUrlInput.trim();
+    const url = normalizeImageUrl(customUrlInput);
     if (!url || !customName.trim()) return;
     setCustomImageUrl(url);
     setSelectedHero({ name: customName.trim(), emoji: '✨', imageUrl: url });

@@ -20,6 +20,7 @@ import BookCreate from './pages/BookCreate';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ShareStoryPage from './pages/ShareStoryPage';
+import ShareTarget from './pages/ShareTarget';
 import Onboarding from './pages/Onboarding';
 import AdminDashboard from './pages/AdminDashboard';
 import FeedbackButton from './components/FeedbackButton';
@@ -61,6 +62,9 @@ export default function App() {
 
             {/* Public story share */}
             <Route path="/share/:id" element={<ShareStoryPage />} />
+
+            {/* Web Share Target — receives images shared from Android gallery/browser */}
+            <Route path="/share-target" element={<ShareTarget />} />
 
             {/* Public static */}
             <Route path="/privacy" element={<Privacy />} />
