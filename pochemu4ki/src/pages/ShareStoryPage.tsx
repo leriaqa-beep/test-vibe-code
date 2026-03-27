@@ -144,7 +144,7 @@ function FinalCTA({ onClose }: { childName?: string; onClose: () => void }) {
         style={{
           display: 'block', width: '100%', marginTop: 16,
           background: 'none', border: 'none',
-          color: 'rgba(255,255,255,0.45)',
+          color: 'rgba(255,255,255,0.70)',
           fontFamily: 'Comfortaa, sans-serif', fontSize: 13,
           cursor: 'pointer',
           WebkitTapHighlightColor: 'transparent',
