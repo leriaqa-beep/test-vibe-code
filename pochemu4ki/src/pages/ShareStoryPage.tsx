@@ -139,6 +139,20 @@ function FinalCTA({ onClose }: { childName?: string; onClose: () => void }) {
       <p style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'Comfortaa, sans-serif', fontSize: 12, margin: '14px 0 0' }}>
         Без банковской карты · 30 секунд на регистрацию
       </p>
+      <button
+        onClick={onClose}
+        style={{
+          display: 'block', width: '100%', marginTop: 16,
+          background: 'none', border: 'none',
+          color: 'rgba(255,255,255,0.45)',
+          fontFamily: 'Comfortaa, sans-serif', fontSize: 13,
+          cursor: 'pointer',
+          WebkitTapHighlightColor: 'transparent',
+          touchAction: 'manipulation',
+        }}
+      >
+        Создать позже
+      </button>
     </Sheet>
   );
 }
@@ -195,9 +209,11 @@ export default function ShareStoryPage() {
   const [child, setChild] = useState<ChildProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [showGate, setShowGate] = useState(false);      // мягкий попап при загрузке
-  const [showFinalCTA, setShowFinalCTA] = useState(false); // баннер на последней странице
+  const [showGate, setShowGate] = useState(false);
+  const [showFinalCTA, setShowFinalCTA] = useState(false);
   const shownGateRef = useRef(false);
+  const finalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -274,14 +290,22 @@ export default function ShareStoryPage() {
       <BookReader
         story={story}
         child={child ?? undefined}
-        onLastPage={() => setShowFinalCTA(true)}
+        onLastPage={() => {
+          // Даём 8 секунд дочитать прежде чем показать шторку
+          if (finalTimerRef.current) clearTimeout(finalTimerRef.current);
+          finalTimerRef.current = setTimeout(() => setShowFinalCTA(true), 8000);
+        }}
       />
 
       {/* Шторка на последней странице */}
       {showFinalCTA && (
         <FinalCTA
           childName={child?.name}
-          onClose={() => setShowFinalCTA(false)}
+          onClose={() => {
+            setShowFinalCTA(false);
+            // Скроллим к баннеру внизу чтобы пользователь увидел кнопку
+            setTimeout(() => bannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+          }}
         />
       )}
 
@@ -289,6 +313,42 @@ export default function ShareStoryPage() {
       {showGate && !showFinalCTA && (
         <SoftGate onClose={() => setShowGate(false)} />
       )}
+
+      {/* Нижний баннер — виден после закрытия шторки «Позже» */}
+      <div ref={bannerRef} style={{
+        background: 'linear-gradient(160deg, #2D1B50 0%, #4C1D95 60%, #6D28D9 100%)',
+        padding: '40px 24px calc(env(safe-area-inset-bottom, 0px) + 56px)',
+        textAlign: 'center',
+      }}>
+        <img src="/assets/mascot/mascot-joy.png" alt="" style={{ width: 72, height: 72, objectFit: 'contain', marginBottom: 14 }} />
+        <h3 style={{ color: '#fff', fontFamily: 'Comfortaa, sans-serif', fontWeight: 700, fontSize: 18, margin: '0 0 10px' }}>
+          Создайте такую сказку для своего ребёнка!
+        </h3>
+        <p style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'Comfortaa, sans-serif', fontSize: 13, lineHeight: 1.6, margin: '0 0 22px', maxWidth: 300, marginLeft: 'auto', marginRight: 'auto' }}>
+          Персонально — по имени, любимому герою и интересам. Первые 3 сказки бесплатно.
+        </p>
+        <Link
+          to="/auth"
+          style={{
+            display: 'inline-flex', alignItems: 'center',
+            background: 'linear-gradient(135deg, #F59E0B 0%, #E8890A 100%)',
+            color: '#3D1F00',
+            fontFamily: 'Comfortaa, sans-serif',
+            fontWeight: 800, fontSize: 15,
+            padding: '16px 28px', borderRadius: 50,
+            textDecoration: 'none',
+            boxShadow: '0 4px 24px rgba(245,158,11,0.6)',
+            WebkitTapHighlightColor: 'transparent',
+            touchAction: 'manipulation',
+            animation: 'ctaPulse 2.8s ease-in-out infinite',
+          } as React.CSSProperties}
+        >
+          ✨ Попробовать бесплатно
+        </Link>
+        <p style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'Comfortaa, sans-serif', fontSize: 11, margin: '12px 0 0' }}>
+          Без банковской карты · 30 секунд
+        </p>
+      </div>
 
       <StickyCTA />
     </div>
