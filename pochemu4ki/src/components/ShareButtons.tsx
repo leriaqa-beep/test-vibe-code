@@ -1,21 +1,18 @@
 import { useState } from 'react';
 import { Share2, X, Copy, Check, Mail } from 'lucide-react';
 
-function InstagramIcon() {
+function MaxIcon() {
   return (
     <svg width={22} height={22} viewBox="0 0 24 24" fill="none">
       <defs>
-        <linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#f09433" />
-          <stop offset="25%" stopColor="#e6683c" />
-          <stop offset="50%" stopColor="#dc2743" />
-          <stop offset="75%" stopColor="#cc2366" />
-          <stop offset="100%" stopColor="#bc1888" />
+        <linearGradient id="max-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#6B8FF8" />
+          <stop offset="100%" stopColor="#7B5EA7" />
         </linearGradient>
       </defs>
-      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="url(#ig-grad)" />
-      <circle cx="12" cy="12" r="4.5" stroke="#fff" strokeWidth="1.8" fill="none" />
-      <circle cx="17.5" cy="6.5" r="1.2" fill="#fff" />
+      <rect width="24" height="24" rx="6" fill="url(#max-grad)" />
+      <path d="M12 5.5C8.41 5.5 5.5 8.41 5.5 12c0 1.14.31 2.21.85 3.13L5.5 18.5l3.37-.85A6.48 6.48 0 0012 18.5c3.59 0 6.5-2.91 6.5-6.5S15.59 5.5 12 5.5z" fill="#fff"/>
+      <path d="M9.5 11h5M9.5 13.5h3" stroke="url(#max-grad)" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   );
 }
@@ -47,7 +44,7 @@ function TelegramIcon() {
 export default function ShareButtons({ storyId, storyTitle, childName }: ShareButtonsProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [igCopied, setIgCopied] = useState(false);
+  const [maxCopied, setMaxCopied] = useState(false);
 
   const shareUrl = `${window.location.origin}/share/${storyId}`;
   const shareText = childName
@@ -58,6 +55,21 @@ export default function ShareButtons({ storyId, storyTitle, childName }: ShareBu
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(fullText)}`;
   const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
   const emailUrl = `mailto:?subject=${encodeURIComponent(`Сказка «${storyTitle}» — Почему-Ка!`)}&body=${encodeURIComponent(`${shareText}\n\nЧитать сказку: ${shareUrl}\n\nСоздайте свою историю на pochemu4ki-app.onrender.com`)}`;
+
+  const handleMax = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {
+      const el = document.createElement('textarea');
+      el.value = shareUrl;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
+    setMaxCopied(true);
+    setTimeout(() => setMaxCopied(false), 3000);
+  };
 
   const handleCopy = async () => {
     try {
@@ -72,23 +84,6 @@ export default function ShareButtons({ storyId, storyTitle, childName }: ShareBu
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleInstagram = async () => {
-    // Instagram has no web share URL — copy link first, then open Instagram
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-    } catch {
-      const el = document.createElement('textarea');
-      el.value = shareUrl;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-    }
-    setIgCopied(true);
-    setTimeout(() => setIgCopied(false), 3000);
-    setTimeout(() => window.open('https://www.instagram.com', '_blank'), 400);
   };
 
   const handleNativeShare = async () => {
@@ -184,7 +179,7 @@ export default function ShareButtons({ storyId, storyTitle, childName }: ShareBu
             </div>
 
             {/* Share icons grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: igCopied ? 8 : 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 16 }}>
               {/* WhatsApp */}
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={iconLinkStyle}>
                 <div style={{ ...iconCircle, background: '#25D366' }}>
@@ -201,12 +196,12 @@ export default function ShareButtons({ storyId, storyTitle, childName }: ShareBu
                 <span style={iconLabelStyle}>Telegram</span>
               </a>
 
-              {/* Instagram */}
-              <button onClick={handleInstagram} style={{ ...iconLinkStyle, background: 'none', border: 'none', cursor: 'pointer' }}>
-                <div style={{ ...iconCircle, background: igCopied ? '#4ADE80' : 'transparent', transition: 'background 0.25s' }}>
-                  {igCopied ? <Check size={22} color="#fff" /> : <InstagramIcon />}
+              {/* MAX */}
+              <button onClick={handleMax} style={{ ...iconLinkStyle, background: 'none', border: 'none', cursor: 'pointer' }}>
+                <div style={{ ...iconCircle, background: maxCopied ? '#4ADE80' : 'transparent', transition: 'background 0.25s' }}>
+                  {maxCopied ? <Check size={22} color="#fff" /> : <MaxIcon />}
                 </div>
-                <span style={iconLabelStyle}>Instagram</span>
+                <span style={iconLabelStyle}>MAX</span>
               </button>
 
               {/* Email */}
@@ -226,8 +221,8 @@ export default function ShareButtons({ storyId, storyTitle, childName }: ShareBu
               </button>
             </div>
 
-            {/* Instagram hint */}
-            {igCopied && (
+            {/* MAX hint */}
+            {maxCopied && (
               <div style={{
                 background: 'rgba(255,255,255,0.08)',
                 border: '1px solid rgba(255,255,255,0.15)',
@@ -240,7 +235,7 @@ export default function ShareButtons({ storyId, storyTitle, childName }: ShareBu
               }}>
                 <span style={{ fontSize: 16 }}>📋</span>
                 <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: 'Comfortaa, sans-serif', margin: 0, lineHeight: 1.4 }}>
-                  Ссылка скопирована! Вставь её в Instagram Stories или описание профиля
+                  Ссылка скопирована! Открой MAX и вставь её в сообщение
                 </p>
               </div>
             )}

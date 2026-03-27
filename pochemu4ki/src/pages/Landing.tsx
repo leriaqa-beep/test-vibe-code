@@ -199,13 +199,13 @@ export default function Landing() {
                 onClick={() => navigate('/auth?mode=register')}
                 className="btn"
                 style={{
-                  background: 'linear-gradient(135deg, #7C6BC4 0%, #6B5AB8 100%)',
-                  color: '#FFFFFF',
+                  background: 'linear-gradient(135deg, #F59E0B 0%, #E8890A 100%)',
+                  color: '#3D1F00',
                   fontWeight: 700,
                   fontSize: 'var(--text-sm)',
                   padding: '10px 22px',
                   borderRadius: '50px',
-                  boxShadow: '0 4px 16px rgba(124, 107, 196, 0.35)',
+                  boxShadow: '0 4px 16px rgba(245,158,11,0.45)',
                   minHeight: 40,
                 }}
               >
@@ -321,18 +321,19 @@ export default function Landing() {
                   onClick={() => navigate('/auth?mode=register')}
                   className="btn"
                   style={{
-                    background: 'linear-gradient(135deg, #7C6BC4 0%, #6B5AB8 100%)',
-                    color: '#FFFFFF',
-                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #F59E0B 0%, #E8890A 100%)',
+                    color: '#3D1F00',
+                    fontWeight: 800,
                     fontSize: '18px',
                     padding: '16px 40px',
                     borderRadius: '50px',
-                    boxShadow: '0 4px 20px rgba(124, 107, 196, 0.4)',
+                    boxShadow: '0 4px 24px rgba(245,158,11,0.55)',
                     gap: 'var(--space-2)',
                     minHeight: 56,
+                    animation: 'ctaGlow 2.8s ease-in-out infinite',
                   }}
                 >
-                  Попробовать бесплатно
+                  ✨ Попробовать бесплатно
                   <ChevronRight size={20} />
                 </button>
                 <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
@@ -494,17 +495,18 @@ export default function Landing() {
               onClick={() => navigate('/auth?mode=register')}
               className="btn"
               style={{
-                background: 'linear-gradient(135deg, #7C6BC4 0%, #6B5AB8 100%)',
-                color: '#FFFFFF',
-                fontWeight: 700,
+                background: 'linear-gradient(135deg, #F59E0B 0%, #E8890A 100%)',
+                color: '#3D1F00',
+                fontWeight: 800,
                 fontSize: '18px',
                 padding: '16px 40px',
                 borderRadius: '50px',
-                boxShadow: '0 4px 20px rgba(124, 107, 196, 0.4)',
+                boxShadow: '0 4px 24px rgba(245,158,11,0.55)',
                 minHeight: 56,
+                animation: 'ctaGlow 2.8s ease-in-out infinite',
               }}
             >
-              Начать прямо сейчас
+              ✨ Начать прямо сейчас
             </button>
           </div>
         </div>
@@ -663,18 +665,22 @@ export default function Landing() {
             onClick={() => navigate('/auth?mode=register')}
             className="btn"
             style={{
-              background: 'linear-gradient(135deg, #7C6BC4 0%, #6B5AB8 100%)',
-              color: '#FFFFFF',
-              fontWeight: 700,
+              background: 'linear-gradient(135deg, #F59E0B 0%, #E8890A 100%)',
+              color: '#3D1F00',
+              fontWeight: 800,
               fontSize: '18px',
-              padding: '16px 40px',
+              padding: '16px 48px',
               borderRadius: '50px',
-              boxShadow: '0 4px 20px rgba(124, 107, 196, 0.4)',
-              minHeight: 56,
+              boxShadow: '0 4px 28px rgba(245,158,11,0.60)',
+              minHeight: 60,
+              animation: 'ctaGlow 2.8s ease-in-out infinite',
             }}
           >
-            Создать первую сказку
+            ✨ Создать первую сказку
           </button>
+          <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', margin: '8px 0 0' }}>
+            Бесплатно · без карты · 30 секунд
+          </p>
         </div>
       </section>
 
@@ -710,6 +716,10 @@ export default function Landing() {
 
       {/* ── Адаптивность ── */}
       <style>{`
+        @keyframes ctaGlow {
+          0%, 100% { box-shadow: 0 4px 24px rgba(245,158,11,0.55); }
+          50% { box-shadow: 0 6px 40px rgba(245,158,11,0.85), 0 0 0 6px rgba(245,158,11,0.12); }
+        }
         @media (max-width: 768px) {
           .hero-grid     { grid-template-columns: 1fr !important; }
           .features-grid { grid-template-columns: 1fr !important; }

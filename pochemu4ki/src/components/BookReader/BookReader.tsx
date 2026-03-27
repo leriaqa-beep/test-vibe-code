@@ -77,11 +77,12 @@ function injectStyles() {
 interface BookReaderProps {
   story: Story;
   child?: ChildProfile;
+  onLastPage?: () => void;
 }
 
 type Direction = 'forward' | 'backward';
 
-export default function BookReader({ story, child }: BookReaderProps) {
+export default function BookReader({ story, child, onLastPage }: BookReaderProps) {
   const [showCover, setShowCover] = useState(true);
   // page index: 0 = first content page
   const [pageIdx, setPageIdx] = useState(0);
@@ -143,6 +144,13 @@ export default function BookReader({ story, child }: BookReaderProps) {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
   }, [pageIdx, showCover]);
 
+  // Сигнализируем родителю когда пользователь дошёл до последней страницы
+  useEffect(() => {
+    if (!showCover && pageIdx === totalPages - 1 && onLastPage) {
+      onLastPage();
+    }
+  }, [pageIdx, showCover, totalPages, onLastPage]);
+
   // Touch swipe
   const onTouchStart = (e: TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -189,8 +197,8 @@ export default function BookReader({ story, child }: BookReaderProps) {
         />
       </div>
 
-      {/* Navigation overlay — raised above StoryView bottom bar */}
-      <div style={{
+      {/* Navigation overlay — hidden when only 1 page (no navigation needed) */}
+      {pages.length > 1 && <div style={{
         position: 'fixed',
         bottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)',
         left: '50%',
@@ -248,7 +256,7 @@ export default function BookReader({ story, child }: BookReaderProps) {
         >
           <ChevronRight size={18} color="#fff" />
         </button>
-      </div>
+      </div>}
     </div>
   );
 }
