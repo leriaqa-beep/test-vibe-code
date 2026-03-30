@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { store } from '../db/store';
 import { supabase } from '../db/supabase';
@@ -16,9 +16,11 @@ async function adminMiddleware(req: AuthRequest, res: Response, next: () => void
   next();
 }
 
-// GET /api/admin/stats
-router.get('/stats', authMiddleware, adminMiddleware as never, async (_req: AuthRequest, res: Response) => {
+// GET /api/admin/stats?days=30
+router.get('/stats', authMiddleware, adminMiddleware as never, async (req: Request, res: Response) => {
   const now = new Date();
+  const days = Math.min(Math.max(parseInt(String(req.query.days || '30'), 10) || 30, 7), 365);
+  const period = new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString();
   const week = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const month = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -30,10 +32,13 @@ router.get('/stats', authMiddleware, adminMiddleware as never, async (_req: Auth
     { count: newUsersMonth },
     { count: newStoriesWeek },
     { count: newStoriesMonth },
+    { count: newStoriesPeriod },
     { count: usersWithStories },
+    { count: premiumCount },
     { data: ratingData },
     { data: storiesByDayData },
     { data: userList },
+    { data: allStoriesForFunnel },
   ] = await Promise.all([
     supabase.from('users').select('*', { count: 'exact', head: true }),
     supabase.from('stories').select('*', { count: 'exact', head: true }),
@@ -42,10 +47,13 @@ router.get('/stats', authMiddleware, adminMiddleware as never, async (_req: Auth
     supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', month),
     supabase.from('stories').select('*', { count: 'exact', head: true }).gte('created_at', week),
     supabase.from('stories').select('*', { count: 'exact', head: true }).gte('created_at', month),
+    supabase.from('stories').select('*', { count: 'exact', head: true }).gte('created_at', period),
     supabase.from('users').select('*', { count: 'exact', head: true }).gt('stories_used', 0),
+    supabase.from('users').select('*', { count: 'exact', head: true }).eq('is_premium', true),
     supabase.from('stories').select('rating').gt('rating', 0),
-    supabase.from('stories').select('created_at').gte('created_at', month).order('created_at', { ascending: true }),
+    supabase.from('stories').select('created_at').gte('created_at', period).order('created_at', { ascending: true }),
     supabase.from('users').select('id, email, created_at, stories_used, is_premium').order('created_at', { ascending: false }),
+    supabase.from('stories').select('user_id, rating'),
   ]);
 
   const { data: referralData } = await supabase
@@ -59,17 +67,44 @@ router.get('/stats', authMiddleware, adminMiddleware as never, async (_req: Auth
     ? Math.round((ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) * 10) / 10
     : 0;
 
-  // Stories grouped by date (last 30 days)
+  // Stories grouped by date (selected period)
   const dayMap: Record<string, number> = {};
-  for (let i = 29; i >= 0; i--) {
+  for (let i = days - 1; i >= 0; i--) {
     const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
     dayMap[d.toISOString().slice(0, 10)] = 0;
   }
+
+  // Heatmap: day-of-week (0=Mon) × hour (0-23, UTC+3 Moscow)
+  const heatmap: number[][] = Array.from({ length: 7 }, () => new Array(24).fill(0));
+
   for (const story of (storiesByDayData || [])) {
-    const day = (story as { created_at: string }).created_at.slice(0, 10);
+    const created = (story as { created_at: string }).created_at;
+    const day = created.slice(0, 10);
     if (day in dayMap) dayMap[day]++;
+
+    const d = new Date(created);
+    const dow = (d.getUTCDay() + 6) % 7; // 0=Mon...6=Sun
+    const hour = (d.getUTCHours() + 3) % 24; // UTC+3 Moscow
+    heatmap[dow][hour]++;
   }
   const storiesByDay = Object.entries(dayMap).map(([date, count]) => ({ date, count }));
+
+  // Funnel: all-time conversion stages
+  const userStoryCounts: Record<string, number> = {};
+  const userRatedSet = new Set<string>();
+  for (const s of (allStoriesForFunnel || []) as { user_id: string; rating: number }[]) {
+    userStoryCounts[s.user_id] = (userStoryCounts[s.user_id] || 0) + 1;
+    if (s.rating > 0) userRatedSet.add(s.user_id);
+  }
+  const usersWithTwoPlus = Object.values(userStoryCounts).filter(c => c >= 2).length;
+
+  const funnel = {
+    signups: totalUsers ?? 0,
+    firstStory: usersWithStories ?? 0,
+    twoPlus: usersWithTwoPlus,
+    rated: userRatedSet.size,
+    premium: premiumCount ?? 0,
+  };
 
   // User list with children count
   const childrenByUser: Record<string, number> = {};
@@ -100,6 +135,8 @@ router.get('/stats', authMiddleware, adminMiddleware as never, async (_req: Auth
     .map(([source, count]) => ({ source, count }))
     .sort((a, b) => b.count - a.count);
 
+  const usersWithoutReferral = (totalUsers ?? 0) - (referralData || []).length;
+
   res.json({
     totalUsers: totalUsers ?? 0,
     totalStories: totalStories ?? 0,
@@ -108,11 +145,17 @@ router.get('/stats', authMiddleware, adminMiddleware as never, async (_req: Auth
     newUsersMonth: newUsersMonth ?? 0,
     newStoriesWeek: newStoriesWeek ?? 0,
     newStoriesMonth: newStoriesMonth ?? 0,
+    newStoriesPeriod: newStoriesPeriod ?? 0,
     usersWithStories: usersWithStories ?? 0,
+    premiumCount: premiumCount ?? 0,
     avgRating,
     storiesByDay,
     userList: users,
     referralSources,
+    usersWithoutReferral,
+    funnel,
+    heatmap,
+    days,
   });
 });
 

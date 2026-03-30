@@ -10,14 +10,20 @@ const SOURCES = [
   { id: 'other',       label: 'Другое',           emoji: '💡' },
 ];
 
-const LS_KEY = 'referralSourceDone';
+const LS_SUBMITTED = 'referralSourceSubmitted';
+const LS_SKIPPED_AT = 'referralSourceSkippedAt';
+const SKIP_RESOW_DAYS = 7;
 
 export function markReferralDone() {
-  localStorage.setItem(LS_KEY, '1');
+  localStorage.setItem(LS_SUBMITTED, '1');
 }
 
 export function isReferralDone() {
-  return !!localStorage.getItem(LS_KEY);
+  if (localStorage.getItem(LS_SUBMITTED)) return true;
+  const skippedAt = localStorage.getItem(LS_SKIPPED_AT);
+  if (!skippedAt) return false;
+  const daysSince = (Date.now() - parseInt(skippedAt, 10)) / (1000 * 60 * 60 * 24);
+  return daysSince < SKIP_RESOW_DAYS;
 }
 
 interface Props {
@@ -43,7 +49,7 @@ export default function ReferralSourceModal({ onClose }: Props) {
   }
 
   function handleSkip() {
-    markReferralDone();
+    localStorage.setItem(LS_SKIPPED_AT, String(Date.now()));
     onClose();
   }
 

@@ -65,7 +65,7 @@ export const api = {
   },
 
   admin: {
-    stats: () => request<import('../types').AdminStats>('/admin/stats'),
+    stats: (days = 30) => request<import('../types').AdminStats>(`/admin/stats?days=${days}`),
   },
 
   users: {

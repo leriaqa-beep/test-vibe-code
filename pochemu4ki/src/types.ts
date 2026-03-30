@@ -15,6 +15,14 @@ export interface AdminUserEntry {
   childrenCount: number;
 }
 
+export interface AdminFunnel {
+  signups: number;
+  firstStory: number;
+  twoPlus: number;
+  rated: number;
+  premium: number;
+}
+
 export interface AdminStats {
   totalUsers: number;
   totalStories: number;
@@ -23,11 +31,17 @@ export interface AdminStats {
   newUsersMonth: number;
   newStoriesWeek: number;
   newStoriesMonth: number;
+  newStoriesPeriod: number;
   usersWithStories: number;
+  premiumCount: number;
   avgRating: number;
   storiesByDay: { date: string; count: number }[];
   userList: AdminUserEntry[];
   referralSources: { source: string; count: number }[];
+  usersWithoutReferral: number;
+  funnel: AdminFunnel;
+  heatmap: number[][];
+  days: number;
 }
 
 export interface Toy {
