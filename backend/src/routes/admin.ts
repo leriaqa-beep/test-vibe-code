@@ -52,7 +52,7 @@ router.get('/stats', authMiddleware, adminMiddleware as never, async (req: Reque
     supabase.from('users').select('*', { count: 'exact', head: true }).eq('is_premium', true),
     supabase.from('stories').select('rating').gt('rating', 0),
     supabase.from('stories').select('created_at').gte('created_at', period).order('created_at', { ascending: true }),
-    supabase.from('users').select('id, email, created_at, stories_used, is_premium, plan_expires_at').order('created_at', { ascending: false }),
+    supabase.from('users').select('id, email, created_at, stories_used, is_premium').order('created_at', { ascending: false }),
     supabase.from('stories').select('user_id, rating'),
   ]);
 
@@ -115,15 +115,13 @@ router.get('/stats', authMiddleware, adminMiddleware as never, async (req: Reque
   }
 
   const users = (userList || []).map((u: {
-    id: string; email: string; created_at: string; stories_used: number;
-    is_premium: boolean; plan_expires_at?: string;
+    id: string; email: string; created_at: string; stories_used: number; is_premium: boolean;
   }) => ({
     id: u.id,
     email: u.email,
     createdAt: u.created_at,
     storiesUsed: u.stories_used,
     isPremium: u.is_premium,
-    planExpiresAt: u.plan_expires_at || undefined,
     childrenCount: childrenByUser[u.id] || 0,
   }));
 
