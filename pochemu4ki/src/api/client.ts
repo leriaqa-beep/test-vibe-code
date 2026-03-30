@@ -66,6 +66,15 @@ export const api = {
 
   admin: {
     stats: (days = 30) => request<import('../types').AdminStats>(`/admin/stats?days=${days}`),
+    setPremium: (userId: string, isPremium: boolean, days?: number) =>
+      request<{ success: boolean; isPremium: boolean; planExpiresAt: string | null }>(
+        `/admin/users/${userId}/set-premium`,
+        { method: 'POST', body: JSON.stringify({ isPremium, days }) }
+      ),
+    feedback: (limit = 50) =>
+      request<{ feedback: import('../types').AdminFeedbackEntry[]; total: number }>(
+        `/admin/feedback?limit=${limit}`
+      ),
   },
 
   users: {

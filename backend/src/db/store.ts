@@ -11,6 +11,7 @@ export interface User {
   isPremium: boolean;
   storiesUsed: number;
   referralSource?: string;
+  planExpiresAt?: string; // requires migration 001_plan_expires_at.sql
 }
 
 export interface Toy {
@@ -62,6 +63,7 @@ function mapUser(row: any): User {
     isPremium: row.is_premium,
     storiesUsed: row.stories_used,
     referralSource: row.referral_source || undefined,
+    planExpiresAt: row.plan_expires_at || undefined,
   };
 }
 

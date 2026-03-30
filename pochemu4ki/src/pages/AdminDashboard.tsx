@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, BookOpen, Star, TrendingUp, BarChart2, Baby, Download, Crown } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, Star, TrendingUp, BarChart2, Baby, Download, Crown, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
-import type { AdminStats, AdminUserEntry } from '../types';
+import type { AdminStats, AdminUserEntry, AdminFeedbackEntry } from '../types';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: '2-digit' });
@@ -145,6 +145,87 @@ const FUNNEL_STEPS = [
   { key: 'premium' as const,    label: 'Premium',             color: '#D46BAA', bg: '#FAE9F4' },
 ];
 
+function daysUntil(iso: string): number {
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+}
+
+function FeedbackSection() {
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<AdminFeedbackEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  function load() {
+    if (loaded) { setOpen(o => !o); return; }
+    setOpen(true);
+    setLoading(true);
+    api.admin.feedback(100)
+      .then(r => { setItems(r.feedback); setLoaded(true); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }
+
+  const ratingColor = (r: number | null) =>
+    !r ? '#ABA9C0' : r >= 4 ? '#22C55E' : r >= 3 ? '#F59E0B' : '#EF4444';
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden mb-6">
+      <button
+        onClick={load}
+        className="w-full px-5 py-3 flex items-center justify-between hover:bg-purple-50 transition"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
+      >
+        <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
+          <MessageSquare className="w-4 h-4 text-purple-500" />
+          Отзывы пользователей
+          {loaded && <span className="text-xs font-normal text-text-muted ml-1">({items.length})</span>}
+        </h2>
+        {open ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+      </button>
+
+      {open && (
+        <div className="border-t border-purple-50">
+          {loading && (
+            <div className="py-8 flex justify-center">
+              <div className="w-6 h-6 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
+            </div>
+          )}
+          {!loading && items.length === 0 && (
+            <p className="text-sm text-text-muted text-center py-6">Пока нет отзывов</p>
+          )}
+          {!loading && items.map(f => (
+            <div key={f.id} className="px-5 py-3 border-b border-gray-50 last:border-0">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-text-primary leading-relaxed">{f.text}</p>
+                  <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                    {f.userEmail && (
+                      <span className="text-xs text-text-muted truncate max-w-[180px]">{f.userEmail}</span>
+                    )}
+                    {f.page && (
+                      <span className="text-xs text-purple-400 bg-purple-50 px-1.5 py-0.5 rounded-md">{f.page}</span>
+                    )}
+                    <span className="text-xs text-text-muted">{formatDate(f.createdAt)}</span>
+                  </div>
+                </div>
+                <div className="shrink-0 flex flex-col items-end gap-1">
+                  {f.rating ? (
+                    <span style={{ color: ratingColor(f.rating), fontSize: 18, fontWeight: 700, lineHeight: 1 }}>
+                      {'★'.repeat(f.rating)}{'☆'.repeat(5 - f.rating)}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-text-muted">без оценки</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   useAuth();
@@ -152,11 +233,14 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [days, setDays] = useState(30);
+  // per-user optimistic premium toggle state
+  const [premiumOverride, setPremiumOverride] = useState<Record<string, boolean>>({});
+  const [premiumLoading, setPremiumLoading] = useState<Record<string, boolean>>({});
 
   const fetchStats = useCallback((d: number) => {
     setLoading(true);
     api.admin.stats(d)
-      .then(setStats)
+      .then(data => { setStats(data); setPremiumOverride({}); })
       .catch(e => {
         if (e.status === 403) navigate('/app');
         else setError(e.message || 'Ошибка загрузки');
@@ -165,6 +249,20 @@ export default function AdminDashboard() {
   }, [navigate]);
 
   useEffect(() => { fetchStats(days); }, [days, fetchStats]);
+
+  async function handleTogglePremium(u: AdminUserEntry) {
+    const current = premiumOverride[u.id] ?? u.isPremium;
+    const next = !current;
+    setPremiumOverride(prev => ({ ...prev, [u.id]: next }));
+    setPremiumLoading(prev => ({ ...prev, [u.id]: true }));
+    try {
+      await api.admin.setPremium(u.id, next, next ? 30 : undefined);
+    } catch {
+      setPremiumOverride(prev => ({ ...prev, [u.id]: current })); // rollback
+    } finally {
+      setPremiumLoading(prev => ({ ...prev, [u.id]: false }));
+    }
+  }
 
   if (loading) {
     return (
@@ -455,6 +553,9 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Feedback */}
+        <FeedbackSection />
+
         {/* User list */}
         <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
           <div className="px-5 py-3 border-b border-purple-50 flex items-center justify-between">
@@ -467,41 +568,79 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid grid-cols-12 px-5 py-2 bg-purple-50 text-xs font-semibold text-text-muted uppercase tracking-wide">
-            <span className="col-span-5">Email</span>
+            <span className="col-span-4">Email / Статус</span>
             <span className="col-span-2 text-center">Детей</span>
             <span className="col-span-2 text-center">Сказок</span>
-            <span className="col-span-3 text-right">Зарегистрирован</span>
+            <span className="col-span-2 text-center">Действие</span>
+            <span className="col-span-2 text-right">Дата</span>
           </div>
 
           <div className="divide-y divide-gray-50">
-            {stats.userList.map(u => (
-              <div
-                key={u.id}
-                className={`grid grid-cols-12 px-5 py-3 items-center text-sm ${u.storiesUsed === 0 ? 'opacity-50' : ''}`}
-              >
-                <div className="col-span-5 min-w-0">
-                  <p className="truncate text-text-primary font-medium text-xs">{u.email}</p>
-                  {u.isPremium && (
-                    <span className="text-xs text-purple-500 font-semibold flex items-center gap-0.5">
-                      <Crown className="w-3 h-3" /> Premium
+            {stats.userList.map(u => {
+              const isPremium = premiumOverride[u.id] ?? u.isPremium;
+              const isLoading = !!premiumLoading[u.id];
+              const expiry = u.planExpiresAt;
+              const daysLeft = expiry ? daysUntil(expiry) : null;
+
+              return (
+                <div
+                  key={u.id}
+                  className={`grid grid-cols-12 px-5 py-3 items-center text-sm ${u.storiesUsed === 0 ? 'opacity-50' : ''}`}
+                >
+                  <div className="col-span-4 min-w-0">
+                    <p className="truncate text-text-primary font-medium text-xs">{u.email}</p>
+                    {isPremium ? (
+                      <span className="text-xs text-purple-500 font-semibold flex items-center gap-0.5">
+                        <Crown className="w-3 h-3" />
+                        Premium
+                        {daysLeft !== null && daysLeft > 0 && (
+                          <span className="text-text-muted font-normal ml-1">({daysLeft}д)</span>
+                        )}
+                        {daysLeft !== null && daysLeft <= 0 && (
+                          <span className="text-red-400 font-normal ml-1">(истёк)</span>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-text-muted">Free</span>
+                    )}
+                  </div>
+                  <div className="col-span-2 text-center">
+                    <span className={`text-xs font-bold ${u.childrenCount > 0 ? 'text-pink-500' : 'text-text-muted'}`}>
+                      {u.childrenCount}
                     </span>
-                  )}
+                  </div>
+                  <div className="col-span-2 text-center">
+                    <span className={`text-xs font-bold ${u.storiesUsed > 0 ? 'text-purple-600' : 'text-text-muted'}`}>
+                      {u.storiesUsed}
+                    </span>
+                  </div>
+                  <div className="col-span-2 text-center">
+                    <button
+                      onClick={() => handleTogglePremium(u)}
+                      disabled={isLoading}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: 8,
+                        border: 'none',
+                        fontSize: 11, fontWeight: 600,
+                        cursor: isLoading ? 'not-allowed' : 'pointer',
+                        background: isPremium ? '#FEE2E2' : '#EDE9F8',
+                        color: isPremium ? '#DC2626' : '#7C6BC4',
+                        opacity: isLoading ? 0.6 : 1,
+                        transition: 'all 0.15s',
+                        WebkitTapHighlightColor: 'transparent',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {isLoading ? '...' : isPremium ? '✕ Снять' : '✓ Дать'}
+                    </button>
+                  </div>
+                  <div className="col-span-2 text-right text-xs text-text-muted">
+                    {formatDate(u.createdAt)}
+                  </div>
                 </div>
-                <div className="col-span-2 text-center">
-                  <span className={`text-xs font-bold ${u.childrenCount > 0 ? 'text-pink-500' : 'text-text-muted'}`}>
-                    {u.childrenCount}
-                  </span>
-                </div>
-                <div className="col-span-2 text-center">
-                  <span className={`text-xs font-bold ${u.storiesUsed > 0 ? 'text-purple-600' : 'text-text-muted'}`}>
-                    {u.storiesUsed}
-                  </span>
-                </div>
-                <div className="col-span-3 text-right text-xs text-text-muted">
-                  {formatDate(u.createdAt)}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

@@ -13,6 +13,17 @@ export interface AdminUserEntry {
   storiesUsed: number;
   isPremium: boolean;
   childrenCount: number;
+  planExpiresAt?: string;
+}
+
+export interface AdminFeedbackEntry {
+  id: string;
+  userId: string | null;
+  userEmail: string | null;
+  text: string;
+  rating: number | null;
+  page: string | null;
+  createdAt: string;
 }
 
 export interface AdminFunnel {
