@@ -84,7 +84,7 @@ router.get('/stats', authMiddleware, adminMiddleware as never, async (req: Reque
 
     const d = new Date(created);
     const dow = (d.getUTCDay() + 6) % 7; // 0=Mon...6=Sun
-    const hour = (d.getUTCHours() + 3) % 24; // UTC+3 Moscow
+    const hour = (d.getUTCHours() + 6) % 24; // UTC+6 Bishkek
     heatmap[dow][hour]++;
   }
   const storiesByDay = Object.entries(dayMap).map(([date, count]) => ({ date, count }));

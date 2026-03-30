@@ -80,7 +80,7 @@ function HeatmapGrid({ heatmap, days }: { heatmap: number[][], days: number }) {
         <BarChart2 className="w-4 h-4 text-purple-500" /> Тепловая карта спроса
       </h2>
       <p className="text-xs text-text-muted mb-4">
-        Когда генерируют сказки — последние {days} дн, UTC+3 (Москва)
+        Когда генерируют сказки — последние {days} дн, UTC+6 (Бишкек)
       </p>
       <div style={{ overflowX: 'auto' }}>
         <div style={{ minWidth: 600 }}>
