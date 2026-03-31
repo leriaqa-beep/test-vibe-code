@@ -238,4 +238,52 @@ router.get('/feedback', authMiddleware, adminMiddleware as never, async (req: Re
   res.json({ feedback, total: feedback.length });
 });
 
+// GET /api/admin/story-activity?limit=200&days=30
+router.get('/story-activity', authMiddleware, adminMiddleware as never, async (req: Request, res: Response) => {
+  const limit = Math.min(parseInt(String(req.query.limit || '200'), 10) || 200, 500);
+  const days = Math.min(Math.max(parseInt(String(req.query.days || '30'), 10) || 30, 1), 365);
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: storiesData, error } = await supabase
+    .from('stories')
+    .select('id, user_id, title, question, created_at, rating')
+    .gte('created_at', since)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    res.status(500).json({ error: 'Не удалось загрузить активность' });
+    return;
+  }
+
+  // Enrich with user emails
+  const userIds = [...new Set(
+    (storiesData || []).map((s: { user_id: string }) => s.user_id).filter(Boolean)
+  )] as string[];
+
+  const emailMap: Record<string, string> = {};
+  if (userIds.length > 0) {
+    const { data: users } = await supabase
+      .from('users').select('id, email').in('id', userIds);
+    for (const u of (users || []) as { id: string; email: string }[]) {
+      emailMap[u.id] = u.email;
+    }
+  }
+
+  const activity = (storiesData || []).map((s: {
+    id: string; user_id: string; title: string;
+    question: string; created_at: string; rating: number | null;
+  }) => ({
+    id: s.id,
+    userId: s.user_id,
+    userEmail: emailMap[s.user_id] || null,
+    title: s.title,
+    question: s.question,
+    createdAt: s.created_at,
+    rating: s.rating || null,
+  }));
+
+  res.json({ activity, total: activity.length });
+});
+
 export default router;

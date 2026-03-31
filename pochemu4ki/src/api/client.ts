@@ -75,6 +75,10 @@ export const api = {
       request<{ feedback: import('../types').AdminFeedbackEntry[]; total: number }>(
         `/admin/feedback?limit=${limit}`
       ),
+    storyActivity: (days = 30, limit = 200) =>
+      request<{ activity: import('../types').AdminStoryActivity[]; total: number }>(
+        `/admin/story-activity?days=${days}&limit=${limit}`
+      ),
   },
 
   users: {

@@ -16,6 +16,16 @@ export interface AdminUserEntry {
   planExpiresAt?: string;
 }
 
+export interface AdminStoryActivity {
+  id: string;
+  userId: string;
+  userEmail: string | null;
+  title: string;
+  question: string;
+  createdAt: string;
+  rating: number | null;
+}
+
 export interface AdminFeedbackEntry {
   id: string;
   userId: string | null;

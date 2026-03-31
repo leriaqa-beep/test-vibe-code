@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, BookOpen, Star, TrendingUp, BarChart2, Baby, Download, Crown, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, Star, TrendingUp, BarChart2, Baby, Download, Crown, MessageSquare, ChevronDown, ChevronUp, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
-import type { AdminStats, AdminUserEntry, AdminFeedbackEntry } from '../types';
+import type { AdminStats, AdminUserEntry, AdminFeedbackEntry, AdminStoryActivity } from '../types';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: '2-digit' });
@@ -226,6 +226,139 @@ function FeedbackSection() {
   );
 }
 
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString('ru-RU', {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function StoryActivitySection({ days }: { days: number }) {
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<AdminStoryActivity[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [search, setSearch] = useState('');
+
+  function load() {
+    if (loaded) { setOpen(o => !o); return; }
+    setOpen(true);
+    setLoading(true);
+    api.admin.storyActivity(days, 300)
+      .then(r => { setItems(r.activity); setLoaded(true); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }
+
+  // Group by user email for per-user counts
+  const userCounts: Record<string, number> = {};
+  for (const item of items) {
+    const key = item.userEmail || item.userId;
+    userCounts[key] = (userCounts[key] || 0) + 1;
+  }
+
+  const filtered = search.trim()
+    ? items.filter(i => (i.userEmail || '').toLowerCase().includes(search.trim().toLowerCase()))
+    : items;
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden mb-6">
+      <button
+        onClick={load}
+        className="w-full px-5 py-3 flex items-center justify-between hover:bg-purple-50 transition"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
+      >
+        <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
+          <Activity className="w-4 h-4 text-purple-500" />
+          Активность: кто и когда генерировал сказки
+          {loaded && <span className="text-xs font-normal text-text-muted ml-1">({items.length} за {days} дн)</span>}
+        </h2>
+        {open ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+      </button>
+
+      {open && (
+        <div className="border-t border-purple-50">
+          {loading && (
+            <div className="py-8 flex justify-center">
+              <div className="w-6 h-6 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
+            </div>
+          )}
+
+          {!loading && loaded && (
+            <>
+              {/* Per-user summary */}
+              {Object.keys(userCounts).length > 0 && (
+                <div className="px-5 py-3 border-b border-purple-50 flex flex-wrap gap-2">
+                  {Object.entries(userCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([email, count]) => (
+                      <button
+                        key={email}
+                        onClick={() => setSearch(search === email ? '' : email)}
+                        style={{
+                          padding: '3px 10px',
+                          borderRadius: 20,
+                          fontSize: 12, fontWeight: 600,
+                          cursor: 'pointer',
+                          border: search === email ? '2px solid var(--accent-primary)' : '1.5px solid var(--border-default)',
+                          background: search === email ? 'var(--accent-primary)' : 'var(--bg-surface)',
+                          color: search === email ? '#fff' : 'var(--text-secondary)',
+                          transition: 'all 0.15s',
+                          WebkitTapHighlightColor: 'transparent',
+                        }}
+                      >
+                        {email.split('@')[0]} · {count}
+                      </button>
+                    ))}
+                </div>
+              )}
+
+              {/* Search input */}
+              <div className="px-5 py-2 border-b border-purple-50">
+                <input
+                  type="text"
+                  placeholder="Поиск по email..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  style={{
+                    width: '100%', padding: '6px 12px',
+                    borderRadius: 10, border: '1.5px solid var(--border-default)',
+                    fontSize: 13, outline: 'none',
+                    background: 'var(--bg-primary)', color: 'var(--text-primary)',
+                  }}
+                />
+              </div>
+
+              {filtered.length === 0 && (
+                <p className="text-sm text-text-muted text-center py-6">Ничего не найдено</p>
+              )}
+
+              {/* Story list */}
+              <div className="divide-y divide-gray-50 max-h-[420px] overflow-y-auto">
+                {filtered.map(item => (
+                  <div key={item.id} className="px-5 py-3 flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-purple-600 truncate">{item.userEmail || item.userId}</p>
+                      <p className="text-sm text-text-primary leading-snug mt-0.5 line-clamp-2">
+                        {item.question || item.title}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-xs text-text-muted whitespace-nowrap">{formatDateTime(item.createdAt)}</p>
+                      {item.rating ? (
+                        <p className="text-xs text-yellow-500 font-bold mt-0.5">{'★'.repeat(item.rating)}</p>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   useAuth();
@@ -412,17 +545,18 @@ export default function AdminDashboard() {
           </h2>
           <div className="flex items-end gap-0.5 h-28">
             {stats.storiesByDay.map(({ date, count }) => {
-              const heightPct = (count / maxBarCount) * 100;
+              const heightPx = Math.round((count / maxBarCount) * 112);
+              const barH = count > 0 ? Math.max(heightPx, 4) : 0;
               const isToday = date === new Date().toISOString().slice(0, 10);
               return (
                 <div
                   key={date}
-                  className="flex-1 flex flex-col items-center gap-0.5 group relative"
+                  className="flex-1 group relative flex items-end"
                   title={`${formatShortDate(date)}: ${count}`}
                 >
                   <div
                     className={`w-full rounded-t-sm transition-all ${isToday ? 'bg-purple-600' : 'bg-purple-200 group-hover:bg-purple-400'}`}
-                    style={{ height: `${Math.max(heightPct, count > 0 ? 4 : 0)}%` }}
+                    style={{ height: barH }}
                   />
                   {count > 0 && (
                     <div className="absolute bottom-full mb-1 hidden group-hover:block z-10 bg-gray-800 text-white text-xs rounded px-1.5 py-0.5 whitespace-nowrap pointer-events-none">
@@ -555,6 +689,9 @@ export default function AdminDashboard() {
 
         {/* Feedback */}
         <FeedbackSection />
+
+        {/* Story Activity */}
+        <StoryActivitySection days={days} />
 
         {/* User list */}
         <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
