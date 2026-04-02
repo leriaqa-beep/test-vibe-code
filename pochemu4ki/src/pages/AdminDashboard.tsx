@@ -239,18 +239,24 @@ function formatTime(iso: string) {
 function StoryActivitySection({ days }: { days: number }) {
   const [items, setItems] = useState<AdminStoryActivity[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
-    setSelectedDate('');
-    setExpandedUser(null);
+    setError(null);
     api.admin.storyActivity(days, 500)
-      .then(r => setItems(r.activity))
-      .catch(() => {})
+      .then(r => { setItems(r.activity); })
+      .catch((e) => setError(e?.message || 'Ошибка загрузки активности'))
       .finally(() => setLoading(false));
   }, [days]);
+
+  useEffect(() => {
+    setSelectedDate('');
+    setExpandedUser(null);
+    load();
+  }, [load]);
 
   // Unique dates with activity
   const availableDates = Array.from(
@@ -318,11 +324,27 @@ function StoryActivitySection({ days }: { days: number }) {
         </div>
       )}
 
-      {!loading && userRows.length === 0 && (
+      {!loading && error && (
+        <div className="px-5 py-4 flex items-center gap-3">
+          <p className="text-sm text-red-500 flex-1">{error}</p>
+          <button
+            onClick={load}
+            style={{
+              padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+              border: '1.5px solid #EF4444', color: '#EF4444', background: '#FEF2F2',
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            Повторить
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && userRows.length === 0 && (
         <p className="text-sm text-text-muted text-center py-6">Нет данных за этот период</p>
       )}
 
-      {!loading && userRows.length > 0 && (
+      {!loading && !error && userRows.length > 0 && (
         <div style={{ overflowX: 'auto', maxHeight: 480, overflowY: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
