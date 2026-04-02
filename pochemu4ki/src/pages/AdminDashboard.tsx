@@ -232,127 +232,163 @@ function formatDateTime(iso: string) {
   });
 }
 
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
 function StoryActivitySection({ days }: { days: number }) {
-  const [open, setOpen] = useState(false);
   const [items, setItems] = useState<AdminStoryActivity[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const [search, setSearch] = useState('');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
-  function load() {
-    if (loaded) { setOpen(o => !o); return; }
-    setOpen(true);
+  useEffect(() => {
     setLoading(true);
-    api.admin.storyActivity(days, 300)
-      .then(r => { setItems(r.activity); setLoaded(true); })
+    setSelectedDate('');
+    setExpandedUser(null);
+    api.admin.storyActivity(days, 500)
+      .then(r => setItems(r.activity))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }
+  }, [days]);
 
-  // Group by user email for per-user counts
-  const userCounts: Record<string, number> = {};
-  for (const item of items) {
-    const key = item.userEmail || item.userId;
-    userCounts[key] = (userCounts[key] || 0) + 1;
-  }
+  // Unique dates with activity
+  const availableDates = Array.from(
+    new Set(items.map(i => i.createdAt.slice(0, 10)))
+  ).sort((a, b) => b.localeCompare(a));
 
-  const filtered = search.trim()
-    ? items.filter(i => (i.userEmail || '').toLowerCase().includes(search.trim().toLowerCase()))
+  // Filter by selected date
+  const filtered = selectedDate
+    ? items.filter(i => i.createdAt.slice(0, 10) === selectedDate)
     : items;
+
+  // Group by user
+  type UserRow = { email: string; count: number; stories: AdminStoryActivity[] };
+  const userMap: Record<string, UserRow> = {};
+  for (const item of filtered) {
+    const key = item.userEmail || item.userId;
+    if (!userMap[key]) userMap[key] = { email: key, count: 0, stories: [] };
+    userMap[key].count++;
+    userMap[key].stories.push(item);
+  }
+  const userRows = Object.values(userMap).sort((a, b) => b.count - a.count);
+
+  const thStyle: React.CSSProperties = {
+    padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700,
+    color: 'var(--text-secondary)', background: 'var(--bg-primary)',
+    borderBottom: '1.5px solid var(--border-default)', whiteSpace: 'nowrap',
+  };
+  const tdStyle: React.CSSProperties = {
+    padding: '8px 12px', fontSize: 13, color: 'var(--text-primary)',
+    borderBottom: '1px solid #F3F0FB', verticalAlign: 'top',
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden mb-6">
-      <button
-        onClick={load}
-        className="w-full px-5 py-3 flex items-center justify-between hover:bg-purple-50 transition"
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-      >
+      {/* Header */}
+      <div className="px-5 py-3 border-b border-purple-50 flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
           <Activity className="w-4 h-4 text-purple-500" />
-          Активность: кто и когда генерировал сказки
-          {loaded && <span className="text-xs font-normal text-text-muted ml-1">({items.length} за {days} дн)</span>}
+          Активность
+          {!loading && <span className="text-xs font-normal text-text-muted">({items.length} за {days} дн)</span>}
         </h2>
-        {open ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
-      </button>
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedDate}
+            onChange={e => { setSelectedDate(e.target.value); setExpandedUser(null); }}
+            style={{
+              padding: '5px 10px', borderRadius: 10, fontSize: 12, fontWeight: 600,
+              border: '1.5px solid var(--border-default)',
+              background: selectedDate ? 'var(--accent-primary)' : 'var(--bg-surface)',
+              color: selectedDate ? '#fff' : 'var(--text-secondary)',
+              outline: 'none', cursor: 'pointer',
+            }}
+          >
+            <option value="">Все дни</option>
+            {availableDates.map(d => (
+              <option key={d} value={d}>{new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
-      {open && (
-        <div className="border-t border-purple-50">
-          {loading && (
-            <div className="py-8 flex justify-center">
-              <div className="w-6 h-6 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
-            </div>
-          )}
+      {loading && (
+        <div className="py-8 flex justify-center">
+          <div className="w-6 h-6 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
+        </div>
+      )}
 
-          {!loading && loaded && (
-            <>
-              {/* Per-user summary */}
-              {Object.keys(userCounts).length > 0 && (
-                <div className="px-5 py-3 border-b border-purple-50 flex flex-wrap gap-2">
-                  {Object.entries(userCounts)
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([email, count]) => (
-                      <button
-                        key={email}
-                        onClick={() => setSearch(search === email ? '' : email)}
-                        style={{
-                          padding: '3px 10px',
-                          borderRadius: 20,
-                          fontSize: 12, fontWeight: 600,
-                          cursor: 'pointer',
-                          border: search === email ? '2px solid var(--accent-primary)' : '1.5px solid var(--border-default)',
-                          background: search === email ? 'var(--accent-primary)' : 'var(--bg-surface)',
-                          color: search === email ? '#fff' : 'var(--text-secondary)',
-                          transition: 'all 0.15s',
-                          WebkitTapHighlightColor: 'transparent',
-                        }}
-                      >
-                        {email.split('@')[0]} · {count}
-                      </button>
+      {!loading && userRows.length === 0 && (
+        <p className="text-sm text-text-muted text-center py-6">Нет данных за этот период</p>
+      )}
+
+      {!loading && userRows.length > 0 && (
+        <div style={{ overflowX: 'auto', maxHeight: 480, overflowY: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+              <tr>
+                <th style={{ ...thStyle, width: 32 }}>#</th>
+                <th style={thStyle}>Пользователь</th>
+                <th style={{ ...thStyle, textAlign: 'center' }}>Сказок</th>
+                <th style={thStyle}>
+                  {selectedDate ? 'Время генерации' : 'Последняя активность'}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {userRows.map((row, idx) => {
+                const isExpanded = expandedUser === row.email;
+                const sortedStories = [...row.stories].sort(
+                  (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                );
+                const lastStory = sortedStories[0];
+                return (
+                  <>
+                    <tr
+                      key={row.email}
+                      onClick={() => setExpandedUser(isExpanded ? null : row.email)}
+                      style={{
+                        cursor: 'pointer',
+                        background: isExpanded ? '#F3EEFF' : idx % 2 === 0 ? '#fff' : '#FDFBFF',
+                        transition: 'background 0.15s',
+                      }}
+                    >
+                      <td style={{ ...tdStyle, color: 'var(--text-muted)', fontSize: 11 }}>{idx + 1}</td>
+                      <td style={tdStyle}>
+                        <span style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>
+                          {row.email.includes('@') ? row.email.split('@')[0] : row.email}
+                        </span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>
+                          {row.email.includes('@') ? '@' + row.email.split('@')[1] : ''}
+                        </span>
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 700, color: row.count >= 3 ? '#7C6BC4' : 'var(--text-primary)' }}>
+                        {row.count}
+                      </td>
+                      <td style={{ ...tdStyle, color: 'var(--text-secondary)', fontSize: 12 }}>
+                        {selectedDate
+                          ? sortedStories.map(s => formatTime(s.createdAt)).join(', ')
+                          : formatDateTime(lastStory.createdAt)
+                        }
+                      </td>
+                    </tr>
+                    {isExpanded && sortedStories.map(story => (
+                      <tr key={story.id} style={{ background: '#FAF7FF' }}>
+                        <td style={{ ...tdStyle, borderBottom: 'none' }} />
+                        <td colSpan={2} style={{ ...tdStyle, fontSize: 12, paddingLeft: 24, color: 'var(--text-secondary)' }}>
+                          {story.question || story.title || '—'}
+                        </td>
+                        <td style={{ ...tdStyle, fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          {formatDateTime(story.createdAt)}
+                          {story.rating ? <span style={{ color: '#F59E0B', marginLeft: 6 }}>{'★'.repeat(story.rating)}</span> : null}
+                        </td>
+                      </tr>
                     ))}
-                </div>
-              )}
-
-              {/* Search input */}
-              <div className="px-5 py-2 border-b border-purple-50">
-                <input
-                  type="text"
-                  placeholder="Поиск по email..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  style={{
-                    width: '100%', padding: '6px 12px',
-                    borderRadius: 10, border: '1.5px solid var(--border-default)',
-                    fontSize: 13, outline: 'none',
-                    background: 'var(--bg-primary)', color: 'var(--text-primary)',
-                  }}
-                />
-              </div>
-
-              {filtered.length === 0 && (
-                <p className="text-sm text-text-muted text-center py-6">Ничего не найдено</p>
-              )}
-
-              {/* Story list */}
-              <div className="divide-y divide-gray-50 max-h-[420px] overflow-y-auto">
-                {filtered.map(item => (
-                  <div key={item.id} className="px-5 py-3 flex items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-purple-600 truncate">{item.userEmail || item.userId}</p>
-                      <p className="text-sm text-text-primary leading-snug mt-0.5 line-clamp-2">
-                        {item.question || item.title}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-xs text-text-muted whitespace-nowrap">{formatDateTime(item.createdAt)}</p>
-                      {item.rating ? (
-                        <p className="text-xs text-yellow-500 font-bold mt-0.5">{'★'.repeat(item.rating)}</p>
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
+                  </>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
